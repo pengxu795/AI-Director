@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Fixed Module 4 Review findings for timeline planning.
+- Changed `ending_hook` reuse handling so callback is only used when it reuses an earlier matched story block.
+- Added partial timeline matching coverage for mixed valid and invalid story block ranges.
+- Deduplicated repeated `source_story_block_ids` within a single narration segment before video range sorting.
 - Added Module 4 phase 1 rule-based shot matching and timeline planning.
 - Added timeline schema with `timeline`, `video_ranges`, `unresolved_segments`, and `metadata`.
 - Added timeline generation CLI and sample output.

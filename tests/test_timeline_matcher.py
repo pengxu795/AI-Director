@@ -155,6 +155,62 @@ def test_hook_climax_and_ending_hook_reuse_same_block_with_stable_policy():
     assert [item["status"] for item in timeline["timeline"]] == ["matched", "matched", "matched"]
 
 
+def test_ending_hook_first_use_is_primary_not_callback():
+    script = base_script(
+        [],
+        {
+            "id": "n-ending",
+            "type": "ending_hook",
+            "text": "第一次使用这个镜头",
+            "source_story_block_ids": ["b001"],
+            "source_ranges": [],
+            "confidence": 0.7,
+            "reuse_policy": "callback",
+        },
+    )
+
+    timeline = generate_timeline(base_story(), script, subtitles())
+
+    assert timeline["timeline"][0]["segment_type"] == "ending_hook"
+    assert timeline["timeline"][0]["reuse_policy"] == "primary"
+
+
+def test_partial_match_keeps_valid_ranges_without_fabricating_invalid_block():
+    story = base_story(
+        [
+            story_block("b001", "00:00:01.000", "00:00:02.000", 0.7),
+            story_block("b002", "00:00:09.000", "00:00:08.000", 0.9),
+        ]
+    )
+    script = base_script([narration_segment("n001", ["b001", "b002"])])
+
+    timeline = generate_timeline(story, script, subtitles())
+
+    item = timeline["timeline"][0]
+    assert item["status"] == "partial"
+    assert item["reuse_policy"] == "primary"
+    assert item["confidence"] <= 0.5
+    assert item["video_ranges"] == [
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:02.000",
+            "source_story_block_id": "b001",
+            "priority": 1,
+        }
+    ]
+
+
+def test_repeated_block_ids_in_same_segment_are_deduped_before_sorting():
+    script = base_script([narration_segment("n001", ["b001", "b001", "b002"])])
+
+    timeline = generate_timeline(base_story(), script, subtitles())
+
+    ranges = timeline["timeline"][0]["video_ranges"]
+    assert [item["source_story_block_id"] for item in ranges] == ["b001", "b002"]
+    assert len({item["source_story_block_id"] for item in ranges}) == len(ranges)
+    assert [item["priority"] for item in ranges] == [1, 2]
+
+
 def test_out_of_order_ranges_are_sorted_in_output():
     story = base_story(
         [

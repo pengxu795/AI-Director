@@ -125,7 +125,7 @@ def _timeline_item_for_segment(
     segment_id = str(segment.get("id", ""))
     segment_type = str(segment.get("type", "development"))
     text = str(segment.get("text", ""))
-    source_ids = [str(block_id) for block_id in _safe_scalar_list(segment.get("source_story_block_ids")) if str(block_id)]
+    source_ids = _unique_block_ids(segment.get("source_story_block_ids"))
 
     if not source_ids:
         return _unresolved_item(index, segment_id, segment_type, text, "missing_source_story_block_ids"), (
@@ -268,7 +268,7 @@ def _reuse_policy_for_segment(
     matched_ids: set[str],
     used_block_ids: set[str],
 ) -> str:
-    if str(segment.get("reuse_policy", "")) == "callback" or str(segment.get("type", "")) == "ending_hook":
+    if str(segment.get("type", "")) == "ending_hook" and matched_ids & used_block_ids:
         return "callback"
     if matched_ids & used_block_ids:
         return "duplicate"
@@ -303,3 +303,15 @@ def _safe_scalar_list(value: Any) -> list[Any]:
     if not isinstance(value, list):
         return []
     return value
+
+
+def _unique_block_ids(value: Any) -> list[str]:
+    block_ids = []
+    seen = set()
+    for block_id in _safe_scalar_list(value):
+        normalized = str(block_id)
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        block_ids.append(normalized)
+    return block_ids
