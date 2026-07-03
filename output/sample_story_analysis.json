@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "subtitle_count": 3,
+    "start": "00:02:15.200",
+    "end": "00:02:26.500"
+  },
+  "characters": [
+    {
+      "name": "女主",
+      "mentions": 1
+    },
+    {
+      "name": "妈妈",
+      "mentions": 1
+    },
+    {
+      "name": "孩子",
+      "mentions": 1
+    },
+    {
+      "name": "女儿",
+      "mentions": 1
+    }
+  ],
+  "relationships": [
+    {
+      "type": "亲子关系被否定",
+      "evidence": "你不是我的亲生女儿",
+      "start": "00:02:15.200",
+      "end": "00:02:18.800"
+    },
+    {
+      "type": "存在长期隐瞒",
+      "evidence": "女主愣住了，她终于明白自己被隐瞒多年",
+      "start": "00:02:19.100",
+      "end": "00:02:22.400"
+    },
+    {
+      "type": "亲子身份产生关联",
+      "evidence": "可门外的孩子，却喊了她一声妈妈",
+      "start": "00:02:23.000",
+      "end": "00:02:26.500"
+    }
+  ],
+  "main_plot": "剧情从“你不是我的亲生女儿”开始，以“你不是我的亲生女儿”制造核心矛盾，并通过“可门外的孩子，却喊了她一声妈妈”推进反转。",
+  "conflicts": [
+    {
+      "type": "conflict",
+      "text": "你不是我的亲生女儿",
+      "start": "00:02:15.200",
+      "end": "00:02:18.800",
+      "reason": "不是"
+    },
+    {
+      "type": "conflict",
+      "text": "女主愣住了，她终于明白自己被隐瞒多年",
+      "start": "00:02:19.100",
+      "end": "00:02:22.400",
+      "reason": "隐瞒"
+    }
+  ],
+  "satisfying_points": [
+    {
+      "type": "satisfying_point",
+      "text": "女主愣住了，她终于明白自己被隐瞒多年",
+      "start": "00:02:19.100",
+      "end": "00:02:22.400",
+      "reason": "终于"
+    }
+  ],
+  "twists": [
+    {
+      "type": "twist",
+      "text": "可门外的孩子，却喊了她一声妈妈",
+      "start": "00:02:23.000",
+      "end": "00:02:26.500",
+      "reason": "可、却"
+    }
+  ],
+  "climax": {
+    "text": "可门外的孩子，却喊了她一声妈妈",
+    "start": "00:02:23.000",
+    "end": "00:02:26.500",
+    "reason": "keyword_intensity"
+  },
+  "spoiler_warnings": [
+    {
+      "type": "spoiler_warning",
+      "text": "你不是我的亲生女儿",
+      "start": "00:02:15.200",
+      "end": "00:02:18.800",
+      "reason": "亲生"
+    }
+  ]
+}
