@@ -420,6 +420,77 @@ def test_character_aliases_do_not_reuse_independent_character_names():
         assert not (aliases & names), character
 
 
+def test_character_aliases_merge_mother_synonyms_into_one_entity():
+    subtitles = [
+        {"start": "00:00:01.000", "end": "00:00:02.000", "text": "妈妈看着女主"},
+        {"start": "00:00:02.100", "end": "00:00:03.000", "text": "母亲终于说出真相"},
+    ]
+
+    analysis = analyze_story(subtitles)
+    mother_characters = [
+        character
+        for character in analysis["characters"]
+        if character["name"] in {"妈妈", "母亲"}
+    ]
+
+    assert mother_characters == [
+        {
+            "id": "c001",
+            "name": "妈妈",
+            "aliases": ["妈妈", "母亲"],
+            "role": "supporting",
+            "mentions": 2,
+        }
+    ]
+    assert _aliases_are_unique_across_characters(analysis["characters"])
+
+
+def test_character_aliases_merge_father_synonyms_into_one_entity():
+    subtitles = [
+        {"start": "00:00:01.000", "end": "00:00:02.000", "text": "爸爸赶到现场"},
+        {"start": "00:00:02.100", "end": "00:00:03.000", "text": "父亲没有解释"},
+    ]
+
+    analysis = analyze_story(subtitles)
+    father_characters = [
+        character
+        for character in analysis["characters"]
+        if character["name"] in {"爸爸", "父亲"}
+    ]
+
+    assert father_characters == [
+        {
+            "id": "c001",
+            "name": "爸爸",
+            "aliases": ["爸爸", "父亲"],
+            "role": "supporting",
+            "mentions": 2,
+        }
+    ]
+    assert _aliases_are_unique_across_characters(analysis["characters"])
+
+
+def test_main_plot_uses_time_ordered_subtitles():
+    subtitles = [
+        {
+            "start": "00:00:10.000",
+            "end": "00:00:12.000",
+            "text": "可孩子突然出现",
+        },
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:02.000",
+            "text": "女主回到家",
+        },
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["main_plot"].startswith("剧情从“女主回到家”开始")
+    assert "核心矛盾" not in analysis["main_plot"]
+    assert "通过“可孩子突然出现”推进反转" in analysis["main_plot"]
+
+
 def test_load_subtitles_json_reads_sample_output():
     subtitles = load_subtitles_json("output/sample_subtitles.json")
 
@@ -516,3 +587,13 @@ def _is_valid_range(source_range):
         and TIMECODE_PATTERN.match(end)
         and start <= end
     )
+
+
+def _aliases_are_unique_across_characters(characters):
+    seen = set()
+    for character in characters:
+        for alias in character["aliases"]:
+            if alias in seen:
+                return False
+            seen.add(alias)
+    return True

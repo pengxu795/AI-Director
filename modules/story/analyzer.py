@@ -210,9 +210,14 @@ def _build_main_plot(
 
     first = subtitles[0]["text"]
     last = subtitles[-1]["text"]
-    conflict_text = conflicts[0]["text"] if conflicts else first
     twist_text = twists[-1]["text"] if twists else last
 
+    if not conflicts:
+        if twists:
+            return f"剧情从“{first}”开始，并通过“{twist_text}”推进反转。"
+        return f"剧情围绕“{first}”展开，并推动人物关系继续升级。"
+
+    conflict_text = conflicts[0]["text"]
     if conflict_text == twist_text:
         return f"剧情围绕“{conflict_text}”展开，并推动人物关系继续升级。"
     return f"剧情从“{first}”开始，以“{conflict_text}”制造核心矛盾，并通过“{twist_text}”推进反转。"

@@ -36,6 +36,11 @@ ROLE_ALIASES = {
     "总裁": ("总裁",),
 }
 
+CANONICAL_CHARACTER_NAMES = {
+    "母亲": "妈妈",
+    "父亲": "爸爸",
+}
+
 ROLE_TYPES = {
     "女主": "protagonist",
     "男主": "protagonist",
@@ -75,7 +80,7 @@ def run_story_pipeline(subtitles: list[dict[str, str]]) -> dict[str, Any]:
         },
         "characters": characters,
         "relationships": relationships,
-        "main_plot": _build_main_plot(cleaned, conflicts, twists),
+        "main_plot": _build_main_plot(story_ordered, conflicts, twists),
         "episodes": episodes,
         "story_blocks": story_blocks,
         "scenes": scenes,
@@ -94,7 +99,8 @@ def extract_characters(subtitles: list[dict[str, str]]) -> list[dict[str, Any]]:
         text = record["text"]
         for keyword in CHARACTER_KEYWORDS:
             if keyword in text:
-                counts[keyword] += text.count(keyword)
+                canonical_name = CANONICAL_CHARACTER_NAMES.get(keyword, keyword)
+                counts[canonical_name] += text.count(keyword)
 
     priority = {name: index for index, name in enumerate(CHARACTER_KEYWORDS)}
     ordered = sorted(
