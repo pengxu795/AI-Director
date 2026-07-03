@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Hardened Module 3 traceability during Review.
+- Added `reuse_policy` to narration segments and ending hook.
+- Ensured title hooks and ending hook only use content that resolves to input `story_blocks`.
+- Added tests for unmapped twists, source-range mapping, traceable outputs, and ending hook callback reuse.
 - Added Module 3 phase 1 rule-based script generation.
 - Added script schema with `title_hooks`, `narration_segments`, `ending_hook`, and `metadata`.
 - Added script generation CLI and sample output.

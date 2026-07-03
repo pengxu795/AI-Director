@@ -82,6 +82,7 @@ def test_generate_script_outputs_stable_schema():
             "source_story_block_ids",
             "source_ranges",
             "confidence",
+            "reuse_policy",
         }
 
 
@@ -96,6 +97,7 @@ def test_generate_script_handles_empty_story_blocks():
         "source_story_block_ids": [],
         "source_ranges": [],
         "confidence": 0.0,
+        "reuse_policy": "callback",
     }
     assert script["metadata"]["source_story_block_count"] == 0
 
@@ -104,6 +106,15 @@ def test_generate_script_handles_conflict_without_twist():
     story = base_story_analysis()
     story["twists"] = []
     story["story_blocks"] = [story_block("b001", "conflict", "女主被赶出家门")]
+    story["conflicts"] = [
+        {
+            "type": "conflict",
+            "text": "女主被赶出家门",
+            "source_range": {"start": "00:00:01.000", "end": "00:00:02.000"},
+            "confidence": 0.7,
+        }
+    ]
+    story["climax"] = {}
 
     script = generate_script(story)
 
@@ -146,6 +157,25 @@ def test_every_narration_segment_traces_to_story_blocks():
         assert set(segment["source_story_block_ids"]) <= valid_ids
 
 
+def test_all_non_empty_script_outputs_trace_to_story_blocks():
+    story = base_story_analysis()
+    script = generate_script(story)
+    blocks_by_id = {block["id"]: block for block in story["story_blocks"]}
+
+    outputs = script["title_hooks"] + script["narration_segments"] + [script["ending_hook"]]
+    for item in outputs:
+        if not item["text"]:
+            continue
+        assert item["source_story_block_ids"]
+        assert set(item["source_story_block_ids"]) <= set(blocks_by_id)
+        expected_ranges = [
+            blocks_by_id[block_id]["source_range"]
+            for block_id in item["source_story_block_ids"]
+            if blocks_by_id[block_id]["source_range"]["start"]
+        ]
+        assert item["source_ranges"] == expected_ranges
+
+
 def test_generate_script_output_is_json_serializable():
     encoded = json.dumps(generate_script(base_story_analysis()), ensure_ascii=False)
     decoded = json.loads(encoded)
@@ -161,8 +191,67 @@ def test_ending_hook_does_not_repeat_climax_as_full_ending():
     assert "秘密" in script["ending_hook"]["text"] or "答案" in script["ending_hook"]["text"]
 
 
+def test_unmapped_twist_does_not_generate_confident_hooks():
+    story = base_story_analysis()
+    story["story_blocks"] = [story_block("b001", "development", "女主回到家")]
+    story["twists"] = [
+        {
+            "type": "twist",
+            "text": "这是无法映射的反转",
+            "source_range": {"start": "00:09:01.000", "end": "00:09:02.000"},
+            "confidence": 0.9,
+        }
+    ]
+    story["conflicts"] = []
+    story["climax"] = {}
+
+    script = generate_script(story)
+
+    assert all("无法映射" not in hook["text"] for hook in script["title_hooks"])
+    assert script["ending_hook"] == {
+        "id": "n-ending",
+        "type": "ending_hook",
+        "text": "",
+        "source_story_block_ids": [],
+        "source_ranges": [],
+        "confidence": 0.0,
+        "reuse_policy": "callback",
+    }
+
+
+def test_source_range_match_maps_external_moment_to_story_block():
+    story = base_story_analysis()
+    story["story_blocks"] = [
+        story_block("b009", "twist", "孩子叫出了那个称呼", "00:00:09.000", "00:00:10.000", 0.6)
+    ]
+    story["twists"] = [
+        {
+            "type": "twist",
+            "text": "外部文案和 block 不一样",
+            "source_range": {"start": "00:00:09.000", "end": "00:00:10.000"},
+            "confidence": 0.95,
+        }
+    ]
+    story["conflicts"] = []
+    story["climax"] = {}
+
+    script = generate_script(story)
+
+    assert script["title_hooks"][0]["source_story_block_ids"] == ["b009"]
+    assert script["title_hooks"][0]["source_ranges"] == [
+        {"start": "00:00:09.000", "end": "00:00:10.000"}
+    ]
+    assert script["title_hooks"][0]["confidence"] == 0.6
+
+
+def test_ending_hook_reuses_climax_as_callback():
+    script = generate_script(base_story_analysis())
+
+    assert script["ending_hook"]["source_story_block_ids"] == ["b003"]
+    assert script["ending_hook"]["reuse_policy"] == "callback"
+
+
 def test_load_story_analysis_json_reads_sample_output():
     story = load_story_analysis_json("output/sample_story_analysis.json")
 
     assert story["schema_version"] == "0.1"
-

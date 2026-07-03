@@ -13,7 +13,8 @@
           "end": "00:02:26.500"
         }
       ],
-      "confidence": 0.75
+      "confidence": 0.75,
+      "reuse_policy": "primary"
     },
     {
       "text": "她怎么也没想到，你不是我的亲生女儿",
@@ -26,7 +27,8 @@
           "end": "00:02:18.800"
         }
       ],
-      "confidence": 0.65
+      "confidence": 0.65,
+      "reuse_policy": "primary"
     },
     {
       "text": "她怎么也没想到，女主愣住了，她终于明白自己被隐瞒多年",
@@ -39,7 +41,8 @@
           "end": "00:02:22.400"
         }
       ],
-      "confidence": 0.65
+      "confidence": 0.65,
+      "reuse_policy": "primary"
     }
   ],
   "narration_segments": [
@@ -56,7 +59,8 @@
           "end": "00:02:26.500"
         }
       ],
-      "confidence": 0.75
+      "confidence": 0.75,
+      "reuse_policy": "primary"
     },
     {
       "id": "n002",
@@ -71,7 +75,8 @@
           "end": "00:02:18.800"
         }
       ],
-      "confidence": 0.65
+      "confidence": 0.65,
+      "reuse_policy": "primary"
     },
     {
       "id": "n003",
@@ -86,7 +91,8 @@
           "end": "00:02:18.800"
         }
       ],
-      "confidence": 0.65
+      "confidence": 0.65,
+      "reuse_policy": "primary"
     },
     {
       "id": "n004",
@@ -101,7 +107,8 @@
           "end": "00:02:22.400"
         }
       ],
-      "confidence": 0.65
+      "confidence": 0.65,
+      "reuse_policy": "primary"
     },
     {
       "id": "n005",
@@ -116,7 +123,8 @@
           "end": "00:02:26.500"
         }
       ],
-      "confidence": 0.75
+      "confidence": 0.75,
+      "reuse_policy": "primary"
     }
   ],
   "ending_hook": {
@@ -132,7 +140,8 @@
         "end": "00:02:26.500"
       }
     ],
-    "confidence": 0.75
+    "confidence": 0.75,
+    "reuse_policy": "callback"
   },
   "metadata": {
     "generator": "rule_based",

@@ -91,12 +91,12 @@ def _build_narration_segments(
     segments: list[dict[str, Any]] = []
     hook_block = _pick_hook_block(story_blocks)
     if hook_block:
-        segments.append(_segment(len(segments) + 1, "hook", _hook_text(hook_block), [hook_block]))
+        segments.append(_segment(len(segments) + 1, "hook", _hook_text(hook_block), [hook_block], "primary"))
 
     setup_text = _setup_text(characters, relationships)
     setup_blocks = _first_blocks(story_blocks, 1)
     if setup_text and setup_blocks:
-        segments.append(_segment(len(segments) + 1, "setup", setup_text, setup_blocks))
+        segments.append(_segment(len(segments) + 1, "setup", setup_text, setup_blocks, "primary"))
 
     for block in story_blocks:
         segment_type = _segment_type_for_block(block)
@@ -112,7 +112,7 @@ def _build_narration_segments(
             text = str(block.get("summary", ""))
 
         if text:
-            segments.append(_segment(len(segments) + 1, segment_type, text, [block]))
+            segments.append(_segment(len(segments) + 1, segment_type, text, [block], "primary"))
 
     return _dedupe_segments(segments)
 
@@ -126,14 +126,18 @@ def _build_title_hooks(
     candidates = []
     for source in (twists, conflicts, [climax] if climax.get("text") else [], story_blocks):
         for item in source:
-            text = str(item.get("text") or item.get("summary") or "")
+            block = _resolve_story_block(item, story_blocks)
+            if not block:
+                continue
+            text = str(item.get("text") or item.get("summary") or block.get("summary") or "")
             if text:
                 candidates.append(
                     {
                         "text": f"她怎么也没想到，{text}",
-                        "source_story_block_ids": _source_ids_for_item(item, story_blocks),
-                        "source_ranges": _source_ranges_for_items([item]),
-                        "confidence": _confidence_for_items([item]),
+                        "source_story_block_ids": [str(block["id"])],
+                        "source_ranges": _source_ranges_for_items([block]),
+                        "confidence": _confidence_for_blocks([block]),
+                        "reuse_policy": "primary",
                     }
                 )
             if len(candidates) >= 3:
@@ -147,11 +151,27 @@ def _build_ending_hook(
     conflicts: list[dict[str, Any]],
     climax: dict[str, Any],
 ) -> dict[str, Any]:
-    source = _last_non_empty(twists) or _last_non_empty(story_blocks) or _last_non_empty(conflicts)
-    if not source:
-        return _empty_ending_hook()
+    for sources in (twists, [climax] if climax.get("text") else [], conflicts):
+        source = _last_non_empty(sources)
+        if not source:
+            continue
+        block = _resolve_story_block(source, story_blocks)
+        if not block:
+            return _empty_ending_hook()
+        return _ending_hook_from_source(source, block, climax)
 
-    text = str(source.get("summary") or source.get("text") or "")
+    block = _last_non_empty(story_blocks)
+    if not block:
+        return _empty_ending_hook()
+    return _ending_hook_from_source(block, block, climax)
+
+
+def _ending_hook_from_source(
+    source: dict[str, Any],
+    block: dict[str, Any],
+    climax: dict[str, Any],
+) -> dict[str, Any]:
+    text = str(source.get("summary") or source.get("text") or block.get("summary") or "")
     if climax.get("text") and text == climax.get("text"):
         text = f"而这声称呼背后，还藏着更大的秘密。"
     else:
@@ -161,9 +181,10 @@ def _build_ending_hook(
         "id": "n-ending",
         "type": "ending_hook",
         "text": text,
-        "source_story_block_ids": _source_ids_for_item(source, story_blocks),
-        "source_ranges": _source_ranges_for_items([source]),
-        "confidence": _confidence_for_items([source]),
+        "source_story_block_ids": [str(block["id"])],
+        "source_ranges": _source_ranges_for_items([block]),
+        "confidence": _confidence_for_blocks([block]),
+        "reuse_policy": "callback",
     }
 
 
@@ -175,17 +196,25 @@ def _empty_ending_hook() -> dict[str, Any]:
         "source_story_block_ids": [],
         "source_ranges": [],
         "confidence": 0.0,
+        "reuse_policy": "callback",
     }
 
 
-def _segment(index: int, segment_type: str, text: str, blocks: list[dict[str, Any]]) -> dict[str, Any]:
+def _segment(
+    index: int,
+    segment_type: str,
+    text: str,
+    blocks: list[dict[str, Any]],
+    reuse_policy: str,
+) -> dict[str, Any]:
     return {
         "id": f"n{index:03d}",
         "type": segment_type,
         "text": text,
         "source_story_block_ids": [str(block.get("id", "")) for block in blocks if block.get("id")],
         "source_ranges": _source_ranges_for_items(blocks),
-        "confidence": _confidence_for_items(blocks),
+        "confidence": _confidence_for_blocks(blocks),
+        "reuse_policy": reuse_policy,
     }
 
 
@@ -226,12 +255,19 @@ def _segment_type_for_block(block: dict[str, Any]) -> str:
 
 def _dedupe_segments(segments: list[dict[str, Any]]) -> list[dict[str, Any]]:
     deduped: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
+    seen_exact: set[tuple[str, str, tuple[str, ...]]] = set()
+    seen_primary_use: set[tuple[str, tuple[str, ...]]] = set()
     for segment in segments:
-        key = (segment["type"], segment["text"])
-        if key in seen:
+        source_ids = tuple(segment["source_story_block_ids"])
+        exact_key = (segment["type"], segment["text"], source_ids)
+        primary_key = (segment["type"], source_ids)
+        if exact_key in seen_exact:
             continue
-        seen.add(key)
+        if segment["reuse_policy"] == "primary" and primary_key in seen_primary_use:
+            segment["reuse_policy"] = "duplicate"
+        seen_exact.add(exact_key)
+        if segment["reuse_policy"] == "primary":
+            seen_primary_use.add(primary_key)
         segment["id"] = f"n{len(deduped) + 1:03d}"
         deduped.append(segment)
     return deduped
@@ -246,30 +282,42 @@ def _source_ranges_for_items(items: list[dict[str, Any]]) -> list[dict[str, str]
     return ranges
 
 
-def _confidence_for_items(items: list[dict[str, Any]]) -> float:
-    if not items:
+def _confidence_for_blocks(blocks: list[dict[str, Any]]) -> float:
+    if not blocks:
         return 0.0
     confidences = []
-    for item in items:
+    for block in blocks:
         try:
-            confidences.append(float(item.get("confidence", 0.0)))
+            confidences.append(float(block.get("confidence", 0.0)))
         except (TypeError, ValueError):
             confidences.append(0.0)
     if not confidences:
         return 0.0
-    if not any(_source_ranges_for_items([item]) for item in items):
+    if not all(block.get("id") for block in blocks):
+        return 0.0
+    if not any(_source_ranges_for_items([block]) for block in blocks):
         return min(max(confidences), 0.2)
     return round(sum(confidences) / len(confidences), 2)
 
 
-def _source_ids_for_item(item: dict[str, Any], story_blocks: list[dict[str, Any]]) -> list[str]:
-    if item.get("id"):
-        return [str(item["id"])]
+def _resolve_story_block(item: dict[str, Any], story_blocks: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not isinstance(item, dict):
+        return None
+    item_id = item.get("id")
+    if item_id:
+        for block in story_blocks:
+            if item_id == block.get("id"):
+                return block
+    source_range = item.get("source_range")
+    if isinstance(source_range, dict) and source_range.get("start") and source_range.get("end"):
+        for block in story_blocks:
+            if block.get("source_range") == source_range:
+                return block
     text = item.get("text") or item.get("summary")
     for block in story_blocks:
         if text and text == block.get("summary"):
-            return [str(block.get("id", ""))]
-    return []
+            return block
+    return None
 
 
 def _valid_ranges_from_block(block: dict[str, Any]) -> list[dict[str, str]]:

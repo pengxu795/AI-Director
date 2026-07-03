@@ -138,6 +138,9 @@ Prompt 模板统一放在 `prompts/`，避免写死在 Python 代码里：
 - `story_blocks` 是主要输入桥
 - 每个 `narration_segments` 必须保留 `source_story_block_ids`
 - 每个 `narration_segments` 必须保留 `source_ranges`
+- 每个 `narration_segments` 和 `ending_hook` 必须保留 `reuse_policy`
+- 非空 `title_hooks`、`narration_segments`、`ending_hook` 必须可追溯到输入 `story_blocks`
+- `source_ranges` 必须来自对应 `story_blocks`
 - 无可靠来源时返回空段或低 `confidence`，不编造剧情
 - 当前不做镜头匹配，不生成时间线
 

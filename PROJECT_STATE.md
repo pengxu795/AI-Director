@@ -3,7 +3,7 @@
 ## Current Status
 
 - Current phase: Module 3 Review
-- Latest completed work: Module 3 rule-based script generation phase 1
+- Latest completed work: Module 3 traceability hardening
 - Next module: Module 4 Shot Matching
 - Gate: Do not start Module 4 until Module 3 Review passes
 
@@ -17,11 +17,13 @@
 - Module 2 Review fix: reject out-of-range minute and second values in timecodes
 - Module 2 Review fix: canonical parent aliases and time-ordered `main_plot`
 - Module 3 phase 1: rule-based script generation schema and traceability
+- Module 3 Review fix: title hooks, narration segments, and ending hook must trace to `story_blocks`
 
 ## Pending Review
 
 - Review Module 3 script schema.
 - Confirm every narration segment traces back to Module 2 story blocks.
+- Confirm title hooks and ending hook trace back to Module 2 story blocks.
 - Confirm Module 3 should proceed before Module 4 shot matching.
 
 ## Development Rule

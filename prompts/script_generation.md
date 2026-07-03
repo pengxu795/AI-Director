@@ -12,6 +12,7 @@ Output:
 - Return JSON only.
 - Follow `schema_version: "1.0"`.
 - Preserve traceability to `story_blocks`.
+- Do not emit non-empty text unless it can be traced to `story_blocks`.
 - A future polished script can target 650-750 Chinese characters, but the current contract prioritizes structure and provenance.
 - Start with a 3-second hook.
 - Add a reversal every 8-12 seconds.
@@ -35,3 +36,4 @@ Required fields for each narration segment:
 - `source_story_block_ids`
 - `source_ranges`
 - `confidence`
+- `reuse_policy`
