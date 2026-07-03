@@ -53,6 +53,7 @@ def run_story_pipeline(subtitles: list[dict[str, str]]) -> dict[str, Any]:
     climax = _pick_climax(cleaned)
     spoiler_warnings = _extract_moments(cleaned, SPOILER_KEYWORDS, "spoiler_warning")
     story_blocks = build_story_blocks(cleaned, conflicts, twists, climax)
+    episodes = build_episodes(cleaned, scenes, story_blocks)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -60,12 +61,14 @@ def run_story_pipeline(subtitles: list[dict[str, str]]) -> dict[str, Any]:
             "subtitle_count": len(cleaned),
             "scene_count": len(scenes),
             "story_block_count": len(story_blocks),
+            "episode_count": len(episodes),
             "start": cleaned[0]["start"] if cleaned else "",
             "end": cleaned[-1]["end"] if cleaned else "",
         },
         "characters": characters,
         "relationships": relationships,
         "main_plot": _build_main_plot(cleaned, conflicts, twists),
+        "episodes": episodes,
         "story_blocks": story_blocks,
         "scenes": scenes,
         "conflicts": conflicts,
@@ -132,9 +135,9 @@ def split_scenes(subtitles: list[dict[str, str]]) -> list[dict[str, Any]]:
 
 def build_story_blocks(
     subtitles: list[dict[str, str]],
-    conflicts: list[dict[str, str]],
-    twists: list[dict[str, str]],
-    climax: dict[str, str],
+    conflicts: list[dict[str, Any]],
+    twists: list[dict[str, Any]],
+    climax: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """Build compact story blocks that Module 3 can turn into narration."""
     blocks: list[dict[str, Any]] = []
@@ -160,6 +163,32 @@ def build_story_blocks(
     return blocks
 
 
+def build_episodes(
+    subtitles: list[dict[str, str]],
+    scenes: list[dict[str, Any]],
+    story_blocks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Build episode containers for future multi-episode workflows."""
+    if not subtitles:
+        return []
+
+    return [
+        {
+            "id": "e001",
+            "title": "Episode 1",
+            "start": subtitles[0]["start"],
+            "end": subtitles[-1]["end"],
+            "source_range": {
+                "start": subtitles[0]["start"],
+                "end": subtitles[-1]["end"],
+            },
+            "scene_ids": [scene["id"] for scene in scenes],
+            "story_block_ids": [block["id"] for block in story_blocks],
+            "confidence": 0.5,
+        }
+    ]
+
+
 def _detect_scene_type(text: str, index: int) -> str:
     if any(keyword in text for keyword in TWIST_KEYWORDS):
         return "twist"
@@ -178,8 +207,13 @@ def _build_scene(scene_id: int, scene_type: str, records: list[dict[str, str]]) 
         "type": scene_type,
         "start": records[0]["start"],
         "end": records[-1]["end"],
+        "source_range": {
+            "start": records[0]["start"],
+            "end": records[-1]["end"],
+        },
         "summary": " ".join(record["text"] for record in records),
         "subtitle_count": len(records),
+        "confidence": 0.55,
     }
 
 
@@ -193,8 +227,16 @@ def _story_block(
         "id": f"b{block_id:03d}",
         "type": block_type,
         "summary": record["text"],
+        "evidence": record.get("evidence", record["text"]),
         "start": record["start"],
         "end": record["end"],
+        "source_range": record.get(
+            "source_range",
+            {
+                "start": record["start"],
+                "end": record["end"],
+            },
+        ),
         "purpose": purpose,
+        "confidence": record.get("confidence", 0.5),
     }
-

@@ -80,8 +80,8 @@ def _normalize_record(record: dict[str, str]) -> dict[str, str]:
     }
 
 
-def _extract_relationships(subtitles: list[dict[str, str]]) -> list[dict[str, str]]:
-    relationships: list[dict[str, str]] = []
+def _extract_relationships(subtitles: list[dict[str, str]]) -> list[dict[str, Any]]:
+    relationships: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
     for record in subtitles:
         for pattern, relation_type in RELATIONSHIP_PATTERNS:
@@ -96,6 +96,8 @@ def _extract_relationships(subtitles: list[dict[str, str]]) -> list[dict[str, st
                         "evidence": record["text"],
                         "start": record["start"],
                         "end": record["end"],
+                        "source_range": _source_range(record),
+                        "confidence": 0.7,
                     }
                 )
     return relationships
@@ -105,8 +107,8 @@ def _extract_moments(
     subtitles: list[dict[str, str]],
     keywords: tuple[str, ...],
     moment_type: str,
-) -> list[dict[str, str]]:
-    moments: list[dict[str, str]] = []
+) -> list[dict[str, Any]]:
+    moments: list[dict[str, Any]] = []
     for record in subtitles:
         matched = [keyword for keyword in keywords if keyword in record["text"]]
         if matched:
@@ -114,17 +116,28 @@ def _extract_moments(
                 {
                     "type": moment_type,
                     "text": record["text"],
+                    "evidence": record["text"],
                     "start": record["start"],
                     "end": record["end"],
+                    "source_range": _source_range(record),
+                    "confidence": _keyword_confidence(matched),
                     "reason": "、".join(matched),
                 }
             )
     return moments
 
 
-def _pick_climax(subtitles: list[dict[str, str]]) -> dict[str, str]:
+def _pick_climax(subtitles: list[dict[str, str]]) -> dict[str, Any]:
     if not subtitles:
-        return {"text": "", "start": "", "end": "", "reason": ""}
+        return {
+            "text": "",
+            "evidence": "",
+            "start": "",
+            "end": "",
+            "source_range": {"start": "", "end": ""},
+            "confidence": 0.0,
+            "reason": "",
+        }
 
     scored = []
     for index, record in enumerate(subtitles):
@@ -136,10 +149,21 @@ def _pick_climax(subtitles: list[dict[str, str]]) -> dict[str, str]:
     reason = "keyword_intensity" if keyword_score else "latest_story_beat"
     return {
         "text": record["text"],
+        "evidence": record["text"],
         "start": record["start"],
         "end": record["end"],
+        "source_range": _source_range(record),
+        "confidence": 0.75 if keyword_score else 0.45,
         "reason": reason,
     }
+
+
+def _source_range(record: dict[str, str]) -> dict[str, str]:
+    return {"start": record["start"], "end": record["end"]}
+
+
+def _keyword_confidence(matched_keywords: list[str]) -> float:
+    return min(0.95, 0.55 + len(matched_keywords) * 0.1)
 
 
 def _build_main_plot(

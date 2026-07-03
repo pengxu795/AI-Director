@@ -80,6 +80,7 @@ python3 -m venv .venv
 - `characters`
 - `relationships`
 - `main_plot`
+- `episodes`
 - `story_blocks`
 - `scenes`
 - `conflicts`
@@ -87,6 +88,14 @@ python3 -m venv .venv
 - `twists`
 - `climax`
 - `spoiler_warnings`
+
+关键约束：
+
+- 顶层必须包含 `schema_version`
+- 剧情节点必须保留 `evidence`
+- 剧情节点必须保留 `source_range`
+- 规则引擎判断必须保留 `confidence`
+- `story_blocks` 是 Module 3 解说生成的主要输入
 
 运行示例：
 

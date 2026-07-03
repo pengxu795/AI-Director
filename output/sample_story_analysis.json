@@ -4,6 +4,7 @@
     "subtitle_count": 3,
     "scene_count": 2,
     "story_block_count": 3,
+    "episode_count": 1,
     "start": "00:02:15.200",
     "end": "00:02:26.500"
   },
@@ -54,46 +55,101 @@
       "type": "亲子关系被否定",
       "evidence": "你不是我的亲生女儿",
       "start": "00:02:15.200",
-      "end": "00:02:18.800"
+      "end": "00:02:18.800",
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800"
+      },
+      "confidence": 0.7
     },
     {
       "type": "存在长期隐瞒",
       "evidence": "女主愣住了，她终于明白自己被隐瞒多年",
       "start": "00:02:19.100",
-      "end": "00:02:22.400"
+      "end": "00:02:22.400",
+      "source_range": {
+        "start": "00:02:19.100",
+        "end": "00:02:22.400"
+      },
+      "confidence": 0.7
     },
     {
       "type": "亲子身份产生关联",
       "evidence": "可门外的孩子，却喊了她一声妈妈",
       "start": "00:02:23.000",
-      "end": "00:02:26.500"
+      "end": "00:02:26.500",
+      "source_range": {
+        "start": "00:02:23.000",
+        "end": "00:02:26.500"
+      },
+      "confidence": 0.7
     }
   ],
   "main_plot": "剧情从“你不是我的亲生女儿”开始，以“你不是我的亲生女儿”制造核心矛盾，并通过“可门外的孩子，却喊了她一声妈妈”推进反转。",
+  "episodes": [
+    {
+      "id": "e001",
+      "title": "Episode 1",
+      "start": "00:02:15.200",
+      "end": "00:02:26.500",
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:26.500"
+      },
+      "scene_ids": [
+        "s001",
+        "s002"
+      ],
+      "story_block_ids": [
+        "b001",
+        "b002",
+        "b003"
+      ],
+      "confidence": 0.5
+    }
+  ],
   "story_blocks": [
     {
       "id": "b001",
       "type": "opening",
       "summary": "你不是我的亲生女儿",
+      "evidence": "你不是我的亲生女儿",
       "start": "00:02:15.200",
       "end": "00:02:18.800",
-      "purpose": "建立开场信息"
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800"
+      },
+      "purpose": "建立开场信息",
+      "confidence": 0.5
     },
     {
       "id": "b002",
       "type": "conflict",
       "summary": "你不是我的亲生女儿",
+      "evidence": "你不是我的亲生女儿",
       "start": "00:02:15.200",
       "end": "00:02:18.800",
-      "purpose": "抛出核心矛盾"
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800"
+      },
+      "purpose": "抛出核心矛盾",
+      "confidence": 0.65
     },
     {
       "id": "b003",
       "type": "climax",
       "summary": "可门外的孩子，却喊了她一声妈妈",
+      "evidence": "可门外的孩子，却喊了她一声妈妈",
       "start": "00:02:23.000",
       "end": "00:02:26.500",
-      "purpose": "推到剧情高潮"
+      "source_range": {
+        "start": "00:02:23.000",
+        "end": "00:02:26.500"
+      },
+      "purpose": "推到剧情高潮",
+      "confidence": 0.75
     }
   ],
   "scenes": [
@@ -102,31 +158,53 @@
       "type": "conflict",
       "start": "00:02:15.200",
       "end": "00:02:22.400",
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:22.400"
+      },
       "summary": "你不是我的亲生女儿 女主愣住了，她终于明白自己被隐瞒多年",
-      "subtitle_count": 2
+      "subtitle_count": 2,
+      "confidence": 0.55
     },
     {
       "id": "s002",
       "type": "twist",
       "start": "00:02:23.000",
       "end": "00:02:26.500",
+      "source_range": {
+        "start": "00:02:23.000",
+        "end": "00:02:26.500"
+      },
       "summary": "可门外的孩子，却喊了她一声妈妈",
-      "subtitle_count": 1
+      "subtitle_count": 1,
+      "confidence": 0.55
     }
   ],
   "conflicts": [
     {
       "type": "conflict",
       "text": "你不是我的亲生女儿",
+      "evidence": "你不是我的亲生女儿",
       "start": "00:02:15.200",
       "end": "00:02:18.800",
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800"
+      },
+      "confidence": 0.65,
       "reason": "不是"
     },
     {
       "type": "conflict",
       "text": "女主愣住了，她终于明白自己被隐瞒多年",
+      "evidence": "女主愣住了，她终于明白自己被隐瞒多年",
       "start": "00:02:19.100",
       "end": "00:02:22.400",
+      "source_range": {
+        "start": "00:02:19.100",
+        "end": "00:02:22.400"
+      },
+      "confidence": 0.65,
       "reason": "隐瞒"
     }
   ],
@@ -134,8 +212,14 @@
     {
       "type": "satisfying_point",
       "text": "女主愣住了，她终于明白自己被隐瞒多年",
+      "evidence": "女主愣住了，她终于明白自己被隐瞒多年",
       "start": "00:02:19.100",
       "end": "00:02:22.400",
+      "source_range": {
+        "start": "00:02:19.100",
+        "end": "00:02:22.400"
+      },
+      "confidence": 0.65,
       "reason": "终于"
     }
   ],
@@ -143,23 +227,41 @@
     {
       "type": "twist",
       "text": "可门外的孩子，却喊了她一声妈妈",
+      "evidence": "可门外的孩子，却喊了她一声妈妈",
       "start": "00:02:23.000",
       "end": "00:02:26.500",
+      "source_range": {
+        "start": "00:02:23.000",
+        "end": "00:02:26.500"
+      },
+      "confidence": 0.75,
       "reason": "可、却"
     }
   ],
   "climax": {
     "text": "可门外的孩子，却喊了她一声妈妈",
+    "evidence": "可门外的孩子，却喊了她一声妈妈",
     "start": "00:02:23.000",
     "end": "00:02:26.500",
+    "source_range": {
+      "start": "00:02:23.000",
+      "end": "00:02:26.500"
+    },
+    "confidence": 0.75,
     "reason": "keyword_intensity"
   },
   "spoiler_warnings": [
     {
       "type": "spoiler_warning",
       "text": "你不是我的亲生女儿",
+      "evidence": "你不是我的亲生女儿",
       "start": "00:02:15.200",
       "end": "00:02:18.800",
+      "source_range": {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800"
+      },
+      "confidence": 0.65,
       "reason": "亲生"
     }
   ]

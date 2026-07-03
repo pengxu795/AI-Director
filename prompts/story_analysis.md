@@ -21,6 +21,7 @@ Required top-level fields:
 - `characters`
 - `relationships`
 - `main_plot`
+- `episodes`
 - `story_blocks`
 - `scenes`
 - `conflicts`
@@ -29,3 +30,10 @@ Required top-level fields:
 - `climax`
 - `spoiler_warnings`
 
+Required fields for story moments:
+
+- `evidence`
+- `start`
+- `end`
+- `source_range`
+- `confidence`

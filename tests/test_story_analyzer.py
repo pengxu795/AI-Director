@@ -26,6 +26,7 @@ def test_analyze_story_outputs_module_2_sections():
     assert analysis["summary"]["subtitle_count"] == 3
     assert analysis["summary"]["scene_count"] == 2
     assert analysis["summary"]["story_block_count"] == 3
+    assert analysis["summary"]["episode_count"] == 1
     assert analysis["characters"] == [
         {
             "id": "c001",
@@ -57,39 +58,94 @@ def test_analyze_story_outputs_module_2_sections():
         },
     ]
     assert analysis["relationships"][0]["type"] == "亲子关系被否定"
+    assert analysis["relationships"][0]["evidence"] == "你不是我的亲生女儿"
+    assert analysis["relationships"][0]["source_range"] == {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800",
+    }
+    assert analysis["episodes"] == [
+        {
+            "id": "e001",
+            "title": "Episode 1",
+            "start": "00:02:15.200",
+            "end": "00:02:26.500",
+            "source_range": {
+                "start": "00:02:15.200",
+                "end": "00:02:26.500",
+            },
+            "scene_ids": ["s001", "s002"],
+            "story_block_ids": ["b001", "b002", "b003"],
+            "confidence": 0.5,
+        }
+    ]
     assert analysis["story_blocks"] == [
         {
             "id": "b001",
             "type": "opening",
             "summary": "你不是我的亲生女儿",
+            "evidence": "你不是我的亲生女儿",
             "start": "00:02:15.200",
             "end": "00:02:18.800",
+            "source_range": {
+                "start": "00:02:15.200",
+                "end": "00:02:18.800",
+            },
             "purpose": "建立开场信息",
+            "confidence": 0.5,
         },
         {
             "id": "b002",
             "type": "conflict",
             "summary": "你不是我的亲生女儿",
+            "evidence": "你不是我的亲生女儿",
             "start": "00:02:15.200",
             "end": "00:02:18.800",
+            "source_range": {
+                "start": "00:02:15.200",
+                "end": "00:02:18.800",
+            },
             "purpose": "抛出核心矛盾",
+            "confidence": 0.65,
         },
         {
             "id": "b003",
             "type": "climax",
             "summary": "可门外的孩子，却喊了她一声妈妈",
+            "evidence": "可门外的孩子，却喊了她一声妈妈",
             "start": "00:02:23.000",
             "end": "00:02:26.500",
+            "source_range": {
+                "start": "00:02:23.000",
+                "end": "00:02:26.500",
+            },
             "purpose": "推到剧情高潮",
+            "confidence": 0.75,
         },
     ]
     assert analysis["scenes"][0]["type"] == "conflict"
     assert analysis["scenes"][0]["subtitle_count"] == 2
+    assert analysis["scenes"][0]["source_range"] == {
+        "start": "00:02:15.200",
+        "end": "00:02:22.400",
+    }
     assert analysis["scenes"][1]["type"] == "twist"
     assert analysis["conflicts"][0]["text"] == "你不是我的亲生女儿"
+    assert analysis["conflicts"][0]["evidence"] == "你不是我的亲生女儿"
+    assert analysis["conflicts"][0]["source_range"] == {
+        "start": "00:02:15.200",
+        "end": "00:02:18.800",
+    }
+    assert analysis["conflicts"][0]["confidence"] == 0.65
     assert analysis["satisfying_points"][0]["reason"] == "终于"
+    assert analysis["satisfying_points"][0]["evidence"] == "女主愣住了，她终于明白自己被隐瞒多年"
     assert analysis["twists"][0]["text"] == "可门外的孩子，却喊了她一声妈妈"
+    assert analysis["twists"][0]["evidence"] == "可门外的孩子，却喊了她一声妈妈"
     assert analysis["climax"]["text"] == "可门外的孩子，却喊了她一声妈妈"
+    assert analysis["climax"]["evidence"] == "可门外的孩子，却喊了她一声妈妈"
+    assert analysis["climax"]["source_range"] == {
+        "start": "00:02:23.000",
+        "end": "00:02:26.500",
+    }
     assert analysis["spoiler_warnings"][0]["reason"] == "亲生"
     assert "核心矛盾" in analysis["main_plot"]
 
@@ -102,15 +158,25 @@ def test_analyze_story_handles_empty_subtitles():
         "subtitle_count": 0,
         "scene_count": 0,
         "story_block_count": 0,
+        "episode_count": 0,
         "start": "",
         "end": "",
     }
     assert analysis["characters"] == []
     assert analysis["relationships"] == []
     assert analysis["main_plot"] == ""
+    assert analysis["episodes"] == []
     assert analysis["story_blocks"] == []
     assert analysis["scenes"] == []
-    assert analysis["climax"] == {"text": "", "start": "", "end": "", "reason": ""}
+    assert analysis["climax"] == {
+        "text": "",
+        "evidence": "",
+        "start": "",
+        "end": "",
+        "source_range": {"start": "", "end": ""},
+        "confidence": 0.0,
+        "reason": "",
+    }
 
 
 def test_load_subtitles_json_reads_sample_output():
@@ -132,3 +198,28 @@ def test_split_scenes_groups_adjacent_subtitles_by_story_type():
 
     assert [scene["type"] for scene in scenes] == ["opening", "conflict", "twist"]
     assert scenes[1]["subtitle_count"] == 2
+
+
+def test_analyze_story_detects_twist_keywords_with_evidence_and_confidence():
+    subtitles = [
+        {"start": "00:00:01.000", "end": "00:00:02.000", "text": "女主准备离开"},
+        {"start": "00:00:02.100", "end": "00:00:03.000", "text": "没想到门外的人却是孩子"},
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["twists"] == [
+        {
+            "type": "twist",
+            "text": "没想到门外的人却是孩子",
+            "evidence": "没想到门外的人却是孩子",
+            "start": "00:00:02.100",
+            "end": "00:00:03.000",
+            "source_range": {
+                "start": "00:00:02.100",
+                "end": "00:00:03.000",
+            },
+            "confidence": 0.75,
+            "reason": "却、没想到",
+        }
+    ]
