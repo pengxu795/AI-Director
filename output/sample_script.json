@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.0",
+  "source_story_schema_version": "0.1",
+  "title_hooks": [
+    {
+      "text": "她怎么也没想到，可门外的孩子，却喊了她一声妈妈",
+      "source_story_block_ids": [
+        "b003"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:23.000",
+          "end": "00:02:26.500"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "text": "她怎么也没想到，你不是我的亲生女儿",
+      "source_story_block_ids": [
+        "b001"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:15.200",
+          "end": "00:02:18.800"
+        }
+      ],
+      "confidence": 0.65
+    },
+    {
+      "text": "她怎么也没想到，女主愣住了，她终于明白自己被隐瞒多年",
+      "source_story_block_ids": [
+        "b002"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:19.100",
+          "end": "00:02:22.400"
+        }
+      ],
+      "confidence": 0.65
+    }
+  ],
+  "narration_segments": [
+    {
+      "id": "n001",
+      "type": "hook",
+      "text": "她以为一切已经结束，没想到可门外的孩子，却喊了她一声妈妈",
+      "source_story_block_ids": [
+        "b003"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:23.000",
+          "end": "00:02:26.500"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "id": "n002",
+      "type": "setup",
+      "text": "故事里，女主、妈妈、孩子之间的关系并不简单，亲子关系被否定。",
+      "source_story_block_ids": [
+        "b001"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:15.200",
+          "end": "00:02:18.800"
+        }
+      ],
+      "confidence": 0.65
+    },
+    {
+      "id": "n003",
+      "type": "conflict",
+      "text": "真正的矛盾出现了：你不是我的亲生女儿",
+      "source_story_block_ids": [
+        "b001"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:15.200",
+          "end": "00:02:18.800"
+        }
+      ],
+      "confidence": 0.65
+    },
+    {
+      "id": "n004",
+      "type": "development",
+      "text": "女主愣住了，她终于明白自己被隐瞒多年",
+      "source_story_block_ids": [
+        "b002"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:19.100",
+          "end": "00:02:22.400"
+        }
+      ],
+      "confidence": 0.65
+    },
+    {
+      "id": "n005",
+      "type": "climax",
+      "text": "直到这里，可门外的孩子，却喊了她一声妈妈",
+      "source_story_block_ids": [
+        "b003"
+      ],
+      "source_ranges": [
+        {
+          "start": "00:02:23.000",
+          "end": "00:02:26.500"
+        }
+      ],
+      "confidence": 0.75
+    }
+  ],
+  "ending_hook": {
+    "id": "n-ending",
+    "type": "ending_hook",
+    "text": "而这声称呼背后，还藏着更大的秘密。",
+    "source_story_block_ids": [
+      "b003"
+    ],
+    "source_ranges": [
+      {
+        "start": "00:02:23.000",
+        "end": "00:02:26.500"
+      }
+    ],
+    "confidence": 0.75
+  },
+  "metadata": {
+    "generator": "rule_based",
+    "source_story_block_count": 3,
+    "narration_segment_count": 5,
+    "has_valid_source_ranges": true
+  }
+}

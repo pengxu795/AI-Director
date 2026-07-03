@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 2 stabilization
-- Latest completed work: Module 2 canonical character and main plot ordering fixes
-- Next module: Module 3 Script Generation
-- Gate: Do not start Module 3 until Module 2 Review passes
+- Current phase: Module 3 Review
+- Latest completed work: Module 3 rule-based script generation phase 1
+- Next module: Module 4 Shot Matching
+- Gate: Do not start Module 4 until Module 3 Review passes
 
 ## Completed
 
@@ -16,11 +16,13 @@
 - Module 2 Review fix: ordered story blocks, input-container episodes, safe character aliases
 - Module 2 Review fix: reject out-of-range minute and second values in timecodes
 - Module 2 Review fix: canonical parent aliases and time-ordered `main_plot`
+- Module 3 phase 1: rule-based script generation schema and traceability
 
 ## Pending Review
 
-- Review latest commit after Module 2 contract hardening.
-- Confirm no additional schema changes are needed before Module 3.
+- Review Module 3 script schema.
+- Confirm every narration segment traces back to Module 2 story blocks.
+- Confirm Module 3 should proceed before Module 4 shot matching.
 
 ## Development Rule
 

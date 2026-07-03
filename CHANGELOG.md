@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Added Module 3 phase 1 rule-based script generation.
+- Added script schema with `title_hooks`, `narration_segments`, `ending_hook`, and `metadata`.
+- Added script generation CLI and sample output.
+- Added tests for empty story blocks, missing conflicts/twists, invalid source ranges, traceability, JSON serialization, and ending hook behavior.
 - Canonicalized parent character aliases so `妈妈/母亲` and `爸爸/父亲` each produce one merged character entity.
 - Fixed `main_plot` to use time-ordered subtitles and avoid fabricating a conflict when none is detected.
 - Rejected out-of-range subtitle timecodes where minutes or seconds exceed `59`.
