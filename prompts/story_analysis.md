@@ -11,6 +11,7 @@ Output:
 - Return JSON only.
 - Follow `schema_version: "0.1"`.
 - Preserve source timecodes when referencing evidence.
+- If source timecodes are missing or invalid, return empty `source_range` and low `confidence`.
 - Use `story_blocks` as the main bridge to script generation.
 - Do not reveal final spoilers in narration-facing fields unless they are marked in `spoiler_warnings`.
 

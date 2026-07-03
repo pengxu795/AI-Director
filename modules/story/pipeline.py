@@ -15,8 +15,11 @@ from .analyzer import (
     _build_main_plot,
     _extract_moments,
     _extract_relationships,
+    _has_valid_source_range,
     _normalize_record,
     _pick_climax,
+    _source_range,
+    _timecode_to_ms,
 )
 
 
@@ -54,6 +57,7 @@ def run_story_pipeline(subtitles: list[dict[str, str]]) -> dict[str, Any]:
     spoiler_warnings = _extract_moments(cleaned, SPOILER_KEYWORDS, "spoiler_warning")
     story_blocks = build_story_blocks(cleaned, conflicts, twists, climax)
     episodes = build_episodes(cleaned, scenes, story_blocks)
+    source_range = _records_source_range(cleaned)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -62,8 +66,8 @@ def run_story_pipeline(subtitles: list[dict[str, str]]) -> dict[str, Any]:
             "scene_count": len(scenes),
             "story_block_count": len(story_blocks),
             "episode_count": len(episodes),
-            "start": cleaned[0]["start"] if cleaned else "",
-            "end": cleaned[-1]["end"] if cleaned else "",
+            "start": source_range["start"],
+            "end": source_range["end"],
         },
         "characters": characters,
         "relationships": relationships,
@@ -154,7 +158,7 @@ def build_story_blocks(
 
     if climax.get("text"):
         block_type = "climax"
-        if blocks and blocks[-1]["summary"] == climax["text"]:
+        if blocks and blocks[-1]["type"] == "twist" and blocks[-1]["summary"] == climax["text"]:
             blocks[-1]["type"] = block_type
             blocks[-1]["purpose"] = "推到剧情高潮"
         else:
@@ -172,19 +176,17 @@ def build_episodes(
     if not subtitles:
         return []
 
+    source_range = _records_source_range(subtitles)
     return [
         {
             "id": "e001",
             "title": "Episode 1",
-            "start": subtitles[0]["start"],
-            "end": subtitles[-1]["end"],
-            "source_range": {
-                "start": subtitles[0]["start"],
-                "end": subtitles[-1]["end"],
-            },
+            "start": source_range["start"],
+            "end": source_range["end"],
+            "source_range": source_range,
             "scene_ids": [scene["id"] for scene in scenes],
             "story_block_ids": [block["id"] for block in story_blocks],
-            "confidence": 0.5,
+            "confidence": 0.5 if source_range["start"] else 0.2,
         }
     ]
 
@@ -202,18 +204,16 @@ def _detect_scene_type(text: str, index: int) -> str:
 
 
 def _build_scene(scene_id: int, scene_type: str, records: list[dict[str, str]]) -> dict[str, Any]:
+    source_range = _records_source_range(records)
     return {
         "id": f"s{scene_id:03d}",
         "type": scene_type,
-        "start": records[0]["start"],
-        "end": records[-1]["end"],
-        "source_range": {
-            "start": records[0]["start"],
-            "end": records[-1]["end"],
-        },
+        "start": source_range["start"],
+        "end": source_range["end"],
+        "source_range": source_range,
         "summary": " ".join(record["text"] for record in records),
         "subtitle_count": len(records),
-        "confidence": 0.55,
+        "confidence": 0.55 if source_range["start"] else 0.25,
     }
 
 
@@ -230,13 +230,26 @@ def _story_block(
         "evidence": record.get("evidence", record["text"]),
         "start": record["start"],
         "end": record["end"],
-        "source_range": record.get(
-            "source_range",
-            {
-                "start": record["start"],
-                "end": record["end"],
-            },
-        ),
+        "source_range": record.get("source_range", _source_range(record)),
         "purpose": purpose,
-        "confidence": record.get("confidence", 0.5),
+        "confidence": record.get(
+            "confidence",
+            0.5 if _has_valid_source_range(record) else 0.2,
+        ),
     }
+
+
+def _records_source_range(records: list[dict[str, str]]) -> dict[str, str]:
+    timed_records = []
+    for record in records:
+        start = _timecode_to_ms(record.get("start", ""))
+        end = _timecode_to_ms(record.get("end", ""))
+        if start is not None and end is not None and start <= end:
+            timed_records.append((start, end, record))
+
+    if not timed_records:
+        return {"start": "", "end": ""}
+
+    start_record = min(timed_records, key=lambda item: item[0])[2]
+    end_record = max(timed_records, key=lambda item: item[1])[2]
+    return {"start": start_record["start"], "end": end_record["end"]}

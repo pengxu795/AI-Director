@@ -1,3 +1,5 @@
+import json
+
 from modules.story import analyze_story, load_subtitles_json, split_scenes
 
 
@@ -179,11 +181,119 @@ def test_analyze_story_handles_empty_subtitles():
     }
 
 
+def test_analyze_story_handles_missing_timecodes_with_low_confidence():
+    subtitles = [
+        {"start": "", "end": "", "text": "女主终于发现真相"},
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["subtitle_count"] == 1
+    assert analysis["summary"]["start"] == ""
+    assert analysis["summary"]["end"] == ""
+    assert analysis["episodes"] == [
+        {
+            "id": "e001",
+            "title": "Episode 1",
+            "start": "",
+            "end": "",
+            "source_range": {"start": "", "end": ""},
+            "scene_ids": ["s001"],
+            "story_block_ids": ["b001", "b002"],
+            "confidence": 0.2,
+        }
+    ]
+    assert analysis["satisfying_points"][0]["evidence"] == "女主终于发现真相"
+    assert analysis["satisfying_points"][0]["source_range"] == {"start": "", "end": ""}
+    assert analysis["satisfying_points"][0]["confidence"] == 0.35
+    assert analysis["climax"]["source_range"] == {"start": "", "end": ""}
+    assert analysis["climax"]["confidence"] == 0.35
+
+
+def test_analyze_story_handles_single_subtitle():
+    subtitles = [
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:02.000",
+            "text": "女主回到家",
+        }
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["subtitle_count"] == 1
+    assert analysis["summary"]["start"] == "00:00:01.000"
+    assert analysis["summary"]["end"] == "00:00:02.000"
+    assert analysis["episodes"][0]["source_range"] == {
+        "start": "00:00:01.000",
+        "end": "00:00:02.000",
+    }
+    assert analysis["story_blocks"][0]["type"] == "opening"
+
+
+def test_analyze_story_handles_out_of_order_timecodes_without_invalid_ranges():
+    subtitles = [
+        {
+            "start": "00:00:10.000",
+            "end": "00:00:12.000",
+            "text": "可孩子突然出现",
+        },
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:02.000",
+            "text": "女主回到家",
+        },
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["start"] == "00:00:01.000"
+    assert analysis["summary"]["end"] == "00:00:12.000"
+    assert analysis["episodes"][0]["source_range"] == {
+        "start": "00:00:01.000",
+        "end": "00:00:12.000",
+    }
+    for scene in analysis["scenes"]:
+        assert scene["source_range"]["start"] <= scene["source_range"]["end"]
+
+
+def test_analyze_story_rejects_reversed_time_range_for_evidence():
+    subtitles = [
+        {
+            "start": "00:00:05.000",
+            "end": "00:00:03.000",
+            "text": "没想到真相被隐瞒",
+        },
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["start"] == ""
+    assert analysis["summary"]["end"] == ""
+    assert analysis["twists"][0]["source_range"] == {"start": "", "end": ""}
+    assert analysis["twists"][0]["confidence"] == 0.35
+
+
 def test_load_subtitles_json_reads_sample_output():
     subtitles = load_subtitles_json("output/sample_subtitles.json")
 
     assert len(subtitles) == 3
     assert subtitles[0]["text"] == "你不是我的亲生女儿"
+
+
+def test_analyze_story_output_is_json_serializable():
+    subtitles = [
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:02.000",
+            "text": "可女主终于发现真相",
+        }
+    ]
+
+    encoded = json.dumps(analyze_story(subtitles), ensure_ascii=False)
+    decoded = json.loads(encoded)
+
+    assert decoded["schema_version"] == "0.1"
 
 
 def test_split_scenes_groups_adjacent_subtitles_by_story_type():

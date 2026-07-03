@@ -3,7 +3,7 @@
 ## Current Status
 
 - Current phase: Module 2 stabilization
-- Latest completed work: Module 2.5 Story Pipeline foundations
+- Latest completed work: Module 2 contract review and boundary hardening
 - Next module: Module 3 Script Generation
 - Gate: Do not start Module 3 until Module 2 Review passes
 
@@ -12,12 +12,12 @@
 - Module 1: Subtitle parsing
 - Module 2: Rule-based story analysis MVP
 - Module 2.5: Schema stabilization, prompt layer, story blocks, scene split
+- Module 2 Review hardening: time range validation, low-confidence fallback, JSON serialization test
 
 ## Pending Review
 
-- Verify Module 2 schema is stable enough for Module 3.
-- Confirm `story_blocks` can drive script generation.
-- Confirm `episodes`, `source_range`, `evidence`, and `confidence` are sufficient for later matcher work.
+- Review commit after Module 2 contract hardening.
+- Confirm no additional schema changes are needed before Module 3.
 
 ## Development Rule
 

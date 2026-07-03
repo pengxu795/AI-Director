@@ -41,6 +41,7 @@ SATISFYING_KEYWORDS = ("终于", "真相", "反击", "打脸", "揭穿", "逆袭
 TWIST_KEYWORDS = ("可", "却", "原来", "竟然", "没想到", "突然", "反而")
 SPOILER_KEYWORDS = ("真相", "凶手", "幕后", "身份", "亲生", "结局")
 CLIMAX_KEYWORDS = CONFLICT_KEYWORDS + SATISFYING_KEYWORDS + TWIST_KEYWORDS
+TIMECODE_PATTERN = re.compile(r"^\d{2}:\d{2}:\d{2}\.\d{3}$")
 
 
 def load_subtitles_json(path: str | Path) -> list[dict[str, str]]:
@@ -97,7 +98,7 @@ def _extract_relationships(subtitles: list[dict[str, str]]) -> list[dict[str, An
                         "start": record["start"],
                         "end": record["end"],
                         "source_range": _source_range(record),
-                        "confidence": 0.7,
+                        "confidence": _record_confidence(0.7, record),
                     }
                 )
     return relationships
@@ -120,7 +121,7 @@ def _extract_moments(
                     "start": record["start"],
                     "end": record["end"],
                     "source_range": _source_range(record),
-                    "confidence": _keyword_confidence(matched),
+                    "confidence": _record_confidence(_keyword_confidence(matched), record),
                     "reason": "、".join(matched),
                 }
             )
@@ -153,17 +154,42 @@ def _pick_climax(subtitles: list[dict[str, str]]) -> dict[str, Any]:
         "start": record["start"],
         "end": record["end"],
         "source_range": _source_range(record),
-        "confidence": 0.75 if keyword_score else 0.45,
+        "confidence": _record_confidence(0.75 if keyword_score else 0.45, record),
         "reason": reason,
     }
 
 
 def _source_range(record: dict[str, str]) -> dict[str, str]:
+    if not _has_valid_source_range(record):
+        return {"start": "", "end": ""}
     return {"start": record["start"], "end": record["end"]}
 
 
 def _keyword_confidence(matched_keywords: list[str]) -> float:
     return min(0.95, 0.55 + len(matched_keywords) * 0.1)
+
+
+def _record_confidence(base_confidence: float, record: dict[str, str]) -> float:
+    if _has_valid_source_range(record):
+        return base_confidence
+    return min(base_confidence, 0.35)
+
+
+def _has_valid_source_range(record: dict[str, str]) -> bool:
+    start = _timecode_to_ms(record.get("start", ""))
+    end = _timecode_to_ms(record.get("end", ""))
+    return start is not None and end is not None and start <= end
+
+
+def _timecode_to_ms(value: str) -> int | None:
+    if not TIMECODE_PATTERN.match(value):
+        return None
+
+    hours = int(value[0:2])
+    minutes = int(value[3:5])
+    seconds = int(value[6:8])
+    milliseconds = int(value[9:12])
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000 + milliseconds
 
 
 def _build_main_plot(
