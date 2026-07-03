@@ -2,6 +2,11 @@
 
 ## 2026-07-03
 
+- Added Module 4 phase 1 rule-based shot matching and timeline planning.
+- Added timeline schema with `timeline`, `video_ranges`, `unresolved_segments`, and `metadata`.
+- Added timeline generation CLI and sample output.
+- Added `reuse_policy` handling for primary, duplicate, callback, and unresolved range reuse.
+- Added tests for valid matching, multiple ranges, missing block ids, invalid ranges, reuse, sorting, empty text filtering, unresolved safety, and JSON serialization.
 - Hardened Module 3 traceability during Review.
 - Added `reuse_policy` to narration segments and ending hook.
 - Ensured title hooks and ending hook only use content that resolves to input `story_blocks`.
