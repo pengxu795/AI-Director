@@ -2,6 +2,8 @@
 
 ## 2026-07-03
 
+- Rejected out-of-range subtitle timecodes where minutes or seconds exceed `59`.
+- Added tests for `00:99:00.000` and `00:00:99.000` so invalid ranges cannot enter summary, scenes, episodes, or story blocks.
 - Fixed failed Module 2 Review findings.
 - Lowered invalid evidence confidence to `0.2` or below.
 - Ordered `story_blocks` by valid source time and preserved all ordered story beats instead of only first/last moments.

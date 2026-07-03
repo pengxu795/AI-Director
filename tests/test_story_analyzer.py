@@ -309,6 +309,54 @@ def test_analyze_story_rejects_illegal_timecode_format():
     assert analysis["twists"][0]["confidence"] == 0.2
 
 
+def test_analyze_story_rejects_out_of_range_minutes():
+    subtitles = [
+        {
+            "start": "00:99:00.000",
+            "end": "00:99:01.000",
+            "text": "可女主发现真相",
+        }
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["start"] == ""
+    assert analysis["summary"]["end"] == ""
+    assert analysis["episodes"][0]["source_range"] == {"start": "", "end": ""}
+    assert analysis["scenes"][0]["source_range"] == {"start": "", "end": ""}
+    assert analysis["story_blocks"][0]["source_range"] == {"start": "", "end": ""}
+    assert analysis["story_blocks"][0]["start"] == ""
+    assert analysis["story_blocks"][0]["end"] == ""
+    assert analysis["story_blocks"][0]["confidence"] == 0.2
+
+
+def test_analyze_story_rejects_out_of_range_seconds():
+    subtitles = [
+        {
+            "start": "00:00:99.000",
+            "end": "00:01:00.000",
+            "text": "没想到孩子出现",
+        },
+        {
+            "start": "00:00:03.000",
+            "end": "00:00:04.000",
+            "text": "妈妈沉默了",
+        },
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["start"] == "00:00:03.000"
+    assert analysis["summary"]["end"] == "00:00:04.000"
+    assert analysis["episodes"][0]["source_range"] == {
+        "start": "00:00:03.000",
+        "end": "00:00:04.000",
+    }
+    assert analysis["story_blocks"][-1]["summary"] == "没想到孩子出现"
+    assert analysis["story_blocks"][-1]["source_range"] == {"start": "", "end": ""}
+    assert analysis["story_blocks"][-1]["confidence"] == 0.2
+
+
 def test_analyze_story_allows_duplicate_timecodes_when_range_is_valid():
     subtitles = [
         {

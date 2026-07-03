@@ -195,6 +195,8 @@ def _timecode_to_ms(value: str) -> int | None:
     minutes = int(value[3:5])
     seconds = int(value[6:8])
     milliseconds = int(value[9:12])
+    if minutes > 59 or seconds > 59:
+        return None
     return ((hours * 60 + minutes) * 60 + seconds) * 1000 + milliseconds
 
 
