@@ -83,6 +83,7 @@ def test_normal_segment_maps_one_story_block():
             "end": "00:00:02.000",
             "source_story_block_id": "b001",
             "priority": 1,
+            "reuse_policy": "primary",
         }
     ]
 
@@ -95,6 +96,7 @@ def test_one_segment_maps_multiple_valid_ranges_sorted_by_time():
     assert timeline["timeline"][0]["status"] == "matched"
     assert [item["source_story_block_id"] for item in timeline["timeline"][0]["video_ranges"]] == ["b001", "b002"]
     assert [item["priority"] for item in timeline["timeline"][0]["video_ranges"]] == [1, 2]
+    assert [item["reuse_policy"] for item in timeline["timeline"][0]["video_ranges"]] == ["primary", "primary"]
 
 
 def test_segment_without_source_story_block_ids_is_unresolved():
@@ -153,6 +155,11 @@ def test_hook_climax_and_ending_hook_reuse_same_block_with_stable_policy():
 
     assert [item["reuse_policy"] for item in timeline["timeline"]] == ["primary", "duplicate", "callback"]
     assert [item["status"] for item in timeline["timeline"]] == ["matched", "matched", "matched"]
+    assert [item["video_ranges"][0]["reuse_policy"] for item in timeline["timeline"]] == [
+        "primary",
+        "duplicate",
+        "callback",
+    ]
 
 
 def test_ending_hook_first_use_is_primary_not_callback():
@@ -173,6 +180,7 @@ def test_ending_hook_first_use_is_primary_not_callback():
 
     assert timeline["timeline"][0]["segment_type"] == "ending_hook"
     assert timeline["timeline"][0]["reuse_policy"] == "primary"
+    assert timeline["timeline"][0]["video_ranges"][0]["reuse_policy"] == "primary"
 
 
 def test_partial_match_keeps_valid_ranges_without_fabricating_invalid_block():
@@ -196,8 +204,83 @@ def test_partial_match_keeps_valid_ranges_without_fabricating_invalid_block():
             "end": "00:00:02.000",
             "source_story_block_id": "b001",
             "priority": 1,
+            "reuse_policy": "primary",
         }
     ]
+
+
+def test_mixed_regular_reuse_is_marked_per_video_range():
+    script = base_script(
+        [
+            narration_segment("n001", ["b001"], "先用 b001", "hook"),
+            narration_segment("n002", ["b001", "b002"], "复用 b001 但首次使用 b002", "development"),
+        ]
+    )
+
+    timeline = generate_timeline(base_story(), script, subtitles())
+
+    mixed_item = timeline["timeline"][1]
+    assert mixed_item["reuse_policy"] == "mixed"
+    assert [item["source_story_block_id"] for item in mixed_item["video_ranges"]] == ["b001", "b002"]
+    assert [item["reuse_policy"] for item in mixed_item["video_ranges"]] == ["duplicate", "primary"]
+
+
+def test_mixed_ending_hook_reuse_is_marked_per_video_range():
+    script = base_script(
+        [narration_segment("n001", ["b001"], "先用 b001", "hook")],
+        {
+            "id": "n-ending",
+            "type": "ending_hook",
+            "text": "复用 b001 但首次使用 b002",
+            "source_story_block_ids": ["b001", "b002"],
+            "source_ranges": [],
+            "confidence": 0.7,
+            "reuse_policy": "callback",
+        },
+    )
+
+    timeline = generate_timeline(base_story(), script, subtitles())
+
+    ending_item = timeline["timeline"][1]
+    assert ending_item["reuse_policy"] == "mixed"
+    assert [item["source_story_block_id"] for item in ending_item["video_ranges"]] == ["b001", "b002"]
+    assert [item["reuse_policy"] for item in ending_item["video_ranges"]] == ["callback", "primary"]
+
+
+def test_all_duplicate_ranges_keep_duplicate_item_policy():
+    script = base_script(
+        [
+            narration_segment("n001", ["b001", "b002"], "先使用两个 block"),
+            narration_segment("n002", ["b001", "b002"], "再次使用两个 block"),
+        ]
+    )
+
+    timeline = generate_timeline(base_story(), script, subtitles())
+
+    duplicate_item = timeline["timeline"][1]
+    assert duplicate_item["reuse_policy"] == "duplicate"
+    assert [item["reuse_policy"] for item in duplicate_item["video_ranges"]] == ["duplicate", "duplicate"]
+
+
+def test_all_ending_hook_callback_ranges_keep_callback_item_policy():
+    script = base_script(
+        [narration_segment("n001", ["b001", "b002"], "先使用两个 block")],
+        {
+            "id": "n-ending",
+            "type": "ending_hook",
+            "text": "回调两个已用 block",
+            "source_story_block_ids": ["b001", "b002"],
+            "source_ranges": [],
+            "confidence": 0.7,
+            "reuse_policy": "callback",
+        },
+    )
+
+    timeline = generate_timeline(base_story(), script, subtitles())
+
+    callback_item = timeline["timeline"][1]
+    assert callback_item["reuse_policy"] == "callback"
+    assert [item["reuse_policy"] for item in callback_item["video_ranges"]] == ["callback", "callback"]
 
 
 def test_repeated_block_ids_in_same_segment_are_deduped_before_sorting():
@@ -209,6 +292,7 @@ def test_repeated_block_ids_in_same_segment_are_deduped_before_sorting():
     assert [item["source_story_block_id"] for item in ranges] == ["b001", "b002"]
     assert len({item["source_story_block_id"] for item in ranges}) == len(ranges)
     assert [item["priority"] for item in ranges] == [1, 2]
+    assert [item["reuse_policy"] for item in ranges] == ["primary", "primary"]
 
 
 def test_out_of_order_ranges_are_sorted_in_output():

@@ -151,6 +151,7 @@ def _timeline_item_for_segment(
                 "end": block_range["end"],
                 "source_story_block_id": block_id,
                 "_start_ms": block_range["start_ms"],
+                "reuse_policy": _reuse_policy_for_range(segment, block_id, used_block_ids),
             }
         )
 
@@ -164,12 +165,13 @@ def _timeline_item_for_segment(
             "end": range_item["end"],
             "source_story_block_id": range_item["source_story_block_id"],
             "priority": priority,
+            "reuse_policy": range_item["reuse_policy"],
         }
         for priority, range_item in enumerate(ranges, start=1)
     ]
     matched_ids = {range_item["source_story_block_id"] for range_item in video_ranges}
     status = "partial" if invalid_ids or len(matched_ids) < len(set(source_ids)) else "matched"
-    reuse_policy = _reuse_policy_for_segment(segment, matched_ids, used_block_ids)
+    reuse_policy = _reuse_policy_for_item(video_ranges)
     confidence = _confidence_for_segment(segment, [blocks_by_id[block_id] for block_id in matched_ids], status)
 
     return (
@@ -263,16 +265,20 @@ def _ms_to_timecode(value: int) -> str:
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
 
 
-def _reuse_policy_for_segment(
-    segment: dict[str, Any],
-    matched_ids: set[str],
-    used_block_ids: set[str],
-) -> str:
-    if str(segment.get("type", "")) == "ending_hook" and matched_ids & used_block_ids:
+def _reuse_policy_for_range(segment: dict[str, Any], block_id: str, used_block_ids: set[str]) -> str:
+    if block_id not in used_block_ids:
+        return "primary"
+    if str(segment.get("type", "")) == "ending_hook":
         return "callback"
-    if matched_ids & used_block_ids:
-        return "duplicate"
-    return "primary"
+    return "duplicate"
+
+
+def _reuse_policy_for_item(video_ranges: list[dict[str, Any]]) -> str:
+    policies = {str(video_range.get("reuse_policy", "")) for video_range in video_ranges}
+    policies.discard("")
+    if len(policies) == 1:
+        return next(iter(policies))
+    return "mixed"
 
 
 def _confidence_for_segment(segment: dict[str, Any], blocks: list[dict[str, Any]], status: str) -> float:

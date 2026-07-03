@@ -20,6 +20,7 @@
 - Module 3 Review fix: title hooks, narration segments, and ending hook must trace to `story_blocks`
 - Module 4 phase 1: rule-based shot matching and timeline planning
 - Module 4 Review fix: callback reuse policy, partial matching coverage, and duplicate block-id cleanup
+- Module 4 Review fix: range-level reuse policy for mixed primary, duplicate, and callback ranges
 
 ## Pending Review
 

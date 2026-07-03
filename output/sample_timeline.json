@@ -12,7 +12,8 @@
           "start": "00:02:23.000",
           "end": "00:02:26.500",
           "source_story_block_id": "b003",
-          "priority": 1
+          "priority": 1,
+          "reuse_policy": "primary"
         }
       ],
       "selection_reason": "matched_by_story_block_source_range",
@@ -30,7 +31,8 @@
           "start": "00:02:15.200",
           "end": "00:02:18.800",
           "source_story_block_id": "b001",
-          "priority": 1
+          "priority": 1,
+          "reuse_policy": "primary"
         }
       ],
       "selection_reason": "matched_by_story_block_source_range",
@@ -48,7 +50,8 @@
           "start": "00:02:15.200",
           "end": "00:02:18.800",
           "source_story_block_id": "b001",
-          "priority": 1
+          "priority": 1,
+          "reuse_policy": "duplicate"
         }
       ],
       "selection_reason": "matched_by_story_block_source_range",
@@ -66,7 +69,8 @@
           "start": "00:02:19.100",
           "end": "00:02:22.400",
           "source_story_block_id": "b002",
-          "priority": 1
+          "priority": 1,
+          "reuse_policy": "primary"
         }
       ],
       "selection_reason": "matched_by_story_block_source_range",
@@ -84,7 +88,8 @@
           "start": "00:02:23.000",
           "end": "00:02:26.500",
           "source_story_block_id": "b003",
-          "priority": 1
+          "priority": 1,
+          "reuse_policy": "duplicate"
         }
       ],
       "selection_reason": "matched_by_story_block_source_range",
@@ -102,7 +107,8 @@
           "start": "00:02:23.000",
           "end": "00:02:26.500",
           "source_story_block_id": "b003",
-          "priority": 1
+          "priority": 1,
+          "reuse_policy": "callback"
         }
       ],
       "selection_reason": "matched_by_story_block_source_range",

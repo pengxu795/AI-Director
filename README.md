@@ -175,13 +175,22 @@ python app/generate_script.py output/sample_story_analysis.json output/sample_sc
 - `confidence`
 - `status`
 
+每个 `video_ranges` item 保留：
+
+- `start`
+- `end`
+- `source_story_block_id`
+- `priority`
+- `reuse_policy`
+
 关键约束：
 
 - 只从 Module 2 `story_blocks` 的合法 `source_range` 生成 `video_ranges`
 - 每个 `video_ranges` 必须保留 `source_story_block_id`
 - 无 block id、block 不存在、时间无效或超出原始字幕有效范围时，返回 `unresolved`
 - `unresolved` 不得输出视频范围，`confidence` 必须为 `0.0`
-- 同一 story block 首次使用标记为 `primary`，普通复用标记为 `duplicate`，ending hook 复用标记为 `callback`
+- 每个 `video_ranges` 独立标记 `reuse_policy`：首次使用为 `primary`，普通复用为 `duplicate`，ending hook 复用为 `callback`
+- `timeline` item 的 `reuse_policy` 可为 `primary`、`duplicate`、`callback`、`mixed` 或 `unresolved`
 - 空文本解说段不生成 timeline item
 - 当前不做真实视频剪辑、渲染或导出
 

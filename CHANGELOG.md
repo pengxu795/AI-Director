@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Added range-level Module 4 `reuse_policy` so mixed first-use and reused story blocks remain visible to Module 5.
+- Added `mixed` timeline item reuse policy for narration segments with both primary and reused video ranges.
+- Added tests for mixed regular reuse, mixed ending-hook reuse, all-duplicate ranges, and all-callback ranges.
 - Fixed Module 4 Review findings for timeline planning.
 - Changed `ending_hook` reuse handling so callback is only used when it reuses an earlier matched story block.
 - Added partial timeline matching coverage for mixed valid and invalid story block ranges.
