@@ -13,8 +13,7 @@
       "id": "c001",
       "name": "女主",
       "aliases": [
-        "女主",
-        "妈妈"
+        "女主"
       ],
       "role": "protagonist",
       "mentions": 1
@@ -33,9 +32,7 @@
       "id": "c003",
       "name": "孩子",
       "aliases": [
-        "孩子",
-        "女儿",
-        "儿子"
+        "孩子"
       ],
       "role": "supporting",
       "mentions": 1
@@ -89,7 +86,8 @@
   "episodes": [
     {
       "id": "e001",
-      "title": "Episode 1",
+      "title": "Input 1",
+      "kind": "input_container",
       "start": "00:02:15.200",
       "end": "00:02:26.500",
       "source_range": {
@@ -111,20 +109,6 @@
   "story_blocks": [
     {
       "id": "b001",
-      "type": "opening",
-      "summary": "你不是我的亲生女儿",
-      "evidence": "你不是我的亲生女儿",
-      "start": "00:02:15.200",
-      "end": "00:02:18.800",
-      "source_range": {
-        "start": "00:02:15.200",
-        "end": "00:02:18.800"
-      },
-      "purpose": "建立开场信息",
-      "confidence": 0.5
-    },
-    {
-      "id": "b002",
       "type": "conflict",
       "summary": "你不是我的亲生女儿",
       "evidence": "你不是我的亲生女儿",
@@ -134,7 +118,21 @@
         "start": "00:02:15.200",
         "end": "00:02:18.800"
       },
-      "purpose": "抛出核心矛盾",
+      "purpose": "推进冲突升级",
+      "confidence": 0.65
+    },
+    {
+      "id": "b002",
+      "type": "satisfying_point",
+      "summary": "女主愣住了，她终于明白自己被隐瞒多年",
+      "evidence": "女主愣住了，她终于明白自己被隐瞒多年",
+      "start": "00:02:19.100",
+      "end": "00:02:22.400",
+      "source_range": {
+        "start": "00:02:19.100",
+        "end": "00:02:22.400"
+      },
+      "purpose": "呈现爽点",
       "confidence": 0.65
     },
     {

@@ -1,6 +1,10 @@
 import json
+import re
 
 from modules.story import analyze_story, load_subtitles_json, split_scenes
+
+
+TIMECODE_PATTERN = re.compile(r"^\d{2}:\d{2}:\d{2}\.\d{3}$")
 
 
 def test_analyze_story_outputs_module_2_sections():
@@ -33,7 +37,7 @@ def test_analyze_story_outputs_module_2_sections():
         {
             "id": "c001",
             "name": "女主",
-            "aliases": ["女主", "妈妈"],
+            "aliases": ["女主"],
             "role": "protagonist",
             "mentions": 1,
         },
@@ -47,7 +51,7 @@ def test_analyze_story_outputs_module_2_sections():
         {
             "id": "c003",
             "name": "孩子",
-            "aliases": ["孩子", "女儿", "儿子"],
+            "aliases": ["孩子"],
             "role": "supporting",
             "mentions": 1,
         },
@@ -68,7 +72,8 @@ def test_analyze_story_outputs_module_2_sections():
     assert analysis["episodes"] == [
         {
             "id": "e001",
-            "title": "Episode 1",
+            "title": "Input 1",
+            "kind": "input_container",
             "start": "00:02:15.200",
             "end": "00:02:26.500",
             "source_range": {
@@ -83,20 +88,6 @@ def test_analyze_story_outputs_module_2_sections():
     assert analysis["story_blocks"] == [
         {
             "id": "b001",
-            "type": "opening",
-            "summary": "你不是我的亲生女儿",
-            "evidence": "你不是我的亲生女儿",
-            "start": "00:02:15.200",
-            "end": "00:02:18.800",
-            "source_range": {
-                "start": "00:02:15.200",
-                "end": "00:02:18.800",
-            },
-            "purpose": "建立开场信息",
-            "confidence": 0.5,
-        },
-        {
-            "id": "b002",
             "type": "conflict",
             "summary": "你不是我的亲生女儿",
             "evidence": "你不是我的亲生女儿",
@@ -106,7 +97,21 @@ def test_analyze_story_outputs_module_2_sections():
                 "start": "00:02:15.200",
                 "end": "00:02:18.800",
             },
-            "purpose": "抛出核心矛盾",
+            "purpose": "推进冲突升级",
+            "confidence": 0.65,
+        },
+        {
+            "id": "b002",
+            "type": "satisfying_point",
+            "summary": "女主愣住了，她终于明白自己被隐瞒多年",
+            "evidence": "女主愣住了，她终于明白自己被隐瞒多年",
+            "start": "00:02:19.100",
+            "end": "00:02:22.400",
+            "source_range": {
+                "start": "00:02:19.100",
+                "end": "00:02:22.400",
+            },
+            "purpose": "呈现爽点",
             "confidence": 0.65,
         },
         {
@@ -194,20 +199,25 @@ def test_analyze_story_handles_missing_timecodes_with_low_confidence():
     assert analysis["episodes"] == [
         {
             "id": "e001",
-            "title": "Episode 1",
+            "title": "Input 1",
+            "kind": "input_container",
             "start": "",
             "end": "",
             "source_range": {"start": "", "end": ""},
             "scene_ids": ["s001"],
-            "story_block_ids": ["b001", "b002"],
+            "story_block_ids": ["b001"],
             "confidence": 0.2,
         }
     ]
     assert analysis["satisfying_points"][0]["evidence"] == "女主终于发现真相"
+    assert analysis["satisfying_points"][0]["start"] == ""
+    assert analysis["satisfying_points"][0]["end"] == ""
     assert analysis["satisfying_points"][0]["source_range"] == {"start": "", "end": ""}
-    assert analysis["satisfying_points"][0]["confidence"] == 0.35
+    assert analysis["satisfying_points"][0]["confidence"] == 0.2
+    assert analysis["climax"]["start"] == ""
+    assert analysis["climax"]["end"] == ""
     assert analysis["climax"]["source_range"] == {"start": "", "end": ""}
-    assert analysis["climax"]["confidence"] == 0.35
+    assert analysis["climax"]["confidence"] == 0.2
 
 
 def test_analyze_story_handles_single_subtitle():
@@ -253,6 +263,10 @@ def test_analyze_story_handles_out_of_order_timecodes_without_invalid_ranges():
         "start": "00:00:01.000",
         "end": "00:00:12.000",
     }
+    assert [block["summary"] for block in analysis["story_blocks"]] == [
+        "女主回到家",
+        "可孩子突然出现",
+    ]
     for scene in analysis["scenes"]:
         assert scene["source_range"]["start"] <= scene["source_range"]["end"]
 
@@ -270,8 +284,92 @@ def test_analyze_story_rejects_reversed_time_range_for_evidence():
 
     assert analysis["summary"]["start"] == ""
     assert analysis["summary"]["end"] == ""
+    assert analysis["twists"][0]["start"] == ""
+    assert analysis["twists"][0]["end"] == ""
     assert analysis["twists"][0]["source_range"] == {"start": "", "end": ""}
-    assert analysis["twists"][0]["confidence"] == 0.35
+    assert analysis["twists"][0]["confidence"] == 0.2
+
+
+def test_analyze_story_rejects_illegal_timecode_format():
+    subtitles = [
+        {
+            "start": "1:02",
+            "end": "bad-time",
+            "text": "可女主发现真相",
+        },
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["start"] == ""
+    assert analysis["summary"]["end"] == ""
+    assert analysis["twists"][0]["start"] == ""
+    assert analysis["twists"][0]["end"] == ""
+    assert analysis["twists"][0]["source_range"] == {"start": "", "end": ""}
+    assert analysis["twists"][0]["confidence"] == 0.2
+
+
+def test_analyze_story_allows_duplicate_timecodes_when_range_is_valid():
+    subtitles = [
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:01.000",
+            "text": "女主回头",
+        },
+        {
+            "start": "00:00:01.000",
+            "end": "00:00:01.000",
+            "text": "可真相已经出现",
+        },
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert analysis["summary"]["start"] == "00:00:01.000"
+    assert analysis["summary"]["end"] == "00:00:01.000"
+    assert analysis["episodes"][0]["source_range"] == {
+        "start": "00:00:01.000",
+        "end": "00:00:01.000",
+    }
+    assert analysis["twists"][0]["confidence"] > 0.2
+
+
+def test_story_blocks_keep_story_order_and_do_not_duplicate_same_text_type():
+    subtitles = [
+        {"start": "00:00:01.000", "end": "00:00:02.000", "text": "女主回到家"},
+        {"start": "00:00:02.100", "end": "00:00:03.000", "text": "她发现秘密被隐瞒"},
+        {"start": "00:00:03.100", "end": "00:00:04.000", "text": "女主终于反击"},
+        {"start": "00:00:04.100", "end": "00:00:05.000", "text": "没想到孩子却出现了"},
+    ]
+
+    analysis = analyze_story(subtitles)
+
+    assert [block["type"] for block in analysis["story_blocks"]] == [
+        "opening",
+        "conflict",
+        "satisfying_point",
+        "climax",
+    ]
+    assert [block["summary"] for block in analysis["story_blocks"]] == [
+        record["text"] for record in subtitles
+    ]
+    assert len(
+        {(block["summary"], block["type"]) for block in analysis["story_blocks"]}
+    ) == len(analysis["story_blocks"])
+
+
+def test_character_aliases_do_not_reuse_independent_character_names():
+    subtitles = [
+        {"start": "00:00:01.000", "end": "00:00:02.000", "text": "女主看着妈妈"},
+        {"start": "00:00:02.100", "end": "00:00:03.000", "text": "孩子喊了一声妈妈"},
+    ]
+
+    analysis = analyze_story(subtitles)
+    names = {character["name"] for character in analysis["characters"]}
+
+    for character in analysis["characters"]:
+        aliases = set(character["aliases"]) - {character["name"]}
+        assert not (aliases & names), character
 
 
 def test_load_subtitles_json_reads_sample_output():
@@ -294,6 +392,29 @@ def test_analyze_story_output_is_json_serializable():
     decoded = json.loads(encoded)
 
     assert decoded["schema_version"] == "0.1"
+
+
+def test_every_source_range_is_empty_or_valid():
+    analysis = analyze_story(
+        [
+            {"start": "", "end": "", "text": "女主终于发现真相"},
+            {"start": "bad", "end": "00:00:03.000", "text": "可孩子出现"},
+            {"start": "00:00:10.000", "end": "00:00:12.000", "text": "不是所有人都相信她"},
+            {"start": "00:00:04.000", "end": "00:00:04.000", "text": "妈妈沉默了"},
+        ]
+    )
+
+    def walk(value):
+        if isinstance(value, dict):
+            if set(value) == {"start", "end"}:
+                assert _is_empty_range(value) or _is_valid_range(value), value
+            for nested in value.values():
+                walk(nested)
+        elif isinstance(value, list):
+            for item in value:
+                walk(item)
+
+    walk(analysis)
 
 
 def test_split_scenes_groups_adjacent_subtitles_by_story_type():
@@ -333,3 +454,17 @@ def test_analyze_story_detects_twist_keywords_with_evidence_and_confidence():
             "reason": "却、没想到",
         }
     ]
+
+
+def _is_empty_range(source_range):
+    return source_range == {"start": "", "end": ""}
+
+
+def _is_valid_range(source_range):
+    start = source_range["start"]
+    end = source_range["end"]
+    return (
+        TIMECODE_PATTERN.match(start)
+        and TIMECODE_PATTERN.match(end)
+        and start <= end
+    )

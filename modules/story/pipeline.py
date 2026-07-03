@@ -26,11 +26,14 @@ from .analyzer import (
 SCHEMA_VERSION = "0.1"
 
 ROLE_ALIASES = {
-    "女主": ("女主", "妈妈"),
-    "男主": ("男主", "爸爸", "总裁"),
+    "女主": ("女主",),
+    "男主": ("男主",),
     "妈妈": ("妈妈", "母亲"),
     "爸爸": ("爸爸", "父亲"),
-    "孩子": ("孩子", "女儿", "儿子"),
+    "孩子": ("孩子",),
+    "女儿": ("女儿",),
+    "儿子": ("儿子",),
+    "总裁": ("总裁",),
 }
 
 ROLE_TYPES = {
@@ -46,17 +49,18 @@ def run_story_pipeline(subtitles: list[dict[str, str]]) -> dict[str, Any]:
     """Run the story pipeline and return stable story JSON."""
     cleaned = [_normalize_record(record) for record in subtitles]
     cleaned = [record for record in cleaned if record["text"]]
+    story_ordered = _sort_records_for_story_order(cleaned)
 
-    scenes = split_scenes(cleaned)
-    characters = extract_characters(cleaned)
-    relationships = _extract_relationships(cleaned)
-    conflicts = _extract_moments(cleaned, CONFLICT_KEYWORDS, "conflict")
-    satisfying_points = _extract_moments(cleaned, SATISFYING_KEYWORDS, "satisfying_point")
-    twists = _extract_moments(cleaned, TWIST_KEYWORDS, "twist")
-    climax = _pick_climax(cleaned)
-    spoiler_warnings = _extract_moments(cleaned, SPOILER_KEYWORDS, "spoiler_warning")
-    story_blocks = build_story_blocks(cleaned, conflicts, twists, climax)
-    episodes = build_episodes(cleaned, scenes, story_blocks)
+    scenes = split_scenes(story_ordered)
+    characters = extract_characters(story_ordered)
+    relationships = _extract_relationships(story_ordered)
+    conflicts = _extract_moments(story_ordered, CONFLICT_KEYWORDS, "conflict")
+    satisfying_points = _extract_moments(story_ordered, SATISFYING_KEYWORDS, "satisfying_point")
+    twists = _extract_moments(story_ordered, TWIST_KEYWORDS, "twist")
+    climax = _pick_climax(story_ordered)
+    spoiler_warnings = _extract_moments(story_ordered, SPOILER_KEYWORDS, "spoiler_warning")
+    story_blocks = build_story_blocks(story_ordered, conflicts, satisfying_points, twists, climax)
+    episodes = build_episodes(story_ordered, scenes, story_blocks)
     source_range = _records_source_range(cleaned)
 
     return {
@@ -140,29 +144,36 @@ def split_scenes(subtitles: list[dict[str, str]]) -> list[dict[str, Any]]:
 def build_story_blocks(
     subtitles: list[dict[str, str]],
     conflicts: list[dict[str, Any]],
+    satisfying_points: list[dict[str, Any]],
     twists: list[dict[str, Any]],
     climax: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Build compact story blocks that Module 3 can turn into narration."""
+    """Build ordered story blocks that Module 3 can turn into narration."""
     blocks: list[dict[str, Any]] = []
     if not subtitles:
         return blocks
 
-    blocks.append(_story_block(1, "opening", subtitles[0], "建立开场信息"))
+    moments_by_text = _build_moment_lookup(conflicts, satisfying_points, twists, climax)
+    climax_text = climax.get("text", "") if climax.get("reason") == "keyword_intensity" else ""
+    used_text_types: set[tuple[str, str]] = set()
 
-    if conflicts:
-        blocks.append(_story_block(len(blocks) + 1, "conflict", conflicts[0], "抛出核心矛盾"))
+    for index, record in enumerate(subtitles):
+        record_text = record["text"]
+        block_type = _block_type_for_record(index, record, moments_by_text, climax_text)
+        key = (record_text, block_type)
+        if key in used_text_types:
+            continue
+        used_text_types.add(key)
 
-    if twists:
-        blocks.append(_story_block(len(blocks) + 1, "twist", twists[-1], "制造剧情反转"))
-
-    if climax.get("text"):
-        block_type = "climax"
-        if blocks and blocks[-1]["type"] == "twist" and blocks[-1]["summary"] == climax["text"]:
-            blocks[-1]["type"] = block_type
-            blocks[-1]["purpose"] = "推到剧情高潮"
-        else:
-            blocks.append(_story_block(len(blocks) + 1, block_type, climax, "推到剧情高潮"))
+        source_record = moments_by_text.get(record_text, {}).get(block_type, record)
+        blocks.append(
+            _story_block(
+                len(blocks) + 1,
+                block_type,
+                source_record,
+                _purpose_for_block_type(block_type),
+            )
+        )
 
     return blocks
 
@@ -180,7 +191,8 @@ def build_episodes(
     return [
         {
             "id": "e001",
-            "title": "Episode 1",
+            "title": "Input 1",
+            "kind": "input_container",
             "start": source_range["start"],
             "end": source_range["end"],
             "source_range": source_range,
@@ -223,20 +235,72 @@ def _story_block(
     record: dict[str, str],
     purpose: str,
 ) -> dict[str, Any]:
+    source_range = record.get("source_range", _source_range(record))
     return {
         "id": f"b{block_id:03d}",
         "type": block_type,
         "summary": record["text"],
         "evidence": record.get("evidence", record["text"]),
-        "start": record["start"],
-        "end": record["end"],
-        "source_range": record.get("source_range", _source_range(record)),
+        "start": source_range["start"],
+        "end": source_range["end"],
+        "source_range": source_range,
         "purpose": purpose,
         "confidence": record.get(
             "confidence",
             0.5 if _has_valid_source_range(record) else 0.2,
         ),
     }
+
+
+def _build_moment_lookup(
+    conflicts: list[dict[str, Any]],
+    satisfying_points: list[dict[str, Any]],
+    twists: list[dict[str, Any]],
+    climax: dict[str, Any],
+) -> dict[str, dict[str, dict[str, Any]]]:
+    lookup: dict[str, dict[str, dict[str, Any]]] = {}
+    for block_type, moments in (
+        ("conflict", conflicts),
+        ("satisfying_point", satisfying_points),
+        ("twist", twists),
+    ):
+        for moment in moments:
+            lookup.setdefault(moment["text"], {})[block_type] = moment
+    if climax.get("text") and climax.get("reason") == "keyword_intensity":
+        lookup.setdefault(climax["text"], {})["climax"] = climax
+    return lookup
+
+
+def _block_type_for_record(
+    index: int,
+    record: dict[str, str],
+    moments_by_text: dict[str, dict[str, dict[str, Any]]],
+    climax_text: str,
+) -> str:
+    moment_types = moments_by_text.get(record["text"], {})
+    if record["text"] == climax_text and "climax" in moment_types:
+        return "climax"
+    if "twist" in moment_types:
+        return "twist"
+    if "satisfying_point" in moment_types:
+        return "satisfying_point"
+    if "conflict" in moment_types:
+        return "conflict"
+    if index == 0:
+        return "opening"
+    return "development"
+
+
+def _purpose_for_block_type(block_type: str) -> str:
+    purposes = {
+        "opening": "建立开场信息",
+        "development": "补充剧情发展",
+        "conflict": "推进冲突升级",
+        "satisfying_point": "呈现爽点",
+        "twist": "制造剧情反转",
+        "climax": "推到剧情高潮",
+    }
+    return purposes.get(block_type, "补充剧情信息")
 
 
 def _records_source_range(records: list[dict[str, str]]) -> dict[str, str]:
@@ -253,3 +317,15 @@ def _records_source_range(records: list[dict[str, str]]) -> dict[str, str]:
     start_record = min(timed_records, key=lambda item: item[0])[2]
     end_record = max(timed_records, key=lambda item: item[1])[2]
     return {"start": start_record["start"], "end": end_record["end"]}
+
+
+def _sort_records_for_story_order(records: list[dict[str, str]]) -> list[dict[str, str]]:
+    def sort_key(item: tuple[int, dict[str, str]]) -> tuple[int, int, int]:
+        index, record = item
+        start = _timecode_to_ms(record.get("start", ""))
+        end = _timecode_to_ms(record.get("end", ""))
+        if start is None or end is None or start > end:
+            return (1, index, index)
+        return (0, start, index)
+
+    return [record for _, record in sorted(enumerate(records), key=sort_key)]

@@ -2,6 +2,12 @@
 
 ## 2026-07-03
 
+- Fixed failed Module 2 Review findings.
+- Lowered invalid evidence confidence to `0.2` or below.
+- Ordered `story_blocks` by valid source time and preserved all ordered story beats instead of only first/last moments.
+- Marked `episodes` as `input_container` instead of implying automatic episode splitting.
+- Removed unsafe aliases that merged uncertain roles such as `女主` and `妈妈`.
+- Added tests for illegal timecodes, duplicate timecodes, story block ordering, source range invariants, and alias collisions.
 - Hardened Module 2 story contract during Review.
 - Added validation for invalid, missing, reversed, and out-of-order time ranges.
 - Ensured invalid evidence ranges return empty `source_range` and low `confidence` instead of fabricated timecodes.

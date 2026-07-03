@@ -95,8 +95,8 @@ def _extract_relationships(subtitles: list[dict[str, str]]) -> list[dict[str, An
                     {
                         "type": relation_type,
                         "evidence": record["text"],
-                        "start": record["start"],
-                        "end": record["end"],
+                        "start": _safe_time(record, "start"),
+                        "end": _safe_time(record, "end"),
                         "source_range": _source_range(record),
                         "confidence": _record_confidence(0.7, record),
                     }
@@ -118,8 +118,8 @@ def _extract_moments(
                     "type": moment_type,
                     "text": record["text"],
                     "evidence": record["text"],
-                    "start": record["start"],
-                    "end": record["end"],
+                    "start": _safe_time(record, "start"),
+                    "end": _safe_time(record, "end"),
                     "source_range": _source_range(record),
                     "confidence": _record_confidence(_keyword_confidence(matched), record),
                     "reason": "、".join(matched),
@@ -151,8 +151,8 @@ def _pick_climax(subtitles: list[dict[str, str]]) -> dict[str, Any]:
     return {
         "text": record["text"],
         "evidence": record["text"],
-        "start": record["start"],
-        "end": record["end"],
+        "start": _safe_time(record, "start"),
+        "end": _safe_time(record, "end"),
         "source_range": _source_range(record),
         "confidence": _record_confidence(0.75 if keyword_score else 0.45, record),
         "reason": reason,
@@ -165,6 +165,12 @@ def _source_range(record: dict[str, str]) -> dict[str, str]:
     return {"start": record["start"], "end": record["end"]}
 
 
+def _safe_time(record: dict[str, str], field: str) -> str:
+    if not _has_valid_source_range(record):
+        return ""
+    return record[field]
+
+
 def _keyword_confidence(matched_keywords: list[str]) -> float:
     return min(0.95, 0.55 + len(matched_keywords) * 0.1)
 
@@ -172,7 +178,7 @@ def _keyword_confidence(matched_keywords: list[str]) -> float:
 def _record_confidence(base_confidence: float, record: dict[str, str]) -> float:
     if _has_valid_source_range(record):
         return base_confidence
-    return min(base_confidence, 0.35)
+    return min(base_confidence, 0.2)
 
 
 def _has_valid_source_range(record: dict[str, str]) -> bool:

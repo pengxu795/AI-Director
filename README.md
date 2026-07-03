@@ -99,7 +99,11 @@ python3 -m venv .venv
 - 剧情节点必须保留 `source_range`
 - 规则引擎判断必须保留 `confidence`
 - 无效或缺失时间戳不编造时间，返回空 `source_range` 并降低 `confidence`
+- 单条证据时间无效时，`confidence` 不高于 `0.2`
 - 聚合时间范围使用有效字幕中的最早 `start` 和最晚 `end`
+- 剧情顺序优先按有效时间码排序；无效时间码不会参与聚合时间范围
+- `episodes` 在当前阶段表示单文件输入容器，`kind` 为 `input_container`，不是自动分集
+- 人物 `aliases` 只保存明确同义称呼，不自动把“女主”和“妈妈”等身份称呼合并
 - `story_blocks` 是 Module 3 解说生成的主要输入
 
 运行示例：
