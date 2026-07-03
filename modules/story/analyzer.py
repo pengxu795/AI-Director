@@ -1,10 +1,9 @@
-"""Story analyzer for Module 2."""
+"""Story analyzer compatibility layer for Module 2."""
 
 from __future__ import annotations
 
 import json
 import re
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -67,33 +66,10 @@ def analyze_file_to_json(input_path: str | Path, output_path: str | Path) -> dic
 
 
 def analyze_story(subtitles: list[dict[str, str]]) -> dict[str, Any]:
-    """Analyze ordered subtitle records into an MVP story analysis JSON."""
-    cleaned = [_normalize_record(record) for record in subtitles]
-    cleaned = [record for record in cleaned if record["text"]]
+    """Analyze ordered subtitle records into story pipeline JSON."""
+    from .pipeline import run_story_pipeline
 
-    character_counts = _count_characters(cleaned)
-    relationships = _extract_relationships(cleaned)
-    conflicts = _extract_moments(cleaned, CONFLICT_KEYWORDS, "conflict")
-    satisfying_points = _extract_moments(cleaned, SATISFYING_KEYWORDS, "satisfying_point")
-    twists = _extract_moments(cleaned, TWIST_KEYWORDS, "twist")
-    climax = _pick_climax(cleaned)
-    spoiler_warnings = _extract_moments(cleaned, SPOILER_KEYWORDS, "spoiler_warning")
-
-    return {
-        "summary": {
-            "subtitle_count": len(cleaned),
-            "start": cleaned[0]["start"] if cleaned else "",
-            "end": cleaned[-1]["end"] if cleaned else "",
-        },
-        "characters": _format_characters(character_counts),
-        "relationships": relationships,
-        "main_plot": _build_main_plot(cleaned, conflicts, twists),
-        "conflicts": conflicts,
-        "satisfying_points": satisfying_points,
-        "twists": twists,
-        "climax": climax,
-        "spoiler_warnings": spoiler_warnings,
-    }
+    return run_story_pipeline(subtitles)
 
 
 def _normalize_record(record: dict[str, str]) -> dict[str, str]:
@@ -102,25 +78,6 @@ def _normalize_record(record: dict[str, str]) -> dict[str, str]:
         "end": str(record.get("end", "")).strip(),
         "text": str(record.get("text", "")).strip(),
     }
-
-
-def _count_characters(subtitles: list[dict[str, str]]) -> Counter[str]:
-    counts: Counter[str] = Counter()
-    for record in subtitles:
-        text = record["text"]
-        for keyword in CHARACTER_KEYWORDS:
-            if keyword in text:
-                counts[keyword] += text.count(keyword)
-    return counts
-
-
-def _format_characters(character_counts: Counter[str]) -> list[dict[str, int | str]]:
-    priority = {name: index for index, name in enumerate(CHARACTER_KEYWORDS)}
-    ordered = sorted(
-        character_counts.items(),
-        key=lambda item: (-item[1], priority.get(item[0], len(priority))),
-    )
-    return [{"name": name, "mentions": count} for name, count in ordered]
 
 
 def _extract_relationships(subtitles: list[dict[str, str]]) -> list[dict[str, str]]:

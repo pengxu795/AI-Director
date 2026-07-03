@@ -72,10 +72,32 @@ python3 -m venv .venv
 
 ## Module 2：剧情分析
 
-将字幕 JSON 分析为剧情结构 JSON，包含人物关系、主线剧情、冲突、爽点、反转、高潮和不可剧透内容。
+将字幕 JSON 通过 Story Pipeline 分析为剧情结构 JSON，包含人物、人物关系、主线剧情、剧情块、场景分段、冲突、爽点、反转、高潮和不可剧透内容。
+
+当前 schema：
+
+- `schema_version`
+- `characters`
+- `relationships`
+- `main_plot`
+- `story_blocks`
+- `scenes`
+- `conflicts`
+- `satisfying_points`
+- `twists`
+- `climax`
+- `spoiler_warnings`
 
 运行示例：
 
 ```bash
 .venv/bin/python app/analyze_story.py output/sample_subtitles.json output/sample_story_analysis.json
 ```
+
+## Prompt Layer
+
+Prompt 模板统一放在 `prompts/`，避免写死在 Python 代码里：
+
+- `prompts/story_analysis.md`
+- `prompts/script_generation.md`
+- `prompts/matcher.md`
