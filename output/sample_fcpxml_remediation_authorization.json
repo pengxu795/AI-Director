@@ -1,0 +1,290 @@
+{
+  "schema_version": "1.0",
+  "module": "Module 14",
+  "name": "Remediation Authorization / Implementation Scope Contract",
+  "authorization_id": "auth_r001",
+  "status": "authorization_ready",
+  "source_selection": {
+    "selection_id": "sel_r001",
+    "selected_remediation_id": "r001",
+    "selected_finding_id": "f001",
+    "source_selection_artifact": "output/sample_fcpxml_remediation_selection.json",
+    "source_selection_sha256": "6ed43d56f1e4eede3a148304d0c4a63b7bd025c7a9609321904bcf3a1cceaed1",
+    "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+    "source_review_git_commit": "2069668"
+  },
+  "authorized_by": "module14-reviewer",
+  "authorized_at": "2026-07-04T02:40:00+00:00",
+  "authorization_rationale": "Authorize a narrow future implementation scope for the selected evidence-backed remediation.",
+  "selected_remediation_id": "r001",
+  "selected_finding_id": "f001",
+  "evidence_refs": [
+    "ev_asset_001",
+    "ev_check_clip_source_ranges",
+    "ev_error_media_offline"
+  ],
+  "related_entities": {
+    "asset_ids": [
+      "asset_001"
+    ],
+    "check_ids": [],
+    "error_codes": []
+  },
+  "implementation_scope": {
+    "allowed_files": [
+      "modules/adapters/fcpxml_serializer.py",
+      "tests/test_fcpxml_serializer.py",
+      "docs/fcpxml_serializer.md",
+      "CHANGELOG.md",
+      "PROJECT_STATE.md"
+    ],
+    "prohibited_files": [
+      "modules/story/",
+      "modules/script/",
+      "modules/timeline/",
+      "data/",
+      "media/"
+    ],
+    "allowed_operations": [
+      "edit_existing_files_within_scope",
+      "add_tests_within_scope",
+      "update_docs_within_scope"
+    ],
+    "prohibited_operations": [
+      "modify_files_outside_allowed_scope",
+      "launch_editor",
+      "automatic_import",
+      "read_or_probe_media",
+      "transcode_render_or_export_video"
+    ]
+  },
+  "verification_plan": {
+    "commands": [
+      "python -m pytest -q",
+      "python -m compileall modules app tests",
+      "git diff --check"
+    ],
+    "required_results": [
+      "all_commands_pass",
+      "git_diff_limited_to_allowed_files",
+      "no_boundary_violations"
+    ]
+  },
+  "rollback_plan": {
+    "steps": [
+      "Stop implementation immediately.",
+      "Revert only files changed by the future implementation module.",
+      "Record the failed verification result before requesting Review."
+    ],
+    "requires_review_if_rollback_needed": true
+  },
+  "implementation_execution_allowed": false,
+  "serializer_change_execution_allowed": false,
+  "requires_module_15_implementation_review": true,
+  "immutable_authorization_snapshot": {
+    "selection": {
+      "schema_version": "1.0",
+      "module": "Module 13",
+      "name": "Evidence-Backed Remediation Selection",
+      "selection_id": "sel_r001",
+      "status": "selected",
+      "source_review": {
+        "schema_version": "1.0",
+        "status": "review_ready",
+        "source_record": {
+          "schema_version": "1.0",
+          "status": "recorded",
+          "fcpxml_path": "output/sample_minimal.fcpxml",
+          "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+          "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+          "git_commit": "281ea04",
+          "serializer_commit": "647f4e5"
+        }
+      },
+      "selection": {
+        "selection_id": "sel_r001",
+        "status": "selected",
+        "selected_remediation_id": "r001",
+        "selected_finding_id": "f001",
+        "selected_by": "module13-reviewer",
+        "selected_at": "2026-07-04T02:10:00+00:00",
+        "selection_rationale": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module.",
+        "priority": "P0",
+        "priority_override_reason": "",
+        "evidence_refs": [
+          "ev_asset_001",
+          "ev_check_clip_source_ranges",
+          "ev_error_media_offline"
+        ],
+        "related_entities": {
+          "asset_ids": [
+            "asset_001"
+          ],
+          "check_ids": [],
+          "error_codes": []
+        },
+        "source_review_artifact": "output/sample_fcpxml_compatibility_review.json",
+        "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+        "source_review_git_commit": "2069668",
+        "execution_allowed": false,
+        "serializer_change_allowed": false,
+        "requires_module_14_approval": true
+      },
+      "selected_remediation_id": "r001",
+      "selected_finding_id": "f001",
+      "selected_by": "module13-reviewer",
+      "selected_at": "2026-07-04T02:10:00+00:00",
+      "selection_rationale": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module.",
+      "priority": "P0",
+      "evidence_refs": [
+        "ev_asset_001",
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
+      ],
+      "related_entities": {
+        "asset_ids": [
+          "asset_001"
+        ],
+        "check_ids": [],
+        "error_codes": []
+      },
+      "source_review_artifact": "output/sample_fcpxml_compatibility_review.json",
+      "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+      "source_review_git_commit": "2069668",
+      "execution_allowed": false,
+      "serializer_change_allowed": false,
+      "requires_module_14_approval": true,
+      "immutable_selection_snapshot": {
+        "finding": {
+          "id": "f001",
+          "code": "media_not_online",
+          "severity": "blocker",
+          "original_severity": "blocker",
+          "category": "media",
+          "summary": "Asset asset_001 was offline.",
+          "reproduction": "Sample media manually recorded as offline.",
+          "evidence_refs": [
+            "ev_asset_001",
+            "ev_check_clip_source_ranges",
+            "ev_error_media_offline"
+          ],
+          "evidence_status": "linked",
+          "related_entities": {
+            "asset_ids": [
+              "asset_001"
+            ],
+            "check_ids": [],
+            "error_codes": []
+          },
+          "status": "open"
+        },
+        "remediation": {
+          "id": "r001",
+          "finding_id": "f001",
+          "priority": "P0",
+          "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
+          "owner": "human_review",
+          "serializer_change_allowed": false,
+          "requires_evidence_before_implementation": false,
+          "requires_review_before_implementation": true,
+          "status": "proposed"
+        },
+        "evidence_refs": [
+          "ev_asset_001",
+          "ev_check_clip_source_ranges",
+          "ev_error_media_offline"
+        ],
+        "related_entities": {
+          "asset_ids": [
+            "asset_001"
+          ],
+          "check_ids": [],
+          "error_codes": []
+        },
+        "review_status": "review_ready",
+        "review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+        "review_git_commit": "2069668",
+        "selected_priority": "P0",
+        "selection_rationale": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module."
+      },
+      "task_contract": {
+        "status": "task_contract_ready",
+        "implementation_allowed": false,
+        "serializer_change_allowed": false,
+        "requires_module_14_approval": true,
+        "requires_linked_evidence": true,
+        "selected_remediation_id": "r001",
+        "selected_finding_id": "f001",
+        "evidence_refs": [
+          "ev_asset_001",
+          "ev_check_clip_source_ranges",
+          "ev_error_media_offline"
+        ],
+        "scope_boundary": {
+          "may_define_future_fix_scope": true,
+          "may_modify_serializer": false,
+          "may_create_code_patch": false,
+          "may_modify_samples": false,
+          "may_launch_editor": false,
+          "may_read_media": false,
+          "may_render_or_export_video": false
+        },
+        "next_gate": "Module 13 Review must pass before remediation implementation begins."
+      },
+      "validation_result": {
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      },
+      "metadata": {
+        "selection_recorded": true,
+        "serializer_modified": false,
+        "media_files_read": false,
+        "editor_launched": false,
+        "automatic_import_performed": false,
+        "video_export_performed": false
+      }
+    },
+    "allowed_files": [
+      "modules/adapters/fcpxml_serializer.py",
+      "tests/test_fcpxml_serializer.py",
+      "docs/fcpxml_serializer.md",
+      "CHANGELOG.md",
+      "PROJECT_STATE.md"
+    ],
+    "prohibited_files": [
+      "modules/story/",
+      "modules/script/",
+      "modules/timeline/",
+      "data/",
+      "media/"
+    ],
+    "verification_commands": [
+      "python -m pytest -q",
+      "python -m compileall modules app tests",
+      "git diff --check"
+    ],
+    "rollback_steps": [
+      "Stop implementation immediately.",
+      "Revert only files changed by the future implementation module.",
+      "Record the failed verification result before requesting Review."
+    ],
+    "authorization_rationale": "Authorize a narrow future implementation scope for the selected evidence-backed remediation.",
+    "source_selection_sha256": "6ed43d56f1e4eede3a148304d0c4a63b7bd025c7a9609321904bcf3a1cceaed1"
+  },
+  "validation_result": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "metadata": {
+    "authorization_recorded": true,
+    "code_changes_applied": false,
+    "serializer_modified": false,
+    "fcpxml_generated": false,
+    "media_files_read": false,
+    "editor_launched": false,
+    "automatic_import_performed": false,
+    "video_export_performed": false
+  }
+}

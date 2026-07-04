@@ -2,6 +2,9 @@
 
 ## 2026-07-04
 
+- Added Module 14 remediation authorization and implementation scope contract generation.
+- Added selection SHA-256 freezing, allowed/prohibited file scope, verification plan, rollback plan, and immutable authorization snapshots.
+- Added tests for missing selection files, invalid selections, scope overlap, required verification/rollback, forbidden media commands, JSON-only writing, and no editor/media automation imports.
 - Added Module 13 evidence-backed remediation selection and task contract generation.
 - Added source review SHA-256 freezing, immutable selection snapshots, and explicit single-remediation selection.
 - Added validation that only `review_ready` Module 12 reviews with linked blocker/major findings can be selected.

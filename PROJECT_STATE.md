@@ -2,11 +2,11 @@
 
 ## Current Status
 
-- Current phase: Module 13 Review
-- Current scope: remediation selection contract only
-- Latest completed work: Module 13 evidence-backed remediation selection
-- Next module: Module 14 remediation authorization / implementation scope contract
-- Gate: Module 13 must pass before any serializer or adapter modification is authorized
+- Current phase: Module 14 Review
+- Current scope: remediation authorization and implementation scope contract only
+- Latest completed work: Module 14 remediation authorization / implementation scope contract
+- Next module: FCPXML compatibility remediation implementation
+- Gate: Module 14 Review passes before any serializer or adapter modification is executed
 
 ## Completed
 
@@ -32,19 +32,19 @@
 - Module 11: FCPXML manual import result capture and acceptance record
 - Module 12: FCPXML compatibility findings review and remediation plan
 - Module 13: evidence-backed remediation selection and task contract
+- Module 14: remediation authorization and implementation scope contract
 
 ## Pending Review
 
-- Review Module 13 evidence-backed remediation selection.
-- Confirm selection requires Module 12 `review_ready` input.
-- Confirm selected remediation resolves to a linked-evidence finding.
-- Confirm only one explicit remediation id can be selected.
-- Confirm source review SHA-256 is frozen in the selection output.
-- Confirm immutable snapshot does not change if the source review later changes.
-- Confirm `evidence_incomplete` or missing-evidence remediation cannot be selected.
-- Confirm task contract keeps `implementation_allowed=false` and `serializer_change_allowed=false`.
-- Confirm Module 13 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
-- Confirm Module 13 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
+- Review Module 14 remediation authorization scope contract.
+- Confirm authorization requires an existing Module 13 selection file and freezes `source_selection_sha256`.
+- Confirm allowed and prohibited files are explicit and cannot overlap.
+- Confirm verification and rollback plans are required.
+- Confirm media/editor automation verification commands are blocked.
+- Confirm immutable authorization snapshot preserves selection and scope.
+- Confirm `implementation_execution_allowed=false` and `serializer_change_execution_allowed=false`.
+- Confirm Module 14 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
+- Confirm Module 14 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
 
 ## Development Rule
 
