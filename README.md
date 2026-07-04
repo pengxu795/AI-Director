@@ -553,6 +553,10 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 - selection 必须为 `status="selected"`
 - selection 必须保持 `execution_allowed=false` 和 `serializer_change_allowed=false`
 - 必须存在 Module 13 的 immutable selection snapshot
+- 授权范围必须与 selected remediation 的 `owner` 和 `serializer_change_allowed` 一致
+- 当 selected remediation 的 `serializer_change_allowed=false` 时，不得授权 serializer、serializer test、serializer docs、FCPXML export CLI 或 `.fcpxml` 输出文件
+- 当 selected remediation 的 `owner="human_review"` 时，只能授权 review、protocol、record、manual follow-up 或 documentation 范围
+- human_review remediation 必须标记 `manual_follow_up_required=true`
 - 必须列出 `allowed_files` 与 `prohibited_files`
 - `allowed_files` 只是未来实施范围上限，不代表 Module 14 修改这些文件
 - `allowed_files` 与 `prohibited_files` 不得重叠
@@ -566,5 +570,5 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 运行示例：
 
 ```bash
-python app/authorize_fcpxml_remediation.py output/sample_fcpxml_remediation_selection.json output/sample_fcpxml_remediation_authorization.json --authorized-by module14-reviewer --authorized-at 2026-07-04T02:40:00+00:00 --authorization-rationale "Authorize a narrow future implementation scope for the selected evidence-backed remediation." --allowed-file modules/adapters/fcpxml_serializer.py --allowed-file tests/test_fcpxml_serializer.py --allowed-file docs/fcpxml_serializer.md --allowed-file CHANGELOG.md --allowed-file PROJECT_STATE.md --prohibited-file modules/story/ --prohibited-file modules/script/ --prohibited-file modules/timeline/ --prohibited-file data/ --prohibited-file media/ --verification-command "python -m pytest -q" --verification-command "python -m compileall modules app tests" --verification-command "git diff --check" --rollback-step "Stop implementation immediately." --rollback-step "Revert only files changed by the future implementation module." --rollback-step "Record the failed verification result before requesting Review."
+python app/authorize_fcpxml_remediation.py output/sample_fcpxml_remediation_selection.json output/sample_fcpxml_remediation_authorization.json --authorized-by module14-reviewer --authorized-at 2026-07-04T02:40:00+00:00 --authorization-rationale "Authorize a human-review follow-up scope for the selected evidence-backed remediation." --allowed-file docs/fcpxml_acceptance_record.md --allowed-file docs/fcpxml_compatibility_review.md --allowed-file output/sample_fcpxml_acceptance_record_offline_blocked.json --allowed-file output/sample_fcpxml_compatibility_review.json --allowed-file CHANGELOG.md --allowed-file PROJECT_STATE.md --prohibited-file modules/adapters/fcpxml_serializer.py --prohibited-file tests/test_fcpxml_serializer.py --prohibited-file docs/fcpxml_serializer.md --prohibited-file app/export_fcpxml.py --prohibited-file 'output/*.fcpxml' --prohibited-file modules/story/ --prohibited-file modules/script/ --prohibited-file modules/timeline/ --prohibited-file data/ --prohibited-file media/ --verification-command "python -m pytest -q" --verification-command "python -m compileall modules app tests" --verification-command "git diff --check" --rollback-step "Stop implementation immediately." --rollback-step "Revert only files changed by the future implementation module." --rollback-step "Record the failed verification result before requesting Review."
 ```

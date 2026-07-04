@@ -39,6 +39,9 @@
 - Review Module 14 remediation authorization scope contract.
 - Confirm authorization requires an existing Module 13 selection file and freezes `source_selection_sha256`.
 - Confirm allowed and prohibited files are explicit and cannot overlap.
+- Confirm authorization scope matches selected remediation owner and `serializer_change_allowed`.
+- Confirm human-review remediation cannot authorize serializer, adapter implementation, FCPXML export, or media-generation files.
+- Confirm human-review remediation sets `manual_follow_up_required=true`.
 - Confirm verification and rollback plans are required.
 - Confirm media/editor automation verification commands are blocked.
 - Confirm immutable authorization snapshot preserves selection and scope.

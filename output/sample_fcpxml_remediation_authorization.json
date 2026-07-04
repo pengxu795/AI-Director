@@ -15,7 +15,7 @@
   },
   "authorized_by": "module14-reviewer",
   "authorized_at": "2026-07-04T02:40:00+00:00",
-  "authorization_rationale": "Authorize a narrow future implementation scope for the selected evidence-backed remediation.",
+  "authorization_rationale": "Authorize a human-review follow-up scope for the selected evidence-backed remediation.",
   "selected_remediation_id": "r001",
   "selected_finding_id": "f001",
   "evidence_refs": [
@@ -32,19 +32,26 @@
   },
   "implementation_scope": {
     "allowed_files": [
-      "modules/adapters/fcpxml_serializer.py",
-      "tests/test_fcpxml_serializer.py",
-      "docs/fcpxml_serializer.md",
+      "docs/fcpxml_acceptance_record.md",
+      "docs/fcpxml_compatibility_review.md",
+      "output/sample_fcpxml_acceptance_record_offline_blocked.json",
+      "output/sample_fcpxml_compatibility_review.json",
       "CHANGELOG.md",
       "PROJECT_STATE.md"
     ],
     "prohibited_files": [
+      "modules/adapters/fcpxml_serializer.py",
+      "tests/test_fcpxml_serializer.py",
+      "docs/fcpxml_serializer.md",
+      "app/export_fcpxml.py",
+      "output/*.fcpxml",
       "modules/story/",
       "modules/script/",
       "modules/timeline/",
       "data/",
       "media/"
     ],
+    "manual_follow_up_required": true,
     "allowed_operations": [
       "edit_existing_files_within_scope",
       "add_tests_within_scope",
@@ -80,6 +87,7 @@
   },
   "implementation_execution_allowed": false,
   "serializer_change_execution_allowed": false,
+  "manual_follow_up_required": true,
   "requires_module_15_implementation_review": true,
   "immutable_authorization_snapshot": {
     "selection": {
@@ -246,13 +254,19 @@
       }
     },
     "allowed_files": [
-      "modules/adapters/fcpxml_serializer.py",
-      "tests/test_fcpxml_serializer.py",
-      "docs/fcpxml_serializer.md",
+      "docs/fcpxml_acceptance_record.md",
+      "docs/fcpxml_compatibility_review.md",
+      "output/sample_fcpxml_acceptance_record_offline_blocked.json",
+      "output/sample_fcpxml_compatibility_review.json",
       "CHANGELOG.md",
       "PROJECT_STATE.md"
     ],
     "prohibited_files": [
+      "modules/adapters/fcpxml_serializer.py",
+      "tests/test_fcpxml_serializer.py",
+      "docs/fcpxml_serializer.md",
+      "app/export_fcpxml.py",
+      "output/*.fcpxml",
       "modules/story/",
       "modules/script/",
       "modules/timeline/",
@@ -269,7 +283,7 @@
       "Revert only files changed by the future implementation module.",
       "Record the failed verification result before requesting Review."
     ],
-    "authorization_rationale": "Authorize a narrow future implementation scope for the selected evidence-backed remediation.",
+    "authorization_rationale": "Authorize a human-review follow-up scope for the selected evidence-backed remediation.",
     "source_selection_sha256": "6ed43d56f1e4eede3a148304d0c4a63b7bd025c7a9609321904bcf3a1cceaed1"
   },
   "validation_result": {

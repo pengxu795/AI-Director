@@ -25,9 +25,10 @@ def authorization_request():
         "source_selection_artifact": "output/sample_fcpxml_remediation_selection.json",
         "source_selection_sha256": hashlib.sha256(Path("output/sample_fcpxml_remediation_selection.json").read_bytes()).hexdigest(),
         "allowed_files": [
-            "modules/adapters/fcpxml_serializer.py",
-            "tests/test_fcpxml_serializer.py",
-            "docs/fcpxml_serializer.md",
+            "docs/fcpxml_acceptance_record.md",
+            "docs/fcpxml_compatibility_review.md",
+            "output/sample_fcpxml_acceptance_record_offline_blocked.json",
+            "output/sample_fcpxml_compatibility_review.json",
             "CHANGELOG.md",
             "PROJECT_STATE.md",
         ],
@@ -58,9 +59,10 @@ def test_authorization_records_scope_contract_without_execution():
     assert authorization["authorization_id"] == "auth_r001"
     assert authorization["implementation_execution_allowed"] is False
     assert authorization["serializer_change_execution_allowed"] is False
+    assert authorization["manual_follow_up_required"] is True
     assert authorization["metadata"]["code_changes_applied"] is False
     assert authorization["metadata"]["serializer_modified"] is False
-    assert "modules/adapters/fcpxml_serializer.py" in authorization["implementation_scope"]["allowed_files"]
+    assert "docs/fcpxml_acceptance_record.md" in authorization["implementation_scope"]["allowed_files"]
     assert authorization["immutable_authorization_snapshot"]["selection"]["selection_id"] == "sel_r001"
 
 
@@ -102,12 +104,61 @@ def test_authorization_from_file_blocks_missing_selection_file():
 
 def test_authorization_rejects_overlapping_allowed_and_prohibited_files():
     request = authorization_request()
-    request["prohibited_files"].append("modules/adapters/fcpxml_serializer.py")
+    request["prohibited_files"].append("docs/fcpxml_acceptance_record.md")
 
     authorization = build_fcpxml_remediation_authorization(load_selection(), request)
 
     assert authorization["status"] == "blocked"
     assert any(error["code"] == "allowed_file_also_prohibited" for error in authorization["validation_result"]["errors"])
+
+
+def test_human_review_remediation_rejects_serializer_allowed_file():
+    request = authorization_request()
+    request["allowed_files"].append("modules/adapters/fcpxml_serializer.py")
+
+    authorization = build_fcpxml_remediation_authorization(load_selection(), request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "serializer_scope_not_authorized_for_selected_remediation" for error in authorization["validation_result"]["errors"])
+    assert any(error["code"] == "human_review_scope_cannot_modify_implementation" for error in authorization["validation_result"]["errors"])
+
+
+def test_serializer_change_false_rejects_serializer_test_and_fcpxml_output_scope():
+    request = authorization_request()
+    request["allowed_files"].extend(["tests/test_fcpxml_serializer.py", "output/sample_minimal.fcpxml"])
+
+    authorization = build_fcpxml_remediation_authorization(load_selection(), request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "serializer_scope_not_authorized_for_selected_remediation" for error in authorization["validation_result"]["errors"])
+
+
+def test_human_review_remediation_allows_record_and_documentation_only_scope():
+    authorization = build_fcpxml_remediation_authorization(load_selection(), authorization_request())
+
+    assert authorization["status"] == "authorization_ready"
+    assert authorization["implementation_scope"]["manual_follow_up_required"] is True
+    assert all("fcpxml_serializer.py" not in path for path in authorization["implementation_scope"]["allowed_files"])
+
+
+def test_serializer_remediation_can_authorize_serializer_files_only_when_selected_remediation_allows_it():
+    selection = load_selection()
+    selection["immutable_selection_snapshot"]["remediation"]["owner"] = "engineering"
+    selection["immutable_selection_snapshot"]["remediation"]["serializer_change_allowed"] = True
+    request = authorization_request()
+    request["allowed_files"] = [
+        "modules/adapters/fcpxml_serializer.py",
+        "tests/test_fcpxml_serializer.py",
+        "docs/fcpxml_serializer.md",
+        "CHANGELOG.md",
+        "PROJECT_STATE.md",
+    ]
+
+    authorization = build_fcpxml_remediation_authorization(selection, request)
+
+    assert authorization["status"] == "authorization_ready"
+    assert authorization["manual_follow_up_required"] is False
+    assert "modules/adapters/fcpxml_serializer.py" in authorization["implementation_scope"]["allowed_files"]
 
 
 def test_authorization_requires_verification_and_rollback_plan():

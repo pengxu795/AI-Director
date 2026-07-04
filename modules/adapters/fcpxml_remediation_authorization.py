@@ -8,6 +8,7 @@ Final Cut Pro, automate import, read media, transcode, render, or export video.
 from __future__ import annotations
 
 import copy
+import fnmatch
 import hashlib
 import json
 from pathlib import Path
@@ -15,6 +16,20 @@ from typing import Any
 
 
 FCPXML_REMEDIATION_AUTHORIZATION_SCHEMA_VERSION = "1.0"
+
+SERIALIZER_SCOPE_PATTERNS = (
+    "modules/adapters/fcpxml_serializer.py",
+    "tests/test_fcpxml_serializer.py",
+    "docs/fcpxml_serializer.md",
+    "app/export_fcpxml.py",
+    "output/*.fcpxml",
+)
+
+HUMAN_REVIEW_PROHIBITED_PATTERNS = (
+    "modules/adapters/*.py",
+    "app/export_fcpxml.py",
+    "output/*.fcpxml",
+)
 
 
 def build_fcpxml_remediation_authorization_from_file(selection_path: str | Path, authorization_request: dict[str, Any]) -> dict[str, Any]:
@@ -93,12 +108,35 @@ def validate_fcpxml_remediation_authorization_input(selection: dict[str, Any], a
     prohibited_files = _safe_string_list(authorization_request.get("prohibited_files"))
     verification_commands = _safe_string_list(authorization_request.get("verification_commands"))
     rollback_steps = _safe_string_list(authorization_request.get("rollback_steps"))
+    selected_remediation = _selected_remediation(selection)
+    owner = str(selected_remediation.get("owner", ""))
+    serializer_change_allowed = selected_remediation.get("serializer_change_allowed") is True
     if not allowed_files:
         errors.append(_issue("missing_allowed_files", "authorization_request.allowed_files", "Authorization must list future allowed file paths."))
     if not prohibited_files:
         errors.append(_issue("missing_prohibited_files", "authorization_request.prohibited_files", "Authorization must list prohibited paths."))
     if set(allowed_files) & set(prohibited_files):
         errors.append(_issue("allowed_file_also_prohibited", "authorization_request.allowed_files", "Allowed and prohibited paths must not overlap."))
+    if not serializer_change_allowed:
+        for path in allowed_files:
+            if _matches_any(path, SERIALIZER_SCOPE_PATTERNS):
+                errors.append(
+                    _issue(
+                        "serializer_scope_not_authorized_for_selected_remediation",
+                        "authorization_request.allowed_files",
+                        f"Selected remediation does not authorize serializer or FCPXML generation scope: {path}.",
+                    )
+                )
+    if owner == "human_review":
+        for path in allowed_files:
+            if _matches_any(path, HUMAN_REVIEW_PROHIBITED_PATTERNS):
+                errors.append(
+                    _issue(
+                        "human_review_scope_cannot_modify_implementation",
+                        "authorization_request.allowed_files",
+                        f"Human-review remediation can authorize records, protocols, reviews, or documentation only: {path}.",
+                    )
+                )
     if not verification_commands:
         errors.append(_issue("missing_verification_commands", "authorization_request.verification_commands", "Authorization must define verification commands."))
     if not rollback_steps:
@@ -141,6 +179,8 @@ def _authorization_payload(selection: dict[str, Any], authorization_request: dic
     prohibited_files = _safe_string_list(authorization_request.get("prohibited_files"))
     verification_commands = _safe_string_list(authorization_request.get("verification_commands"))
     rollback_steps = _safe_string_list(authorization_request.get("rollback_steps"))
+    selected_remediation = _selected_remediation(selection)
+    manual_follow_up_required = str(selected_remediation.get("owner", "")) == "human_review"
     return {
         "source_selection": {
             "selection_id": str(selection.get("selection_id", "")),
@@ -162,6 +202,7 @@ def _authorization_payload(selection: dict[str, Any], authorization_request: dic
         "implementation_scope": {
             "allowed_files": allowed_files,
             "prohibited_files": prohibited_files,
+            "manual_follow_up_required": manual_follow_up_required,
             "allowed_operations": ["edit_existing_files_within_scope", "add_tests_within_scope", "update_docs_within_scope"],
             "prohibited_operations": [
                 "modify_files_outside_allowed_scope",
@@ -181,6 +222,7 @@ def _authorization_payload(selection: dict[str, Any], authorization_request: dic
         },
         "implementation_execution_allowed": False,
         "serializer_change_execution_allowed": False,
+        "manual_follow_up_required": manual_follow_up_required,
         "requires_module_15_implementation_review": True,
         "immutable_authorization_snapshot": {
             "selection": copy.deepcopy(selection),
@@ -191,7 +233,7 @@ def _authorization_payload(selection: dict[str, Any], authorization_request: dic
             "authorization_rationale": str(authorization_request.get("authorization_rationale", "")),
             "source_selection_sha256": str(authorization_request.get("source_selection_sha256", "")),
         },
-    }
+}
 
 
 def _blocked_authorization(authorization_request: dict[str, Any], errors: list[dict[str, str]]) -> dict[str, Any]:
@@ -224,6 +266,15 @@ def _blocked_authorization(authorization_request: dict[str, Any], errors: list[d
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:
     return {"code": code, "field": field, "message": message}
+
+
+def _selected_remediation(selection: dict[str, Any]) -> dict[str, Any]:
+    snapshot = _safe_dict(selection.get("immutable_selection_snapshot"))
+    return _safe_dict(snapshot.get("remediation"))
+
+
+def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
+    return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
 
 
 def _safe_dict(value: Any) -> dict[str, Any]:

@@ -38,6 +38,13 @@ Authorization requires:
 
 Verification commands must not invoke editor automation or media tools such as FFmpeg, OpenCV, moviepy, Final Cut Pro, or `osascript`.
 
+Authorization scope must match the selected remediation:
+
+- If `selected remediation.serializer_change_allowed == false`, `allowed_files` must not include serializer files, serializer tests, serializer docs, FCPXML export CLI files, or `.fcpxml` outputs.
+- If `selected remediation.owner == "human_review"`, scope must be limited to review, protocol, record, manual follow-up, or documentation artifacts.
+- Human-review remediations set `manual_follow_up_required: true`.
+- Serializer or FCPXML generation files can be authorized only when the selected remediation itself allows serializer changes.
+
 ## Output
 
 The authorization JSON contains:
@@ -56,6 +63,7 @@ The authorization JSON contains:
 - `rollback_plan`
 - `implementation_execution_allowed`
 - `serializer_change_execution_allowed`
+- `manual_follow_up_required`
 - `requires_module_15_implementation_review`
 - `immutable_authorization_snapshot`
 - `validation_result`
