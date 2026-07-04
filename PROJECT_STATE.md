@@ -22,6 +22,7 @@
 - Module 4 Review fix: callback reuse policy, partial matching coverage, and duplicate block-id cleanup
 - Module 4 Review fix: range-level reuse policy for mixed primary, duplicate, and callback ranges
 - Module 5 phase 1: editor-agnostic edit timeline generation
+- Module 5 Review fix: range-level unresolved records for rejected video ranges
 
 ## Pending Review
 

@@ -220,6 +220,7 @@ python app/generate_timeline.py output/sample_story_analysis.json output/sample_
 - 只消费 Module 4 timeline JSON
 - 只把合法且正时长的 `video_ranges` 转换为视频 clip
 - `unresolved`、非法时间、倒置时间、零时长范围不得生成 clip
+- 每个被拒绝的 `video_ranges` 必须进入 `unresolved_items`，并保留来源时间与原因
 - 每个 clip 必须保留 `source_timeline_item_id`、`narration_segment_id`、`source_story_block_id` 和 `reuse_policy`
 - 生成顺序化 `tracks.video` 和 `tracks.narration`，供后续导出器转换
 - 当前不做真实视频剪辑、渲染或导出

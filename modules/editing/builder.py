@@ -51,9 +51,9 @@ def build_edit_timeline(timeline_plan: dict[str, Any]) -> dict[str, Any]:
         if not str(item.get("text", "")).strip():
             continue
 
-        clips, cursor_ms = _clips_for_item(item, len(video_track), cursor_ms)
+        clips, rejected_ranges, cursor_ms = _clips_for_item(item, len(video_track), cursor_ms)
+        unresolved_items.extend(rejected_ranges)
         if not clips:
-            unresolved_items.append(_unresolved_item(item, "no_valid_clip_ranges"))
             continue
 
         segment_id = f"e{len(edit_segments) + 1:03d}"
@@ -114,17 +114,22 @@ def _clips_for_item(
     item: dict[str, Any],
     existing_clip_count: int,
     cursor_ms: int,
-) -> tuple[list[dict[str, Any]], int]:
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], int]:
     if str(item.get("status", "")) == "unresolved":
-        return [], cursor_ms
+        return [], [_unresolved_item(item, None, "item_marked_unresolved")], cursor_ms
 
     clips = []
+    rejected_ranges = []
     for source_range in _safe_list(item.get("video_ranges")):
         start = str(source_range.get("start", ""))
         end = str(source_range.get("end", ""))
         start_ms = _timecode_to_ms(start)
         end_ms = _timecode_to_ms(end)
-        if start_ms is None or end_ms is None or start_ms >= end_ms:
+        if start_ms is None or end_ms is None:
+            rejected_ranges.append(_unresolved_item(item, source_range, "invalid_timecode"))
+            continue
+        if start_ms >= end_ms:
+            rejected_ranges.append(_unresolved_item(item, source_range, "non_positive_duration"))
             continue
 
         duration_ms = end_ms - start_ms
@@ -147,7 +152,10 @@ def _clips_for_item(
         )
         cursor_ms = timeline_end_ms
 
-    return clips, cursor_ms
+    if not clips and not rejected_ranges:
+        rejected_ranges.append(_unresolved_item(item, None, "missing_or_invalid_range"))
+
+    return clips, rejected_ranges, cursor_ms
 
 
 def _narration_cue_for_item(
@@ -170,11 +178,15 @@ def _narration_cue_for_item(
     }
 
 
-def _unresolved_item(item: dict[str, Any], reason: str) -> dict[str, str]:
+def _unresolved_item(item: dict[str, Any], source_range: dict[str, Any] | None, reason: str) -> dict[str, str]:
+    source_range = source_range if isinstance(source_range, dict) else {}
     return {
         "source_timeline_item_id": str(item.get("id", "")),
         "narration_segment_id": str(item.get("narration_segment_id", "")),
         "segment_type": str(item.get("segment_type", "")),
+        "source_story_block_id": str(source_range.get("source_story_block_id", "")),
+        "source_start": str(source_range.get("start", "")),
+        "source_end": str(source_range.get("end", "")),
         "reason": reason,
     }
 

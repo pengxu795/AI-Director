@@ -108,24 +108,106 @@ def test_unresolved_timeline_item_does_not_create_clips_or_narration():
             "source_timeline_item_id": "t001",
             "narration_segment_id": "n001",
             "segment_type": "development",
-            "reason": "no_valid_clip_ranges",
+            "source_story_block_id": "",
+            "source_start": "",
+            "source_end": "",
+            "reason": "item_marked_unresolved",
         }
     ]
 
 
-def test_invalid_or_zero_duration_ranges_are_unresolved_not_fabricated():
+def test_valid_and_reversed_ranges_create_clip_and_unresolved_record():
     timeline = base_timeline(
         [
-            timeline_item("t001", [video_range("b001", "00:00:03.000", "00:00:03.000")]),
-            timeline_item("t002", [video_range("b002", "00:00:05.000", "00:00:04.000")]),
-            timeline_item("t003", [video_range("b003", "bad", "00:00:06.000")]),
+            timeline_item(
+                "t001",
+                [
+                    video_range("b001", "00:00:01.000", "00:00:02.000"),
+                    video_range("b002", "00:00:05.000", "00:00:04.000"),
+                ],
+            ),
+        ]
+    )
+
+    edit_timeline = build_edit_timeline(timeline)
+
+    assert [clip["source_story_block_id"] for clip in edit_timeline["tracks"]["video"]] == ["b001"]
+    assert edit_timeline["unresolved_items"] == [
+        {
+            "source_timeline_item_id": "t001",
+            "narration_segment_id": "n001",
+            "segment_type": "development",
+            "source_story_block_id": "b002",
+            "source_start": "00:00:05.000",
+            "source_end": "00:00:04.000",
+            "reason": "non_positive_duration",
+        }
+    ]
+    assert edit_timeline["metadata"]["unresolved_count"] == 1
+
+
+def test_valid_and_bad_timecode_ranges_create_clip_and_unresolved_record():
+    timeline = base_timeline(
+        [
+            timeline_item(
+                "t001",
+                [
+                    video_range("b001", "00:00:01.000", "00:00:02.000"),
+                    video_range("b002", "bad", "00:00:04.000"),
+                ],
+            ),
+        ]
+    )
+
+    edit_timeline = build_edit_timeline(timeline)
+
+    assert [clip["source_story_block_id"] for clip in edit_timeline["tracks"]["video"]] == ["b001"]
+    assert edit_timeline["unresolved_items"][0]["source_story_block_id"] == "b002"
+    assert edit_timeline["unresolved_items"][0]["source_start"] == "bad"
+    assert edit_timeline["unresolved_items"][0]["source_end"] == "00:00:04.000"
+    assert edit_timeline["unresolved_items"][0]["reason"] == "invalid_timecode"
+
+
+def test_all_invalid_ranges_create_individual_unresolved_records_without_clips():
+    timeline = base_timeline(
+        [
+            timeline_item(
+                "t001",
+                [
+                    video_range("b001", "00:00:03.000", "00:00:03.000"),
+                    video_range("b002", "00:00:05.000", "00:00:04.000"),
+                    video_range("b003", "bad", "00:00:06.000"),
+                ],
+            ),
         ]
     )
 
     edit_timeline = build_edit_timeline(timeline)
 
     assert edit_timeline["tracks"]["video"] == []
-    assert [item["source_timeline_item_id"] for item in edit_timeline["unresolved_items"]] == ["t001", "t002", "t003"]
+    assert [item["source_story_block_id"] for item in edit_timeline["unresolved_items"]] == ["b001", "b002", "b003"]
+    assert [item["reason"] for item in edit_timeline["unresolved_items"]] == [
+        "non_positive_duration",
+        "non_positive_duration",
+        "invalid_timecode",
+    ]
+
+
+def test_missing_or_invalid_range_record_is_explicit():
+    edit_timeline = build_edit_timeline(base_timeline([timeline_item("t001", [])]))
+
+    assert edit_timeline["tracks"]["video"] == []
+    assert edit_timeline["unresolved_items"] == [
+        {
+            "source_timeline_item_id": "t001",
+            "narration_segment_id": "n001",
+            "segment_type": "development",
+            "source_story_block_id": "",
+            "source_start": "",
+            "source_end": "",
+            "reason": "missing_or_invalid_range",
+        }
+    ]
 
 
 def test_reuse_policy_and_traceability_fields_are_preserved():

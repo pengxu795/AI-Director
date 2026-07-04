@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Fixed Module 5 Review blocker where invalid ranges inside otherwise valid timeline items were silently dropped.
+- Added range-level `unresolved_items` records with source ids, source times, and explicit rejection reasons.
+- Added tests for valid plus reversed range, valid plus bad timecode, all-invalid ranges, and item-marked-unresolved handling.
 - Added Module 5 phase 1 edit timeline generation.
 - Added editor-agnostic edit timeline schema with `sequence`, `edit_segments`, `tracks`, and `unresolved_items`.
 - Added edit timeline CLI and sample output.
