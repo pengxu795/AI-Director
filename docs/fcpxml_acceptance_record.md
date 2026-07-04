@@ -43,6 +43,8 @@ The manual result must record:
 - library name
 - project name
 - imported state
+- import result
+- media validation result
 - compatibility result
 - every checklist result from the Module 10 protocol
 - every expected asset import state
@@ -64,20 +66,34 @@ If any identifier differs, Module 11 blocks the record with `artifact_identifier
 
 ## Result Rules
 
-`status` and `compatibility_result` may be:
+`status`, `import_result`, `media_validation_result`, and `compatibility_result` may be:
 
 - `passed`
 - `failed`
 - `blocked`
 
+Result levels are intentionally separate:
+
+- `import_result`: whether Final Cut Pro accepted the `.fcpxml`.
+- `media_validation_result`: whether expected media was online and could be manually checked.
+- `compatibility_result`: full compatibility. It may be `passed` only when import and media validation both pass.
+
 A `passed` record requires:
 
 - `imported == true`
+- `import_result == "passed"`
+- `media_validation_result == "passed"`
+- `compatibility_result == "passed"`
+- every expected asset has exactly one result
+- every expected asset `import_state == "online"`
 - every checklist item is `passed`
+- no blocker `import_errors`
 - artifact relationship was manually confirmed
 - required environment and evidence fields are present
 
-Failed or blocked records may include `import_errors` and failed checklist items. They are still valid records when they are traceable and evidence-backed.
+Failed or blocked records may include offline, missing, or unverified assets; `import_errors`; and failed checklist items. They are still valid records when they are traceable and evidence-backed.
+
+When the `.fcpxml` imports but media is offline, use `import_result: "passed"` with `media_validation_result: "blocked"` or `failed`, and keep `compatibility_result` non-passing. This records that XML import was checked without claiming the edit chain is usable.
 
 ## Boundary
 

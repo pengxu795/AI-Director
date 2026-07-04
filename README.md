@@ -411,8 +411,11 @@ python app/generate_fcpxml_acceptance_protocol.py output/sample_fcpxml_design.js
 - 协议必须是 `acceptance_ready`
 - 人工结果的 artifact identifiers 必须与协议一致
 - 必须记录 FCP 版本、macOS 版本、素材在线/离线状态、错误信息和证据路径
-- `passed` 结果要求所有 checklist 均通过
-- 可以记录 `failed` 或 `blocked`，但必须保留证据和错误信息
+- `result` 拆分为 `import_result`、`media_validation_result` 和 `compatibility_result`
+- `passed` 结果要求所有 checklist 均通过，且所有素材必须 `online`
+- 任一素材 `offline`、`missing` 或 `unverified` 时不得记为完整兼容性通过
+- 任一 blocker import error 都不得记为 `passed`
+- 可以记录 `failed` 或 `blocked`，但必须保留证据、错误信息和媒体状态
 - 不启动或控制 Final Cut Pro，不读取媒体，不转码、不渲染、不导出成片
 
 运行示例：

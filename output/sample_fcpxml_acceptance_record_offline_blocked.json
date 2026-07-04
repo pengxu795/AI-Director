@@ -36,25 +36,25 @@
     "project_name": "Module 11 Sample"
   },
   "result": {
-    "status": "passed",
+    "status": "blocked",
     "import_result": "passed",
-    "media_validation_result": "passed",
+    "media_validation_result": "blocked",
     "imported": true,
-    "compatibility_result": "passed",
-    "summary": "Sample manual acceptance record for a minimal two-clip FCPXML import with online media."
+    "compatibility_result": "blocked",
+    "summary": "FCPXML import was accepted, but offline media prevents source range and edit-chain validation."
   },
   "asset_results": [
     {
       "asset_id": "asset_001",
       "source_file": "/media/drama_episode_01.mp4",
-      "import_state": "online",
-      "notes": "Sample media manually recorded as online."
+      "import_state": "offline",
+      "notes": "Sample media manually recorded as offline."
     },
     {
       "asset_id": "asset_002",
       "source_file": "/media/drama_episode_01.mp4",
-      "import_state": "online",
-      "notes": "Sample media manually recorded as online."
+      "import_state": "offline",
+      "notes": "Sample media manually recorded as offline."
     }
   ],
   "check_results": [
@@ -88,10 +88,10 @@
     },
     {
       "id": "clip_source_ranges",
-      "status": "passed",
-      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "status": "blocked",
+      "actual_result": "Media was offline, so source range verification could not be completed.",
       "evidence_path": "evidence/module11_sample_import.png",
-      "notes": ""
+      "notes": "Offline media prevents complete edit validation."
     },
     {
       "id": "clip_timeline_offsets",
@@ -115,7 +115,13 @@
       "notes": ""
     }
   ],
-  "import_errors": [],
+  "import_errors": [
+    {
+      "code": "media_offline",
+      "message": "FCPXML imported, but sample media assets were offline during manual validation.",
+      "severity": "blocker"
+    }
+  ],
   "evidence": [
     {
       "type": "screenshot",
@@ -125,16 +131,22 @@
   ],
   "regression_samples": [
     {
-      "name": "module11_minimal_fcpxml_import_passed",
+      "name": "module11_minimal_fcpxml_import_blocked",
       "fcpxml_path": "output/sample_minimal.fcpxml",
       "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
-      "result": "passed"
+      "result": "blocked"
     }
   ],
   "validation_result": {
     "valid": true,
     "errors": [],
-    "warnings": []
+    "warnings": [
+      {
+        "code": "media_assets_not_online",
+        "field": "manual_result.asset_results",
+        "message": "Media assets are not online: asset_001, asset_002."
+      }
+    ]
   },
   "metadata": {
     "record_generated": true,

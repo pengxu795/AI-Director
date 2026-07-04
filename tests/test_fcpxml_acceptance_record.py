@@ -29,7 +29,7 @@ def acceptance_ready_protocol(tmp_path):
     )
 
 
-def manual_result(protocol, status="passed"):
+def manual_result(protocol, status="passed", asset_state="online", blocker_error=False):
     artifacts = protocol["source_artifacts"]
     checks = [
         {
@@ -63,6 +63,8 @@ def manual_result(protocol, status="passed"):
         "macos_version": "15.5",
         "library_name": "AI-Director Acceptance",
         "project_name": "Module 11 Sample",
+        "import_result": "passed" if status in {"passed", "failed", "blocked"} else status,
+        "media_validation_result": "passed" if status == "passed" else status,
         "imported": status == "passed",
         "compatibility_result": status,
         "summary": "Manual FCPXML import result captured.",
@@ -70,18 +72,18 @@ def manual_result(protocol, status="passed"):
             {
                 "asset_id": asset["asset_id"],
                 "source_file": asset["source_file"],
-                "import_state": "offline",
-                "notes": "Source media intentionally unavailable in the protocol sample.",
+                "import_state": asset_state,
+                "notes": f"Source media manually recorded as {asset_state}.",
             }
             for asset in protocol["expected_assets"]
         ],
         "checks": checks,
         "import_errors": []
-        if status == "passed"
+        if status == "passed" and not blocker_error
         else [
             {
-                "code": "marker_position_mismatch",
-                "message": "One marker did not appear at the expected clip-relative position.",
+                "code": "manual_import_blocker",
+                "message": "A blocker was observed during manual import review.",
                 "severity": "blocker",
             }
         ],
@@ -120,8 +122,10 @@ def test_acceptance_record_captures_passing_manual_result(tmp_path):
     assert record["artifact_relationship_confirmation"]["relationship_verified"] is True
     assert record["environment"]["final_cut_pro_version"] == "10.8.1"
     assert record["result"]["compatibility_result"] == "passed"
+    assert record["result"]["import_result"] == "passed"
+    assert record["result"]["media_validation_result"] == "passed"
     assert all(check["status"] == "passed" for check in record["check_results"])
-    assert all(asset["import_state"] == "offline" for asset in record["asset_results"])
+    assert all(asset["import_state"] == "online" for asset in record["asset_results"])
     assert record["metadata"]["editor_launched"] is False
     assert record["metadata"]["automatic_import_performed"] is False
 
@@ -135,8 +139,60 @@ def test_acceptance_record_captures_failed_result_with_error_details(tmp_path):
     assert record["status"] == "recorded"
     assert record["validation_result"]["valid"] is True
     assert record["result"]["compatibility_result"] == "failed"
-    assert record["import_errors"][0]["code"] == "marker_position_mismatch"
+    assert record["import_errors"][0]["code"] == "manual_import_blocker"
     assert any(check["status"] == "failed" for check in record["check_results"])
+
+
+@pytest.mark.parametrize("asset_state", ["offline", "missing", "unverified"])
+def test_acceptance_record_does_not_allow_pass_when_media_is_not_online(tmp_path, asset_state):
+    protocol = acceptance_ready_protocol(tmp_path)
+    result = manual_result(protocol, asset_state=asset_state)
+
+    validation = validate_fcpxml_acceptance_record_input(protocol, result)
+
+    assert validation["valid"] is False
+    assert any(error["code"] == "media_assets_not_online" for error in validation["errors"])
+    assert any(error["code"] == "passed_result_requires_online_assets" for error in validation["errors"])
+
+
+def test_acceptance_record_can_capture_import_passed_but_offline_media_as_blocked(tmp_path):
+    protocol = acceptance_ready_protocol(tmp_path)
+    result = manual_result(protocol, status="blocked", asset_state="offline")
+    result["imported"] = True
+    result["import_result"] = "passed"
+    result["media_validation_result"] = "blocked"
+    result["compatibility_result"] = "blocked"
+    result["summary"] = "Only FCPXML import was verified; offline media prevents edit validation."
+
+    record = build_fcpxml_acceptance_record(protocol, result)
+
+    assert record["status"] == "recorded"
+    assert record["validation_result"]["valid"] is True
+    assert any(warning["code"] == "media_assets_not_online" for warning in record["validation_result"]["warnings"])
+    assert record["result"]["import_result"] == "passed"
+    assert record["result"]["media_validation_result"] == "blocked"
+    assert record["result"]["compatibility_result"] == "blocked"
+
+
+def test_acceptance_record_does_not_allow_pass_with_blocker_import_error(tmp_path):
+    protocol = acceptance_ready_protocol(tmp_path)
+    result = manual_result(protocol, blocker_error=True)
+
+    validation = validate_fcpxml_acceptance_record_input(protocol, result)
+
+    assert validation["valid"] is False
+    assert any(error["code"] == "passed_result_has_blocker_import_error" for error in validation["errors"])
+
+
+def test_acceptance_record_requires_asset_validation_for_every_expected_asset(tmp_path):
+    protocol = acceptance_ready_protocol(tmp_path)
+    result = manual_result(protocol)
+    result["asset_results"] = result["asset_results"][:-1]
+
+    validation = validate_fcpxml_acceptance_record_input(protocol, result)
+
+    assert validation["valid"] is False
+    assert any(error["code"] == "missing_asset_validation" for error in validation["errors"])
 
 
 def test_acceptance_record_blocks_protocol_without_acceptance_ready():

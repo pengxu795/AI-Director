@@ -59,6 +59,8 @@ def build_fcpxml_acceptance_record(protocol: dict[str, Any], manual_result: dict
         },
         "result": {
             "status": str(manual_result.get("status", "")),
+            "import_result": str(manual_result.get("import_result", "")),
+            "media_validation_result": str(manual_result.get("media_validation_result", "")),
             "imported": manual_result.get("imported"),
             "compatibility_result": str(manual_result.get("compatibility_result", "")),
             "summary": str(manual_result.get("summary", "")),
@@ -169,15 +171,33 @@ def _validate_environment(manual_result: dict[str, Any], errors: list[dict[str, 
 
 def _validate_result_status(manual_result: dict[str, Any], errors: list[dict[str, str]]) -> None:
     status = str(manual_result.get("status", ""))
+    import_result = str(manual_result.get("import_result", ""))
+    media_validation_result = str(manual_result.get("media_validation_result", ""))
     compatibility_result = str(manual_result.get("compatibility_result", ""))
     if status not in RESULT_STATUSES:
         errors.append(_issue("invalid_result_status", "manual_result.status", "Manual result status must be passed, failed, or blocked."))
+    if import_result not in RESULT_STATUSES:
+        errors.append(_issue("invalid_import_result", "manual_result.import_result", "Import result must be passed, failed, or blocked."))
+    if media_validation_result not in RESULT_STATUSES:
+        errors.append(_issue("invalid_media_validation_result", "manual_result.media_validation_result", "Media validation result must be passed, failed, or blocked."))
     if compatibility_result not in RESULT_STATUSES:
         errors.append(_issue("invalid_compatibility_result", "manual_result.compatibility_result", "Compatibility result must be passed, failed, or blocked."))
+    if compatibility_result == "passed" and (import_result != "passed" or media_validation_result != "passed"):
+        errors.append(
+            _issue(
+                "compatibility_requires_import_and_media_pass",
+                "manual_result.compatibility_result",
+                "Compatibility can pass only when import_result and media_validation_result both pass.",
+            )
+        )
     if status == "passed" and compatibility_result != "passed":
         errors.append(_issue("pass_status_mismatch", "manual_result.compatibility_result", "A passed record must have compatibility_result passed."))
+    if status == "passed" and (import_result != "passed" or media_validation_result != "passed"):
+        errors.append(_issue("passed_result_requires_import_and_media_pass", "manual_result.status", "A passed record requires import and media validation to pass."))
     if status == "passed" and manual_result.get("imported") is not True:
         errors.append(_issue("passed_result_requires_import", "manual_result.imported", "A passed record requires imported=true."))
+    if (status == "passed" or compatibility_result == "passed") and _has_blocker_import_error(manual_result):
+        errors.append(_issue("passed_result_has_blocker_import_error", "manual_result.import_errors", "Passed compatibility cannot include blocker import errors."))
 
 
 def _validate_check_results(protocol: dict[str, Any], manual_result: dict[str, Any], errors: list[dict[str, str]]) -> None:
@@ -207,14 +227,28 @@ def _validate_asset_results(
     expected_asset_ids = [str(item.get("asset_id", "")) for item in _safe_list(protocol.get("expected_assets"))]
     asset_results = _safe_list(manual_result.get("asset_results"))
     result_asset_ids = [str(item.get("asset_id", "")) for item in asset_results]
+    if len(result_asset_ids) != len(set(result_asset_ids)):
+        errors.append(_issue("duplicate_asset_validation", "manual_result.asset_results", "Each expected asset can have only one manual result."))
     if sorted(result_asset_ids) != sorted(expected_asset_ids):
         errors.append(_issue("asset_result_mismatch", "manual_result.asset_results", "Manual asset results must cover every expected asset."))
+    missing_asset_ids = sorted(set(expected_asset_ids) - set(result_asset_ids))
+    if missing_asset_ids:
+        errors.append(_issue("missing_asset_validation", "manual_result.asset_results", f"Missing manual asset validation for: {', '.join(missing_asset_ids)}."))
+    non_online_assets = []
     for index, asset in enumerate(asset_results):
         prefix = f"manual_result.asset_results[{index}]"
         if asset.get("import_state") not in ASSET_IMPORT_STATES:
             errors.append(_issue("invalid_asset_import_state", f"{prefix}.import_state", "Asset import state must be online, offline, missing, or unverified."))
+        elif asset.get("import_state") != "online":
+            non_online_assets.append(str(asset.get("asset_id", "")))
         if asset.get("import_state") == "unverified":
             warnings.append(_issue("asset_import_state_unverified", f"{prefix}.import_state", "Asset import state remains unverified."))
+    if non_online_assets:
+        if manual_result.get("status") == "passed" or manual_result.get("compatibility_result") == "passed":
+            errors.append(_issue("media_assets_not_online", "manual_result.asset_results", f"Media assets are not online: {', '.join(non_online_assets)}."))
+            errors.append(_issue("passed_result_requires_online_assets", "manual_result.asset_results", "A passed record requires every expected asset to be online."))
+        else:
+            warnings.append(_issue("media_assets_not_online", "manual_result.asset_results", f"Media assets are not online: {', '.join(non_online_assets)}."))
 
 
 def _validate_evidence(manual_result: dict[str, Any], errors: list[dict[str, str]]) -> None:
@@ -231,6 +265,10 @@ def _validate_boundary_flags(manual_result: dict[str, Any], errors: list[dict[st
     for field in ("media_files_read_by_code", "editor_launched_by_code", "automatic_import_performed", "video_export_performed"):
         if manual_result.get(field) is not False:
             errors.append(_issue("boundary_violation", f"manual_result.{field}", "Module 11 must not perform this action by code."))
+
+
+def _has_blocker_import_error(manual_result: dict[str, Any]) -> bool:
+    return any(str(error.get("severity", "")) == "blocker" for error in _safe_list(manual_result.get("import_errors")))
 
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:

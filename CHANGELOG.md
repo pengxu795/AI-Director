@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Fixed Module 11 PASS rules so media must be online and blocker import errors cannot pass.
+- Split manual results into `import_result`, `media_validation_result`, and `compatibility_result`.
+- Added tests and samples for online PASS and offline-media blocked records.
 - Added Module 11 FCPXML manual import result capture and acceptance record.
 - Added validation for acceptance-ready protocols, artifact identifier matching, relationship confirmation, checklist results, asset import states, evidence, and importer errors.
 - Added sample manual result and acceptance record data for regression review.

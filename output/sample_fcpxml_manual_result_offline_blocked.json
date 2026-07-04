@@ -1,19 +1,6 @@
 {
-  "schema_version": "1.0",
-  "module": "Module 11",
-  "name": "FCPXML Manual Import Result Capture / Acceptance Record",
-  "status": "recorded",
-  "source_protocol": {
-    "schema_version": "1.0",
-    "fcpxml_path": "output/sample_minimal.fcpxml",
-    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
-    "source_design_path": "output/sample_fcpxml_design.json",
-    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
-    "git_commit": "281ea04",
-    "serializer_commit": "647f4e5",
-    "acceptance_ready": true
-  },
-  "recorded_artifacts": {
+  "status": "blocked",
+  "artifact_identifiers": {
     "fcpxml_path": "output/sample_minimal.fcpxml",
     "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
     "source_design_path": "output/sample_fcpxml_design.json",
@@ -27,37 +14,32 @@
     "confirmed_at": "2026-07-04T01:00:00+00:00",
     "notes": "Confirmed the design JSON, FCPXML file, git commit, and serializer commit before manual import."
   },
-  "environment": {
-    "tester": "manual-reviewer",
-    "run_at": "2026-07-04T01:05:00+00:00",
-    "final_cut_pro_version": "10.8.1",
-    "macos_version": "15.5",
-    "library_name": "AI-Director Acceptance",
-    "project_name": "Module 11 Sample"
-  },
-  "result": {
-    "status": "passed",
-    "import_result": "passed",
-    "media_validation_result": "passed",
-    "imported": true,
-    "compatibility_result": "passed",
-    "summary": "Sample manual acceptance record for a minimal two-clip FCPXML import with online media."
-  },
+  "tester": "manual-reviewer",
+  "run_at": "2026-07-04T01:05:00+00:00",
+  "final_cut_pro_version": "10.8.1",
+  "macos_version": "15.5",
+  "library_name": "AI-Director Acceptance",
+  "project_name": "Module 11 Sample",
+  "import_result": "passed",
+  "media_validation_result": "blocked",
+  "imported": true,
+  "compatibility_result": "blocked",
+  "summary": "FCPXML import was accepted, but offline media prevents source range and edit-chain validation.",
   "asset_results": [
     {
       "asset_id": "asset_001",
       "source_file": "/media/drama_episode_01.mp4",
-      "import_state": "online",
-      "notes": "Sample media manually recorded as online."
+      "import_state": "offline",
+      "notes": "Sample media manually recorded as offline."
     },
     {
       "asset_id": "asset_002",
       "source_file": "/media/drama_episode_01.mp4",
-      "import_state": "online",
-      "notes": "Sample media manually recorded as online."
+      "import_state": "offline",
+      "notes": "Sample media manually recorded as offline."
     }
   ],
-  "check_results": [
+  "checks": [
     {
       "id": "preflight_fcpxml_file",
       "status": "passed",
@@ -88,10 +70,10 @@
     },
     {
       "id": "clip_source_ranges",
-      "status": "passed",
-      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "status": "blocked",
+      "actual_result": "Media was offline, so source range verification could not be completed.",
       "evidence_path": "evidence/module11_sample_import.png",
-      "notes": ""
+      "notes": "Offline media prevents complete edit validation."
     },
     {
       "id": "clip_timeline_offsets",
@@ -115,7 +97,13 @@
       "notes": ""
     }
   ],
-  "import_errors": [],
+  "import_errors": [
+    {
+      "code": "media_offline",
+      "message": "FCPXML imported, but sample media assets were offline during manual validation.",
+      "severity": "blocker"
+    }
+  ],
   "evidence": [
     {
       "type": "screenshot",
@@ -125,23 +113,14 @@
   ],
   "regression_samples": [
     {
-      "name": "module11_minimal_fcpxml_import_passed",
+      "name": "module11_minimal_fcpxml_import_blocked",
       "fcpxml_path": "output/sample_minimal.fcpxml",
       "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
-      "result": "passed"
+      "result": "blocked"
     }
   ],
-  "validation_result": {
-    "valid": true,
-    "errors": [],
-    "warnings": []
-  },
-  "metadata": {
-    "record_generated": true,
-    "manual_result_capture_only": true,
-    "media_files_read": false,
-    "editor_launched": false,
-    "automatic_import_performed": false,
-    "video_export_performed": false
-  }
+  "media_files_read_by_code": false,
+  "editor_launched_by_code": false,
+  "automatic_import_performed": false,
+  "video_export_performed": false
 }
