@@ -120,12 +120,41 @@ def test_human_review_remediation_rejects_serializer_allowed_file():
 
     assert authorization["status"] == "blocked"
     assert any(error["code"] == "serializer_scope_not_authorized_for_selected_remediation" for error in authorization["validation_result"]["errors"])
-    assert any(error["code"] == "human_review_scope_cannot_modify_implementation" for error in authorization["validation_result"]["errors"])
+    assert any(error["code"] == "human_review_scope_path_not_allowed" for error in authorization["validation_result"]["errors"])
 
 
 def test_serializer_change_false_rejects_serializer_test_and_fcpxml_output_scope():
     request = authorization_request()
     request["allowed_files"].extend(["tests/test_fcpxml_serializer.py", "output/sample_minimal.fcpxml"])
+
+    authorization = build_fcpxml_remediation_authorization(load_selection(), request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "serializer_scope_not_authorized_for_selected_remediation" for error in authorization["validation_result"]["errors"])
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tests/test_fcpxml_serializer_regression.py",
+        "docs/fcpxml_serializer_followup.md",
+        "app/export_fcpxml_v2.py",
+        "modules/adapters/fcpxml_export_helper.py",
+    ],
+)
+def test_human_review_scope_rejects_semantic_serializer_or_export_paths(path):
+    request = authorization_request()
+    request["allowed_files"].append(path)
+
+    authorization = build_fcpxml_remediation_authorization(load_selection(), request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "human_review_scope_path_not_allowed" for error in authorization["validation_result"]["errors"])
+
+
+def test_serializer_change_false_rejects_adapter_export_helper_path():
+    request = authorization_request()
+    request["allowed_files"].append("modules/adapters/fcpxml_export_helper.py")
 
     authorization = build_fcpxml_remediation_authorization(load_selection(), request)
 
@@ -148,8 +177,10 @@ def test_serializer_remediation_can_authorize_serializer_files_only_when_selecte
     request = authorization_request()
     request["allowed_files"] = [
         "modules/adapters/fcpxml_serializer.py",
-        "tests/test_fcpxml_serializer.py",
-        "docs/fcpxml_serializer.md",
+        "modules/adapters/fcpxml_export_helper.py",
+        "tests/test_fcpxml_serializer_regression.py",
+        "docs/fcpxml_serializer_followup.md",
+        "app/export_fcpxml_v2.py",
         "CHANGELOG.md",
         "PROJECT_STATE.md",
     ]

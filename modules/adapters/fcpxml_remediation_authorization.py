@@ -18,17 +18,25 @@ from typing import Any
 FCPXML_REMEDIATION_AUTHORIZATION_SCHEMA_VERSION = "1.0"
 
 SERIALIZER_SCOPE_PATTERNS = (
-    "modules/adapters/fcpxml_serializer.py",
-    "tests/test_fcpxml_serializer.py",
-    "docs/fcpxml_serializer.md",
-    "app/export_fcpxml.py",
+    "modules/adapters/*serializer*.py",
+    "modules/adapters/*fcpxml*export*.py",
+    "tests/*serializer*.py",
+    "tests/*fcpxml*export*.py",
+    "docs/*serializer*.md",
+    "docs/*fcpxml*export*.md",
+    "app/*export_fcpxml*.py",
     "output/*.fcpxml",
 )
 
-HUMAN_REVIEW_PROHIBITED_PATTERNS = (
-    "modules/adapters/*.py",
-    "app/export_fcpxml.py",
-    "output/*.fcpxml",
+HUMAN_REVIEW_ALLOWED_PATTERNS = (
+    "docs/fcpxml_acceptance_*.md",
+    "docs/fcpxml_compatibility_*.md",
+    "output/*acceptance*.json",
+    "output/*compatibility_review*.json",
+    "output/*manual_follow_up*.json",
+    "CHANGELOG.md",
+    "PROJECT_STATE.md",
+    "prompts/*human_review*.md",
 )
 
 
@@ -129,12 +137,12 @@ def validate_fcpxml_remediation_authorization_input(selection: dict[str, Any], a
                 )
     if owner == "human_review":
         for path in allowed_files:
-            if _matches_any(path, HUMAN_REVIEW_PROHIBITED_PATTERNS):
+            if not _matches_any(path, HUMAN_REVIEW_ALLOWED_PATTERNS):
                 errors.append(
                     _issue(
-                        "human_review_scope_cannot_modify_implementation",
+                        "human_review_scope_path_not_allowed",
                         "authorization_request.allowed_files",
-                        f"Human-review remediation can authorize records, protocols, reviews, or documentation only: {path}.",
+                        f"Human-review remediation can authorize only review, protocol, record, manual follow-up, or documentation paths: {path}.",
                     )
                 )
     if not verification_commands:

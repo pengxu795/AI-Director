@@ -2,6 +2,8 @@
 
 ## 2026-07-04
 
+- Hardened Module 14 scope validation with semantic serializer/export path patterns and human-review allowed-file whitelisting.
+- Added tests blocking renamed serializer/export files such as serializer regression tests, serializer follow-up docs, export CLI variants, and adapter export helpers.
 - Fixed Module 14 scope validation so human-review remediations cannot authorize serializer or FCPXML generation files.
 - Updated the Module 14 sample authorization to match the selected human-review remediation scope.
 - Added Module 14 remediation authorization and implementation scope contract generation.

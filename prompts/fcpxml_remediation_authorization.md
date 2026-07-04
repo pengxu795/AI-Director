@@ -10,8 +10,9 @@ Module 14 creates an implementation scope contract from one Module 13 selection.
 - Require human `authorized_by`, `authorized_at`, and `authorization_rationale`.
 - Require non-empty `allowed_files`, `prohibited_files`, `verification_commands`, and `rollback_steps`.
 - Reject overlap between allowed and prohibited paths.
-- Reject serializer, serializer-test, serializer-doc, FCPXML export CLI, or `.fcpxml` output scope when the selected remediation has `serializer_change_allowed: false`.
-- For `owner: human_review`, limit allowed scope to review, protocol, record, manual follow-up, or documentation artifacts.
+- Reject serializer, serializer-test, serializer-doc, FCPXML export helper, FCPXML export CLI, or `.fcpxml` output scope when the selected remediation has `serializer_change_allowed: false`, including renamed files that match serializer/export semantics.
+- For `owner: human_review`, every allowed path must match the positive whitelist for review, protocol, record, manual follow-up, or documentation artifacts.
+- Do not rely on `prohibited_files` alone; validate `allowed_files` directly.
 - Set `manual_follow_up_required: true` for human-review remediations.
 - Reject verification commands that invoke editor automation or media tooling.
 - Define future implementation scope only; do not implement the remediation.

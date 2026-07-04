@@ -554,8 +554,10 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 - selection 必须保持 `execution_allowed=false` 和 `serializer_change_allowed=false`
 - 必须存在 Module 13 的 immutable selection snapshot
 - 授权范围必须与 selected remediation 的 `owner` 和 `serializer_change_allowed` 一致
-- 当 selected remediation 的 `serializer_change_allowed=false` 时，不得授权 serializer、serializer test、serializer docs、FCPXML export CLI 或 `.fcpxml` 输出文件
-- 当 selected remediation 的 `owner="human_review"` 时，只能授权 review、protocol、record、manual follow-up 或 documentation 范围
+- 当 selected remediation 的 `serializer_change_allowed=false` 时，不得授权 serializer、serializer test、serializer docs、FCPXML export helper、FCPXML export CLI 或 `.fcpxml` 输出文件
+- serializer/export 禁止规则使用语义路径模式，不能通过改文件名绕过
+- 当 selected remediation 的 `owner="human_review"` 时，`allowed_files` 每一项都必须命中 review、protocol、record、manual follow-up 或 documentation 白名单
+- 不得只依赖 `prohibited_files`，`allowed_files` 自身必须通过白名单校验
 - human_review remediation 必须标记 `manual_follow_up_required=true`
 - 必须列出 `allowed_files` 与 `prohibited_files`
 - `allowed_files` 只是未来实施范围上限，不代表 Module 14 修改这些文件

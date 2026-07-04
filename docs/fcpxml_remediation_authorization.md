@@ -40,8 +40,10 @@ Verification commands must not invoke editor automation or media tools such as F
 
 Authorization scope must match the selected remediation:
 
-- If `selected remediation.serializer_change_allowed == false`, `allowed_files` must not include serializer files, serializer tests, serializer docs, FCPXML export CLI files, or `.fcpxml` outputs.
-- If `selected remediation.owner == "human_review"`, scope must be limited to review, protocol, record, manual follow-up, or documentation artifacts.
+- If `selected remediation.serializer_change_allowed == false`, `allowed_files` must not include serializer files, serializer tests, serializer docs, FCPXML export helper files, FCPXML export CLI files, or `.fcpxml` outputs.
+- This check uses semantic path patterns such as `*serializer*`, `*fcpxml*export*`, `app/*export_fcpxml*.py`, and `output/*.fcpxml`; renaming the file must not bypass the rule.
+- If `selected remediation.owner == "human_review"`, `allowed_files` must pass a positive whitelist for review, protocol, record, manual follow-up, or documentation artifacts.
+- Human-review scope is not authorized just because a path is absent from `prohibited_files`; each `allowed_files` entry must pass the whitelist.
 - Human-review remediations set `manual_follow_up_required: true`.
 - Serializer or FCPXML generation files can be authorized only when the selected remediation itself allows serializer changes.
 
