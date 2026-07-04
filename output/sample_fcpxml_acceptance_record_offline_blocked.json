@@ -124,9 +124,62 @@
   ],
   "evidence": [
     {
-      "type": "screenshot",
-      "path": "evidence/module11_sample_import.png",
-      "description": "Sample screenshot path for manual FCPXML import evidence."
+      "evidence_id": "ev_asset_001",
+      "evidence_type": "screenshot",
+      "path_or_reference": "evidence/module11_asset_001_offline.png",
+      "description": "Asset asset_001 was offline after FCPXML import.",
+      "related_asset_ids": [
+        "asset_001"
+      ],
+      "related_check_ids": [
+        "resource_paths"
+      ],
+      "related_error_codes": []
+    },
+    {
+      "evidence_id": "ev_asset_002",
+      "evidence_type": "screenshot",
+      "path_or_reference": "evidence/module11_asset_002_offline.png",
+      "description": "Asset asset_002 was offline after FCPXML import.",
+      "related_asset_ids": [
+        "asset_002"
+      ],
+      "related_check_ids": [
+        "resource_paths"
+      ],
+      "related_error_codes": []
+    },
+    {
+      "evidence_id": "ev_check_clip_source_ranges",
+      "evidence_type": "manual_note",
+      "path_or_reference": "evidence/module11_clip_source_ranges_blocked.md",
+      "description": "Clip source range validation was blocked because media was offline.",
+      "related_asset_ids": [
+        "asset_001",
+        "asset_002"
+      ],
+      "related_check_ids": [
+        "clip_source_ranges"
+      ],
+      "related_error_codes": []
+    },
+    {
+      "evidence_id": "ev_error_media_offline",
+      "evidence_type": "manual_note",
+      "path_or_reference": "evidence/module11_media_offline_error.md",
+      "description": "Manual import error record for offline media.",
+      "related_asset_ids": [
+        "asset_001",
+        "asset_002"
+      ],
+      "related_check_ids": [
+        "resource_paths",
+        "clip_source_ranges"
+      ],
+      "related_error_codes": [
+        "media_offline",
+        "media_assets_not_online"
+      ]
     }
   ],
   "regression_samples": [

@@ -413,6 +413,8 @@ python app/generate_fcpxml_acceptance_protocol.py output/sample_fcpxml_design.js
 - 协议必须是 `acceptance_ready`
 - 人工结果的 artifact identifiers 必须与协议一致
 - 必须记录 FCP 版本、macOS 版本、素材在线/离线状态、错误信息和证据路径
+- 每条证据必须包含稳定 `evidence_id`、`evidence_type`、`description`、`path_or_reference`
+- 每条证据必须用 `related_asset_ids`、`related_check_ids`、`related_error_codes` 绑定到人工验收对象
 - `result` 拆分为 `import_result`、`media_validation_result` 和 `compatibility_result`
 - `compatibility_result="passed"` 必须同时满足顶层 `status="passed"` 且 `imported=true`
 - `passed` 结果要求所有 checklist 均通过，且所有素材必须 `online`
@@ -446,7 +448,12 @@ python app/record_fcpxml_acceptance_result.py output/sample_fcpxml_acceptance_pr
 
 - 只整理 findings 与 proposed remediation，不直接修 serializer
 - findings 来自媒体状态、checklist、import errors 和 record warnings
+- findings 的 `evidence_refs` 只能引用 Module 11 的真实 `evidence_id`
+- asset id、check id 和 error code 必须放入 `related_entities`，不得冒充证据引用
+- blocker / major finding 缺少匹配证据时必须降级或标记 `evidence_status="missing"`
+- 缺少证据时 review status 为 `evidence_incomplete`，不得伪称完整 `review_ready`
 - remediation item 必须 `serializer_change_allowed=false`
+- 缺证据的 remediation item 必须 `requires_evidence_before_implementation=true`
 - 任何 serializer 改动、样例修复、媒体重绑或编辑器自动化都必须等 Review 后进入后续模块
 - 不启动或控制 Final Cut Pro，不自动导入，不读取媒体，不转码、不渲染、不导出成片
 

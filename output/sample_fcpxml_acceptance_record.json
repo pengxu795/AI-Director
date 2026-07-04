@@ -118,9 +118,25 @@
   "import_errors": [],
   "evidence": [
     {
-      "type": "screenshot",
-      "path": "evidence/module11_sample_import.png",
-      "description": "Sample screenshot path for manual FCPXML import evidence."
+      "evidence_id": "ev_full_import",
+      "evidence_type": "screenshot",
+      "path_or_reference": "evidence/module11_sample_import_online.png",
+      "description": "Sample evidence for successful import with online media.",
+      "related_asset_ids": [
+        "asset_001",
+        "asset_002"
+      ],
+      "related_check_ids": [
+        "preflight_fcpxml_file",
+        "preflight_environment",
+        "resource_paths",
+        "clip_count_and_order",
+        "clip_source_ranges",
+        "clip_timeline_offsets",
+        "marker_positions",
+        "invalid_file_behavior"
+      ],
+      "related_error_codes": []
     }
   ],
   "regression_samples": [

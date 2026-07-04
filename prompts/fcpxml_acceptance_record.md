@@ -13,7 +13,9 @@ Module 11 records manually observed Final Cut Pro import results.
 - Block PASS when any import error has `severity: blocker`.
 - Capture every checklist result from the Module 10 protocol.
 - Capture every expected asset's online/offline/missing/unverified state.
-- Capture importer errors, evidence paths, notes, and regression sample references.
+- Capture importer errors, stable evidence ids, evidence paths or references, notes, and regression sample references.
+- Each evidence entry must include `evidence_id`, `evidence_type`, `description`, `path_or_reference`, `related_asset_ids`, `related_check_ids`, and `related_error_codes`.
+- Evidence ids must be unique and suitable for later Module 12 finding references.
 - Allow valid failed or blocked records when they are traceable and evidence-backed.
 - Do not infer PASS from generated files.
 - Do not launch or control Final Cut Pro.

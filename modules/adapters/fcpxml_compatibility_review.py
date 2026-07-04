@@ -20,12 +20,13 @@ def build_fcpxml_compatibility_review(acceptance_record: dict[str, Any]) -> dict
     validation_result = validate_fcpxml_compatibility_review_input(acceptance_record)
     findings = _findings_from_record(acceptance_record) if validation_result["valid"] else []
     remediation_plan = _remediation_plan(findings)
+    status = _review_status(validation_result, findings)
 
     return {
         "schema_version": FCPXML_COMPATIBILITY_REVIEW_SCHEMA_VERSION,
         "module": "Module 12",
         "name": "FCPXML Compatibility Findings Review / Remediation Plan",
-        "status": "review_ready" if validation_result["valid"] else "blocked",
+        "status": status,
         "source_record": {
             "schema_version": str(acceptance_record.get("schema_version", "")),
             "status": str(acceptance_record.get("status", "")),
@@ -75,8 +76,11 @@ def validate_fcpxml_compatibility_review_input(acceptance_record: dict[str, Any]
         if metadata.get(field) is not False:
             errors.append(_issue("boundary_violation", f"acceptance_record.metadata.{field}", "Module 12 must not depend on automated editor or media processing."))
 
-    if not _safe_list(acceptance_record.get("evidence")):
+    evidence = _safe_list(acceptance_record.get("evidence"))
+    if not evidence:
         warnings.append(_issue("missing_review_evidence", "acceptance_record.evidence", "No evidence entries were attached to this record."))
+    _validate_evidence_schema(evidence, warnings)
+    warnings.extend(_missing_evidence_warnings(acceptance_record, evidence))
 
     return {
         "valid": not errors,
@@ -87,7 +91,7 @@ def validate_fcpxml_compatibility_review_input(acceptance_record: dict[str, Any]
 
 def write_fcpxml_compatibility_review(review: dict[str, Any], output_path: str | Path) -> dict[str, Any]:
     """Write a compatibility review JSON without applying remediation."""
-    if review.get("status") != "review_ready":
+    if review.get("status") not in {"review_ready", "evidence_incomplete"}:
         raise ValueError(f"Invalid Module 12 compatibility review: {review.get('validation_result', {})}")
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -108,8 +112,11 @@ def write_fcpxml_compatibility_review(review: dict[str, Any], output_path: str |
 
 def _findings_from_record(record: dict[str, Any]) -> list[dict[str, Any]]:
     findings = []
+    evidence = _safe_list(record.get("evidence"))
     for asset in _safe_list(record.get("asset_results")):
         if asset.get("import_state") != "online":
+            asset_id = str(asset.get("asset_id", ""))
+            evidence_refs = _evidence_refs_for_asset(evidence, asset_id)
             findings.append(
                 _finding(
                     "media_not_online",
@@ -117,11 +124,14 @@ def _findings_from_record(record: dict[str, Any]) -> list[dict[str, Any]]:
                     "media",
                     f"Asset {asset.get('asset_id', '')} was {asset.get('import_state', '')}.",
                     str(asset.get("notes", "")),
-                    [str(asset.get("asset_id", ""))],
+                    evidence_refs,
+                    {"asset_ids": [asset_id], "check_ids": [], "error_codes": []},
                 )
             )
     for check in _safe_list(record.get("check_results")):
         if check.get("status") != "passed":
+            check_id = str(check.get("id", ""))
+            evidence_refs = _evidence_refs_for_check(evidence, check_id)
             findings.append(
                 _finding(
                     "manual_check_not_passed",
@@ -129,29 +139,36 @@ def _findings_from_record(record: dict[str, Any]) -> list[dict[str, Any]]:
                     "manual_check",
                     f"Checklist item {check.get('id', '')} was {check.get('status', '')}.",
                     str(check.get("actual_result", "")),
-                    [str(check.get("id", ""))],
+                    evidence_refs,
+                    {"asset_ids": [], "check_ids": [check_id], "error_codes": []},
                 )
             )
     for error in _safe_list(record.get("import_errors")):
+        error_code = str(error.get("code", "import_error"))
+        evidence_refs = _evidence_refs_for_error(evidence, error_code)
         findings.append(
             _finding(
-                str(error.get("code", "import_error")),
+                error_code,
                 str(error.get("severity", "warning")),
                 "import_error",
                 str(error.get("message", "")),
                 str(error.get("message", "")),
-                [],
+                evidence_refs,
+                {"asset_ids": [], "check_ids": [], "error_codes": [error_code]},
             )
         )
     for warning in _safe_list(_safe_dict(record.get("validation_result")).get("warnings")):
+        warning_code = str(warning.get("code", "validation_warning"))
+        evidence_refs = _evidence_refs_for_error(evidence, warning_code)
         findings.append(
             _finding(
-                str(warning.get("code", "validation_warning")),
+                warning_code,
                 "warning",
                 "record_warning",
                 str(warning.get("message", "")),
                 str(warning.get("field", "")),
-                [],
+                evidence_refs,
+                {"asset_ids": [], "check_ids": [], "error_codes": [warning_code]},
             )
         )
     if not findings and _safe_dict(record.get("result")).get("compatibility_result") == "passed":
@@ -163,6 +180,7 @@ def _findings_from_record(record: dict[str, Any]) -> list[dict[str, Any]]:
                 "Manual acceptance record passed with no findings.",
                 "No remediation required.",
                 [],
+                {"asset_ids": [], "check_ids": [], "error_codes": []},
             )
         )
     return [_with_id(index, finding) for index, finding in enumerate(findings, start=1)]
@@ -182,6 +200,7 @@ def _remediation_plan(findings: list[dict[str, Any]]) -> dict[str, Any]:
                 "action": action,
                 "owner": "human_review",
                 "serializer_change_allowed": False,
+                "requires_evidence_before_implementation": finding.get("evidence_status") != "linked",
                 "requires_review_before_implementation": True,
                 "status": "proposed",
             }
@@ -194,14 +213,29 @@ def _remediation_plan(findings: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _finding(code: str, severity: str, category: str, summary: str, reproduction: str, evidence_refs: list[str]) -> dict[str, Any]:
+def _finding(
+    code: str,
+    severity: str,
+    category: str,
+    summary: str,
+    reproduction: str,
+    evidence_refs: list[str],
+    related_entities: dict[str, list[str]],
+) -> dict[str, Any]:
+    evidence_status = "linked" if evidence_refs or severity == "info" else "missing"
+    original_severity = severity
+    if evidence_status == "missing" and severity in {"blocker", "major"}:
+        severity = "warning"
     return {
         "code": code,
         "severity": severity,
+        "original_severity": original_severity,
         "category": category,
         "summary": summary,
         "reproduction": reproduction,
         "evidence_refs": evidence_refs,
+        "evidence_status": evidence_status,
+        "related_entities": related_entities,
         "status": "open" if severity != "info" else "informational",
     }
 
@@ -224,6 +258,8 @@ def _priority_for_severity(severity: str) -> str:
 
 
 def _recommended_action(finding: dict[str, Any]) -> str:
+    if finding.get("evidence_status") == "missing":
+        return "Attach manual evidence before deciding or implementing remediation."
     if finding["category"] == "media":
         return "Repeat manual import with bound online media before assessing source ranges or edit usability."
     if finding["category"] == "manual_check":
@@ -235,6 +271,65 @@ def _recommended_action(finding: dict[str, Any]) -> str:
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:
     return {"code": code, "field": field, "message": message}
+
+
+def _review_status(validation_result: dict[str, Any], findings: list[dict[str, Any]]) -> str:
+    if not validation_result["valid"]:
+        return "blocked"
+    if any(finding.get("evidence_status") == "missing" for finding in findings):
+        return "evidence_incomplete"
+    if any(warning.get("code") == "missing_review_evidence" for warning in validation_result["warnings"]):
+        return "evidence_incomplete"
+    return "review_ready"
+
+
+def _validate_evidence_schema(evidence: list[dict[str, Any]], warnings: list[dict[str, str]]) -> None:
+    evidence_ids = []
+    for index, item in enumerate(evidence):
+        prefix = f"acceptance_record.evidence[{index}]"
+        for field in ("evidence_id", "evidence_type", "description", "path_or_reference"):
+            if not item.get(field):
+                warnings.append(_issue("incomplete_evidence_entry", f"{prefix}.{field}", "Evidence entry is missing a stable field."))
+        for field in ("related_asset_ids", "related_check_ids", "related_error_codes"):
+            if not isinstance(item.get(field), list):
+                warnings.append(_issue("incomplete_evidence_entry", f"{prefix}.{field}", "Evidence relation fields should be lists."))
+        if item.get("evidence_id"):
+            evidence_ids.append(str(item.get("evidence_id")))
+    if len(evidence_ids) != len(set(evidence_ids)):
+        warnings.append(_issue("duplicate_evidence_id", "acceptance_record.evidence", "Evidence ids should be unique."))
+
+
+def _missing_evidence_warnings(record: dict[str, Any], evidence: list[dict[str, Any]]) -> list[dict[str, str]]:
+    warnings = []
+    for error in _safe_list(record.get("import_errors")):
+        code = str(error.get("code", ""))
+        if code and not _evidence_refs_for_error(evidence, code):
+            warnings.append(_issue("missing_evidence_for_import_error", "acceptance_record.import_errors", f"No evidence is linked to import error: {code}."))
+    return warnings
+
+
+def _evidence_refs_for_asset(evidence: list[dict[str, Any]], asset_id: str) -> list[str]:
+    return _evidence_refs(evidence, "related_asset_ids", asset_id)
+
+
+def _evidence_refs_for_check(evidence: list[dict[str, Any]], check_id: str) -> list[str]:
+    return _evidence_refs(evidence, "related_check_ids", check_id)
+
+
+def _evidence_refs_for_error(evidence: list[dict[str, Any]], error_code: str) -> list[str]:
+    return _evidence_refs(evidence, "related_error_codes", error_code)
+
+
+def _evidence_refs(evidence: list[dict[str, Any]], relation_field: str, value: str) -> list[str]:
+    refs = []
+    for item in evidence:
+        if value in [str(entry) for entry in _safe_list_values(item.get(relation_field))] and item.get("evidence_id"):
+            refs.append(str(item.get("evidence_id")))
+    return refs
+
+
+def _safe_list_values(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
 
 
 def _safe_dict(value: Any) -> dict[str, Any]:

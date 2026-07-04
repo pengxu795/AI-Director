@@ -36,6 +36,9 @@
 - Review Module 12 compatibility findings and remediation plan.
 - Confirm findings are derived from Module 11 acceptance records without guessing.
 - Confirm non-online media, failed/blocked checks, import errors, and validation warnings become traceable findings.
+- Confirm `finding.evidence_refs` contains only real Module 11 `evidence_id` values.
+- Confirm affected asset ids, checklist ids, and error codes stay in `related_entities` and do not masquerade as evidence.
+- Confirm missing evidence produces `evidence_incomplete` and requires evidence before remediation implementation.
 - Confirm successful records produce informational findings and no remediation items.
 - Confirm remediation is proposed only and keeps `serializer_change_allowed=false`.
 - Confirm Module 12 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.

@@ -51,6 +51,18 @@ The manual result must record:
 - evidence entries
 - artifact relationship confirmation
 
+Each evidence entry must use stable evidence identifiers:
+
+- `evidence_id`
+- `evidence_type`
+- `description`
+- `path_or_reference`
+- `related_asset_ids`
+- `related_check_ids`
+- `related_error_codes`
+
+`evidence_id` values must be unique within the record. The relation lists connect manual proof such as screenshots, copied Final Cut Pro error text, reviewer notes, or external references to the exact assets, checklist items, or importer error codes they support.
+
 ## Artifact Safety
 
 The manual result artifact identifiers must match the Module 10 protocol:

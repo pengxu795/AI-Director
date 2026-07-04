@@ -89,9 +89,13 @@ def manual_result(protocol, status="passed", asset_state="online", blocker_error
         ],
         "evidence": [
             {
-                "type": "screenshot",
-                "path": "evidence/fcpxml_import_screen.png",
+                "evidence_id": "ev001",
+                "evidence_type": "screenshot",
+                "path_or_reference": "evidence/fcpxml_import_screen.png",
                 "description": "Manual import evidence screenshot.",
+                "related_asset_ids": [asset["asset_id"] for asset in protocol["expected_assets"]],
+                "related_check_ids": [item["id"] for item in protocol["checklist"]],
+                "related_error_codes": ["manual_import_blocker"] if status != "passed" or blocker_error else [],
             }
         ],
         "regression_samples": [

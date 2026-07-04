@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Fixed Module 12 evidence traceability so findings reference real Module 11 `evidence_id` values instead of asset ids, checklist ids, or empty placeholders.
+- Added `related_entities` for affected assets, checklist items, and error codes.
+- Added `evidence_incomplete` handling and `requires_evidence_before_implementation` for findings without linked manual evidence.
+- Hardened Module 11 evidence entries with stable ids and relation lists for assets, checks, and error codes.
 - Added Module 12 FCPXML compatibility findings review and remediation plan.
 - Added findings extraction from non-online media, failed checks, import errors, and acceptance-record warnings.
 - Added proposed-only remediation items with serializer changes disabled.

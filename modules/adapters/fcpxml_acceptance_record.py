@@ -273,8 +273,15 @@ def _validate_evidence(manual_result: dict[str, Any], errors: list[dict[str, str
         errors.append(_issue("missing_manual_evidence", "manual_result.evidence", "Manual result must include evidence entries."))
     for index, item in enumerate(evidence):
         prefix = f"manual_result.evidence[{index}]"
-        if not item.get("type") or not item.get("path") or not item.get("description"):
-            errors.append(_issue("incomplete_evidence_entry", prefix, "Evidence entries require type, path, and description."))
+        for field in ("evidence_id", "evidence_type", "description", "path_or_reference"):
+            if not item.get(field):
+                errors.append(_issue("incomplete_evidence_entry", f"{prefix}.{field}", "Evidence entries require stable id, type, description, and path/reference."))
+        for field in ("related_asset_ids", "related_check_ids", "related_error_codes"):
+            if not isinstance(item.get(field), list):
+                errors.append(_issue("incomplete_evidence_entry", f"{prefix}.{field}", "Evidence relation fields must be lists."))
+    evidence_ids = [str(item.get("evidence_id", "")) for item in evidence]
+    if len(evidence_ids) != len(set(evidence_ids)):
+        errors.append(_issue("duplicate_evidence_id", "manual_result.evidence", "Evidence ids must be unique."))
 
 
 def _validate_boundary_flags(manual_result: dict[str, Any], errors: list[dict[str, str]]) -> None:

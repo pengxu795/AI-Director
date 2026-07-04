@@ -30,6 +30,9 @@ def test_compatibility_review_passed_record_has_no_remediation_items():
             "summary": "Manual acceptance record passed with no findings.",
             "reproduction": "No remediation required.",
             "evidence_refs": [],
+            "evidence_status": "linked",
+            "original_severity": "info",
+            "related_entities": {"asset_ids": [], "check_ids": [], "error_codes": []},
             "status": "informational",
         }
     ]
@@ -50,6 +53,10 @@ def test_compatibility_review_extracts_offline_media_and_blocked_checks():
     assert review["remediation_plan"]["status"] == "proposed"
     assert all(item["serializer_change_allowed"] is False for item in review["remediation_plan"]["items"])
     assert any(item["priority"] == "P0" for item in review["remediation_plan"]["items"])
+    assert all(finding["evidence_refs"] for finding in review["findings"] if finding["code"] != "media_assets_not_online")
+    assert any("ev_asset_001" in finding["evidence_refs"] for finding in review["findings"] if finding["code"] == "media_not_online")
+    assert any("ev_check_clip_source_ranges" in finding["evidence_refs"] for finding in review["findings"] if finding["code"] == "manual_check_not_passed")
+    assert any("ev_error_media_offline" in finding["evidence_refs"] for finding in review["findings"] if finding["code"] == "media_offline")
 
 
 def test_compatibility_review_blocks_invalid_acceptance_record():
@@ -72,6 +79,31 @@ def test_compatibility_review_requires_traceable_source_artifacts():
 
     assert validation["valid"] is False
     assert any(error["code"] == "missing_source_record_artifact" for error in validation["errors"])
+
+
+def test_compatibility_review_marks_missing_evidence_as_incomplete():
+    record = load_record("sample_fcpxml_acceptance_record_offline_blocked.json")
+    record["evidence"] = []
+
+    review = build_fcpxml_compatibility_review(record)
+
+    assert review["status"] == "evidence_incomplete"
+    assert any(warning["code"] == "missing_review_evidence" for warning in review["validation_result"]["warnings"])
+    assert any(warning["code"] == "missing_evidence_for_import_error" for warning in review["validation_result"]["warnings"])
+    assert all(finding["severity"] != "blocker" for finding in review["findings"])
+    assert all(item["priority"] != "P0" for item in review["remediation_plan"]["items"])
+    assert all(item["requires_evidence_before_implementation"] is True for item in review["remediation_plan"]["items"])
+
+
+def test_compatibility_review_keeps_entity_refs_separate_from_evidence_refs():
+    review = build_fcpxml_compatibility_review(load_record("sample_fcpxml_acceptance_record_offline_blocked.json"))
+    media_finding = next(finding for finding in review["findings"] if finding["code"] == "media_not_online")
+    check_finding = next(finding for finding in review["findings"] if finding["code"] == "manual_check_not_passed")
+
+    assert "asset_001" not in media_finding["evidence_refs"]
+    assert "asset_001" in media_finding["related_entities"]["asset_ids"]
+    assert "clip_source_ranges" not in check_finding["evidence_refs"]
+    assert "clip_source_ranges" in check_finding["related_entities"]["check_ids"]
 
 
 def test_compatibility_review_write_outputs_json_only(tmp_path):

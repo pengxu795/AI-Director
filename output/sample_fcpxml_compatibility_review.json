@@ -33,56 +33,110 @@
       "id": "f001",
       "code": "media_not_online",
       "severity": "blocker",
+      "original_severity": "blocker",
       "category": "media",
       "summary": "Asset asset_001 was offline.",
       "reproduction": "Sample media manually recorded as offline.",
       "evidence_refs": [
-        "asset_001"
+        "ev_asset_001",
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
       ],
+      "evidence_status": "linked",
+      "related_entities": {
+        "asset_ids": [
+          "asset_001"
+        ],
+        "check_ids": [],
+        "error_codes": []
+      },
       "status": "open"
     },
     {
       "id": "f002",
       "code": "media_not_online",
       "severity": "blocker",
+      "original_severity": "blocker",
       "category": "media",
       "summary": "Asset asset_002 was offline.",
       "reproduction": "Sample media manually recorded as offline.",
       "evidence_refs": [
-        "asset_002"
+        "ev_asset_002",
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
       ],
+      "evidence_status": "linked",
+      "related_entities": {
+        "asset_ids": [
+          "asset_002"
+        ],
+        "check_ids": [],
+        "error_codes": []
+      },
       "status": "open"
     },
     {
       "id": "f003",
       "code": "manual_check_not_passed",
       "severity": "blocker",
+      "original_severity": "blocker",
       "category": "manual_check",
       "summary": "Checklist item clip_source_ranges was blocked.",
       "reproduction": "Media was offline, so source range verification could not be completed.",
       "evidence_refs": [
-        "clip_source_ranges"
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
       ],
+      "evidence_status": "linked",
+      "related_entities": {
+        "asset_ids": [],
+        "check_ids": [
+          "clip_source_ranges"
+        ],
+        "error_codes": []
+      },
       "status": "open"
     },
     {
       "id": "f004",
       "code": "media_offline",
       "severity": "blocker",
+      "original_severity": "blocker",
       "category": "import_error",
       "summary": "FCPXML imported, but sample media assets were offline during manual validation.",
       "reproduction": "FCPXML imported, but sample media assets were offline during manual validation.",
-      "evidence_refs": [],
+      "evidence_refs": [
+        "ev_error_media_offline"
+      ],
+      "evidence_status": "linked",
+      "related_entities": {
+        "asset_ids": [],
+        "check_ids": [],
+        "error_codes": [
+          "media_offline"
+        ]
+      },
       "status": "open"
     },
     {
       "id": "f005",
       "code": "media_assets_not_online",
       "severity": "warning",
+      "original_severity": "warning",
       "category": "record_warning",
       "summary": "Media assets are not online: asset_001, asset_002.",
       "reproduction": "manual_result.asset_results",
-      "evidence_refs": [],
+      "evidence_refs": [
+        "ev_error_media_offline"
+      ],
+      "evidence_status": "linked",
+      "related_entities": {
+        "asset_ids": [],
+        "check_ids": [],
+        "error_codes": [
+          "media_assets_not_online"
+        ]
+      },
       "status": "open"
     }
   ],
@@ -96,6 +150,7 @@
         "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
         "owner": "human_review",
         "serializer_change_allowed": false,
+        "requires_evidence_before_implementation": false,
         "requires_review_before_implementation": true,
         "status": "proposed"
       },
@@ -106,6 +161,7 @@
         "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
         "owner": "human_review",
         "serializer_change_allowed": false,
+        "requires_evidence_before_implementation": false,
         "requires_review_before_implementation": true,
         "status": "proposed"
       },
@@ -116,6 +172,7 @@
         "action": "Inspect the failed checklist evidence and decide whether a serializer fix, protocol update, or sample correction is needed.",
         "owner": "human_review",
         "serializer_change_allowed": false,
+        "requires_evidence_before_implementation": false,
         "requires_review_before_implementation": true,
         "status": "proposed"
       },
@@ -126,6 +183,7 @@
         "action": "Triage the importer error against the exact FCPXML/design fingerprints before changing serializer output.",
         "owner": "human_review",
         "serializer_change_allowed": false,
+        "requires_evidence_before_implementation": false,
         "requires_review_before_implementation": true,
         "status": "proposed"
       },
@@ -136,6 +194,7 @@
         "action": "Review this finding and decide whether remediation is needed.",
         "owner": "human_review",
         "serializer_change_allowed": false,
+        "requires_evidence_before_implementation": false,
         "requires_review_before_implementation": true,
         "status": "proposed"
       }
