@@ -20,6 +20,7 @@ The protocol JSON contains:
 - `schema_version`
 - `target_editor`
 - `source_artifacts`
+- `artifact_relationship`
 - `source_design`
 - `expected_assets`
 - `expected_clips`
@@ -46,9 +47,15 @@ All checklist items start with `status: "not_run"`. Module 10 must not pre-fill 
 - `fully_traceable`
 - `acceptance_ready`
 
-Default protocol generation allows `git_commit` and `serializer_commit` to be empty, but it emits `missing_artifact_revision_metadata` and keeps `fully_traceable` / `acceptance_ready` false.
+Formal manual acceptance requires `fcpxml_path`, `fcpxml_sha256`, `source_design_path`, `source_design_sha256`, `git_commit`, and `serializer_commit`.
+
+Default protocol generation allows `source_design_path`, `git_commit`, and `serializer_commit` to be empty, but it emits `missing_source_design_artifact` or `missing_artifact_revision_metadata` and keeps `fully_traceable` / `acceptance_ready` false.
+
+If `source_design_path` is provided but the file is missing, the protocol emits `source_design_file_not_found` and keeps `fully_traceable` / `acceptance_ready` false.
 
 If the `.fcpxml` path does not exist, protocol generation returns `status: "blocked"` with `fcpxml_file_not_found`.
+
+`artifact_relationship` records both fingerprints and the serializer commit, but `relationship_verified` remains `false`. Module 10 does not parse FCPXML to prove design-to-file consistency; the preflight checklist requires a human to confirm both artifacts came from the same serializer output chain.
 
 ## Manual Acceptance Scope
 
@@ -59,6 +66,8 @@ The tester manually imports the `.fcpxml` into Final Cut Pro and records:
 - library and project names
 - whether media asset paths resolve or appear offline
 - whether the imported `.fcpxml` file SHA-256 matches the protocol
+- whether the source design SHA-256 matches the design file used to generate the `.fcpxml`
+- whether the design file, `.fcpxml` file, and serializer commit belong to the same output chain
 - clip count and order
 - clip source in/out
 - timeline offsets and durations

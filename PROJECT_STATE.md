@@ -33,6 +33,8 @@
 
 - Review Module 10 manual acceptance protocol.
 - Confirm the exact `.fcpxml` artifact is locked with SHA-256 before manual import.
+- Confirm the source design artifact is locked with path and SHA-256 before `acceptance_ready`.
+- Confirm `artifact_relationship.relationship_verified` remains false until manual confirmation.
 - Confirm missing revision metadata produces `missing_artifact_revision_metadata` and does not mark the protocol `acceptance_ready`.
 - Confirm checklist covers resource paths, clip source ranges, timeline offsets, marker positions, and importer error behavior.
 - Confirm expected clips and markers are derived from the Module 8/9 design without guessing.

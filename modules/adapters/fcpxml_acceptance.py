@@ -23,8 +23,8 @@ CHECKLIST_DEFINITIONS = [
     (
         "preflight_fcpxml_file",
         "preflight",
-        "Confirm the generated .fcpxml file fingerprint matches the protocol before import.",
-        "File path, SHA-256, design fingerprint, commit hash, and serializer metadata are recorded before import.",
+        "Confirm the generated .fcpxml file fingerprint, source design fingerprint, and serializer revision belong to the same output chain before import.",
+        "FCPXML SHA-256, source design SHA-256, commit hash, and serializer metadata are manually confirmed before import.",
     ),
     (
         "preflight_environment",
@@ -99,6 +99,22 @@ def build_fcpxml_import_acceptance_protocol(
 
     if design_path and Path(design_path).is_file():
         source_design_sha256 = _sha256_file(Path(design_path))
+    elif design_path:
+        protocol_warnings.append(
+            _issue(
+                "source_design_file_not_found",
+                "source_artifacts.source_design_path",
+                "The source design file was not found; acceptance cannot be fully traceable.",
+            )
+        )
+    else:
+        protocol_warnings.append(
+            _issue(
+                "missing_source_design_artifact",
+                "source_artifacts.source_design_path",
+                "The source design file path is required before formal manual acceptance.",
+            )
+        )
     if not git_commit or not serializer_commit:
         protocol_warnings.append(
             _issue(
@@ -119,7 +135,8 @@ def build_fcpxml_import_acceptance_protocol(
         "errors": protocol_errors + list(serialization_validation["errors"]),
         "warnings": protocol_warnings + list(serialization_validation["warnings"]),
     }
-    fully_traceable = bool(fcpxml_sha256 and git_commit and serializer_commit)
+    relationship = _artifact_relationship(source_design_sha256, fcpxml_sha256, serializer_commit)
+    fully_traceable = bool(path and fcpxml_sha256 and design_path and source_design_sha256 and git_commit and serializer_commit)
 
     return {
         "schema_version": FCPXML_ACCEPTANCE_SCHEMA_VERSION,
@@ -139,6 +156,7 @@ def build_fcpxml_import_acceptance_protocol(
             "fully_traceable": fully_traceable,
             "acceptance_ready": validation_result["valid"] and fully_traceable,
         },
+        "artifact_relationship": relationship,
         "target_editor": {
             "name": "Final Cut Pro",
             "validation_mode": "manual_import_only",
@@ -153,7 +171,7 @@ def build_fcpxml_import_acceptance_protocol(
         "expected_assets": _expected_assets(assets),
         "expected_clips": _expected_clips(clips),
         "expected_markers": _expected_markers(markers, clips),
-        "checklist": _checklist(),
+        "checklist": _checklist(relationship),
         "manual_result_template": _manual_result_template(
             path,
             fcpxml_sha256,
@@ -162,6 +180,7 @@ def build_fcpxml_import_acceptance_protocol(
             git_commit,
             serializer_module_version,
             serializer_commit,
+            relationship,
         ),
         "validation_result": validation_result,
         "metadata": {
@@ -194,6 +213,14 @@ def validate_fcpxml_import_acceptance_protocol(protocol: dict[str, Any]) -> dict
         errors.append(_issue("missing_fcpxml_sha256", "source_artifacts.fcpxml_sha256", "Protocol-ready runs must fingerprint the .fcpxml file."))
     if source_artifacts.get("acceptance_ready") and not source_artifacts.get("fully_traceable"):
         errors.append(_issue("acceptance_ready_requires_traceability", "source_artifacts.acceptance_ready", "Acceptance readiness requires full traceability."))
+    if source_artifacts.get("fully_traceable") and not all(
+        source_artifacts.get(field)
+        for field in ("fcpxml_path", "fcpxml_sha256", "source_design_path", "source_design_sha256", "git_commit", "serializer_commit")
+    ):
+        errors.append(_issue("fully_traceable_missing_artifact", "source_artifacts.fully_traceable", "Full traceability requires both file fingerprints and revision metadata."))
+    relationship = _safe_dict(protocol.get("artifact_relationship"))
+    if relationship.get("relationship_verified") is not False:
+        errors.append(_issue("relationship_must_remain_manual", "artifact_relationship.relationship_verified", "Module 10 must not claim automatic design-to-FCPXML relationship verification."))
 
     metadata = _safe_dict(protocol.get("metadata"))
     for field in ("media_files_read", "editor_launched", "video_export_performed", "import_validation_performed"):
@@ -311,9 +338,10 @@ def _expected_markers(markers: list[dict[str, Any]], clips: list[dict[str, Any]]
     return expected
 
 
-def _checklist() -> list[dict[str, Any]]:
-    return [
-        {
+def _checklist(relationship: dict[str, Any]) -> list[dict[str, Any]]:
+    checklist = []
+    for item_id, category, instruction, expected_result in CHECKLIST_DEFINITIONS:
+        item = {
             "id": item_id,
             "category": category,
             "instruction": instruction,
@@ -322,8 +350,10 @@ def _checklist() -> list[dict[str, Any]]:
             "status": "not_run",
             "actual_result": "",
         }
-        for item_id, category, instruction, expected_result in CHECKLIST_DEFINITIONS
-    ]
+        if item_id == "preflight_fcpxml_file":
+            item["artifact_relationship"] = relationship
+        checklist.append(item)
+    return checklist
 
 
 def _manual_result_template(
@@ -334,6 +364,7 @@ def _manual_result_template(
     git_commit: str,
     serializer_module_version: str,
     serializer_commit: str,
+    relationship: dict[str, Any],
 ) -> dict[str, Any]:
     return {
         "status": "not_run",
@@ -346,6 +377,7 @@ def _manual_result_template(
             "serializer_module_version": serializer_module_version,
             "serializer_commit": serializer_commit,
         },
+        "artifact_relationship": relationship,
         "tester": "",
         "run_at": "",
         "final_cut_pro_version": "",
@@ -399,6 +431,21 @@ def _fraction_to_time(value: Fraction) -> str:
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:
     return {"code": code, "field": field, "message": message}
+
+
+def _artifact_relationship(source_design_sha256: str, fcpxml_sha256: str, serializer_commit: str) -> dict[str, Any]:
+    if source_design_sha256 and fcpxml_sha256 and serializer_commit:
+        relationship_status = "fingerprinted_unverified"
+    else:
+        relationship_status = "insufficient_artifacts"
+    return {
+        "source_design_sha256": source_design_sha256,
+        "fcpxml_sha256": fcpxml_sha256,
+        "serializer_commit": serializer_commit,
+        "relationship_status": relationship_status,
+        "relationship_verified": False,
+        "manual_confirmation_required": True,
+    }
 
 
 def _sha256_file(path: Path) -> str:

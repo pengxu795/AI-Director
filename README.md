@@ -355,6 +355,7 @@ python app/export_fcpxml.py output/sample_fcpxml_design.json output/sample_minim
 
 - `target_editor`
 - `source_artifacts`
+- `artifact_relationship`
 - `source_design`
 - `expected_assets`
 - `expected_clips`
@@ -368,6 +369,8 @@ python app/export_fcpxml.py output/sample_fcpxml_design.json output/sample_minim
 
 - 所有 checklist 初始状态必须是 `not_run`
 - 协议必须记录 `.fcpxml` 文件的 SHA-256 指纹
+- 正式人工验收前必须记录 source design 的路径和 SHA-256 指纹
+- `artifact_relationship.relationship_verified` 必须保持 `false`，由人工确认 design、FCPXML 与 serializer commit 属于同一次输出链路
 - 缺少 `git_commit` 或 `serializer_commit` 时必须 warning，且不能标记为 `acceptance_ready`
 - 不自动判断 PASS / FAIL
 - 不启动或控制 Final Cut Pro

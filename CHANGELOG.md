@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Fixed Module 10 readiness so `fully_traceable` requires source design path and SHA-256.
+- Added `artifact_relationship` with manual relationship verification status.
+- Added warnings for missing or unavailable source design artifacts.
 - Fixed Module 10 traceability by recording `.fcpxml` SHA-256 and optional design/revision metadata.
 - Added `missing_artifact_revision_metadata`, `fully_traceable`, and `acceptance_ready` handling.
 - Blocked missing `.fcpxml` paths with `fcpxml_file_not_found`.
