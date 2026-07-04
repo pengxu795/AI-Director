@@ -162,6 +162,27 @@ def test_serializer_change_false_rejects_adapter_export_helper_path():
     assert any(error["code"] == "serializer_scope_not_authorized_for_selected_remediation" for error in authorization["validation_result"]["errors"])
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "modules/adapters/fcpxml_writer.py",
+        "modules/adapters/fcpxml_generator.py",
+        "modules/adapters/fcpxml_project_builder.py",
+        "tests/test_fcpxml_writer.py",
+        "docs/fcpxml_writer.md",
+        "app/generate_fcpxml.py",
+    ],
+)
+def test_serializer_change_false_rejects_fcpxml_implementation_paths(path):
+    request = authorization_request()
+    request["allowed_files"].append(path)
+
+    authorization = build_fcpxml_remediation_authorization(load_selection(), request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "fcpxml_implementation_scope_not_authorized" for error in authorization["validation_result"]["errors"])
+
+
 def test_human_review_remediation_allows_record_and_documentation_only_scope():
     authorization = build_fcpxml_remediation_authorization(load_selection(), authorization_request())
 
@@ -178,9 +199,15 @@ def test_serializer_remediation_can_authorize_serializer_files_only_when_selecte
     request["allowed_files"] = [
         "modules/adapters/fcpxml_serializer.py",
         "modules/adapters/fcpxml_export_helper.py",
+        "modules/adapters/fcpxml_writer.py",
+        "modules/adapters/fcpxml_generator.py",
+        "modules/adapters/fcpxml_project_builder.py",
         "tests/test_fcpxml_serializer_regression.py",
+        "tests/test_fcpxml_writer.py",
         "docs/fcpxml_serializer_followup.md",
+        "docs/fcpxml_writer.md",
         "app/export_fcpxml_v2.py",
+        "app/generate_fcpxml.py",
         "CHANGELOG.md",
         "PROJECT_STATE.md",
     ]

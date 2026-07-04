@@ -556,6 +556,7 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 - 授权范围必须与 selected remediation 的 `owner` 和 `serializer_change_allowed` 一致
 - 当 selected remediation 的 `serializer_change_allowed=false` 时，不得授权 serializer、serializer test、serializer docs、FCPXML export helper、FCPXML export CLI 或 `.fcpxml` 输出文件
 - serializer/export 禁止规则使用语义路径模式，不能通过改文件名绕过
+- FCPXML writer、generator、builder、project、app 或相关 docs/tests 都属于 FCPXML implementation scope，`serializer_change_allowed=false` 时不得授权
 - 当 selected remediation 的 `owner="human_review"` 时，`allowed_files` 每一项都必须命中 review、protocol、record、manual follow-up 或 documentation 白名单
 - 不得只依赖 `prohibited_files`，`allowed_files` 自身必须通过白名单校验
 - human_review remediation 必须标记 `manual_follow_up_required=true`

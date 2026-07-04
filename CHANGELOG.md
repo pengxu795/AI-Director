@@ -2,6 +2,8 @@
 
 ## 2026-07-04
 
+- Hardened Module 14 FCPXML implementation scope validation so writer, generator, builder, project, app, doc, and test paths are blocked unless the selected remediation allows serializer changes.
+- Added tests for FCPXML writer, generator, project builder, writer tests, writer docs, and generate FCPXML app paths.
 - Hardened Module 14 scope validation with semantic serializer/export path patterns and human-review allowed-file whitelisting.
 - Added tests blocking renamed serializer/export files such as serializer regression tests, serializer follow-up docs, export CLI variants, and adapter export helpers.
 - Fixed Module 14 scope validation so human-review remediations cannot authorize serializer or FCPXML generation files.

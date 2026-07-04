@@ -28,6 +28,15 @@ SERIALIZER_SCOPE_PATTERNS = (
     "output/*.fcpxml",
 )
 
+FCPXML_IMPLEMENTATION_SCOPE_PATTERNS = (
+    "modules/adapters/*fcpxml*.py",
+    "tests/*fcpxml*.py",
+    "docs/*fcpxml*.md",
+    "app/*fcpxml*.py",
+    "app/*final_cut*.py",
+    "output/*.fcpxml",
+)
+
 HUMAN_REVIEW_ALLOWED_PATTERNS = (
     "docs/fcpxml_acceptance_*.md",
     "docs/fcpxml_compatibility_*.md",
@@ -133,6 +142,14 @@ def validate_fcpxml_remediation_authorization_input(selection: dict[str, Any], a
                         "serializer_scope_not_authorized_for_selected_remediation",
                         "authorization_request.allowed_files",
                         f"Selected remediation does not authorize serializer or FCPXML generation scope: {path}.",
+                    )
+                )
+            if _matches_any(path, FCPXML_IMPLEMENTATION_SCOPE_PATTERNS) and not _is_human_review_allowed_path(path):
+                errors.append(
+                    _issue(
+                        "fcpxml_implementation_scope_not_authorized",
+                        "authorization_request.allowed_files",
+                        f"Selected remediation does not authorize FCPXML implementation, generation, or writing scope: {path}.",
                     )
                 )
     if owner == "human_review":
@@ -283,6 +300,10 @@ def _selected_remediation(selection: dict[str, Any]) -> dict[str, Any]:
 
 def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
     return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+
+
+def _is_human_review_allowed_path(path: str) -> bool:
+    return _matches_any(path, HUMAN_REVIEW_ALLOWED_PATTERNS)
 
 
 def _safe_dict(value: Any) -> dict[str, Any]:

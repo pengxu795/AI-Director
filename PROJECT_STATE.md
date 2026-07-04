@@ -41,6 +41,7 @@
 - Confirm allowed and prohibited files are explicit and cannot overlap.
 - Confirm authorization scope matches selected remediation owner and `serializer_change_allowed`.
 - Confirm human-review remediation cannot authorize serializer, adapter implementation, FCPXML export, or media-generation files, including renamed serializer/export paths.
+- Confirm `serializer_change_allowed=false` cannot authorize FCPXML writer, generator, builder, project, app, doc, or test implementation paths.
 - Confirm human-review `allowed_files` is validated by whitelist and not only by `prohibited_files`.
 - Confirm human-review remediation sets `manual_follow_up_required=true`.
 - Confirm verification and rollback plans are required.
