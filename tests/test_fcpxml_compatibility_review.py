@@ -95,6 +95,107 @@ def test_compatibility_review_marks_missing_evidence_as_incomplete():
     assert all(item["requires_evidence_before_implementation"] is True for item in review["remediation_plan"]["items"])
 
 
+def test_incomplete_asset_evidence_cannot_confirm_blocker_finding():
+    record = load_record("sample_fcpxml_acceptance_record_offline_blocked.json")
+    for evidence in record["evidence"]:
+        if evidence["evidence_id"] in {"ev_asset_001", "ev_check_clip_source_ranges", "ev_error_media_offline"}:
+            evidence["related_asset_ids"] = []
+    asset_evidence = next(evidence for evidence in record["evidence"] if evidence["evidence_id"] == "ev_asset_001")
+    asset_evidence["related_asset_ids"] = ["asset_001"]
+    asset_evidence["path_or_reference"] = ""
+
+    review = build_fcpxml_compatibility_review(record)
+    asset_finding = next(
+        finding
+        for finding in review["findings"]
+        if finding["code"] == "media_not_online" and "asset_001" in finding["related_entities"]["asset_ids"]
+    )
+
+    assert review["status"] == "evidence_incomplete"
+    assert asset_finding["evidence_status"] == "missing"
+    assert asset_finding["severity"] == "warning"
+    assert "ev_asset_001" not in asset_finding["evidence_refs"]
+    assert any(warning["code"] == "unusable_evidence_entry" for warning in review["validation_result"]["warnings"])
+
+
+def test_incomplete_check_evidence_cannot_generate_confirmed_p0_remediation():
+    record = load_record("sample_fcpxml_acceptance_record_offline_blocked.json")
+    for evidence in record["evidence"]:
+        evidence["related_check_ids"] = []
+    check_evidence = next(evidence for evidence in record["evidence"] if evidence["evidence_id"] == "ev_check_clip_source_ranges")
+    check_evidence["related_check_ids"] = ["clip_source_ranges"]
+    check_evidence["description"] = ""
+
+    review = build_fcpxml_compatibility_review(record)
+    check_finding = next(finding for finding in review["findings"] if finding["code"] == "manual_check_not_passed")
+    check_remediation = next(item for item in review["remediation_plan"]["items"] if item["finding_id"] == check_finding["id"])
+
+    assert review["status"] == "evidence_incomplete"
+    assert check_finding["evidence_status"] == "missing"
+    assert check_finding["severity"] == "warning"
+    assert check_remediation["priority"] != "P0"
+    assert check_remediation["requires_evidence_before_implementation"] is True
+
+
+def test_duplicate_import_error_evidence_ids_are_all_unusable():
+    record = load_record("sample_fcpxml_acceptance_record_offline_blocked.json")
+    error_evidence = next(evidence for evidence in record["evidence"] if evidence["evidence_id"] == "ev_error_media_offline")
+    duplicate = dict(error_evidence)
+    record["evidence"].append(duplicate)
+
+    review = build_fcpxml_compatibility_review(record)
+    import_finding = next(finding for finding in review["findings"] if finding["code"] == "media_offline")
+
+    assert review["status"] == "evidence_incomplete"
+    assert import_finding["evidence_status"] == "missing"
+    assert import_finding["severity"] == "warning"
+    assert import_finding["evidence_refs"] == []
+    assert any(warning["code"] == "duplicate_evidence_id" for warning in review["validation_result"]["warnings"])
+
+
+def test_complete_unique_evidence_still_confirms_blocker_findings():
+    review = build_fcpxml_compatibility_review(load_record("sample_fcpxml_acceptance_record_offline_blocked.json"))
+
+    assert review["status"] == "review_ready"
+    assert any(finding["severity"] == "blocker" and finding["evidence_status"] == "linked" for finding in review["findings"])
+    assert any(item["priority"] == "P0" and item["requires_evidence_before_implementation"] is False for item in review["remediation_plan"]["items"])
+
+
+def test_mixed_complete_and_incomplete_evidence_uses_only_complete_entries():
+    record = load_record("sample_fcpxml_acceptance_record_offline_blocked.json")
+    complete = {
+        "evidence_id": "ev_asset_001_complete_extra",
+        "evidence_type": "manual_note",
+        "path_or_reference": "evidence/asset_001_complete_extra.md",
+        "description": "A complete secondary note for asset_001.",
+        "related_asset_ids": ["asset_001"],
+        "related_check_ids": [],
+        "related_error_codes": [],
+    }
+    incomplete = {
+        "evidence_id": "ev_asset_001_incomplete_extra",
+        "evidence_type": "manual_note",
+        "path_or_reference": "",
+        "description": "This entry is missing its path.",
+        "related_asset_ids": ["asset_001"],
+        "related_check_ids": [],
+        "related_error_codes": [],
+    }
+    record["evidence"].extend([complete, incomplete])
+
+    review = build_fcpxml_compatibility_review(record)
+    asset_finding = next(
+        finding
+        for finding in review["findings"]
+        if finding["code"] == "media_not_online" and "asset_001" in finding["related_entities"]["asset_ids"]
+    )
+
+    assert asset_finding["evidence_status"] == "linked"
+    assert "ev_asset_001_complete_extra" in asset_finding["evidence_refs"]
+    assert "ev_asset_001_incomplete_extra" not in asset_finding["evidence_refs"]
+    assert any(warning["code"] == "unusable_evidence_entry" for warning in review["validation_result"]["warnings"])
+
+
 def test_compatibility_review_keeps_entity_refs_separate_from_evidence_refs():
     review = build_fcpxml_compatibility_review(load_record("sample_fcpxml_acceptance_record_offline_blocked.json"))
     media_finding = next(finding for finding in review["findings"] if finding["code"] == "media_not_online")

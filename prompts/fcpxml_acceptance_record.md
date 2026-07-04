@@ -16,6 +16,7 @@ Module 11 records manually observed Final Cut Pro import results.
 - Capture importer errors, stable evidence ids, evidence paths or references, notes, and regression sample references.
 - Each evidence entry must include `evidence_id`, `evidence_type`, `description`, `path_or_reference`, `related_asset_ids`, `related_check_ids`, and `related_error_codes`.
 - Evidence ids must be unique and suitable for later Module 12 finding references.
+- Treat `evidence_id` as an index only; incomplete or duplicate evidence is not usable audit proof.
 - Allow valid failed or blocked records when they are traceable and evidence-backed.
 - Do not infer PASS from generated files.
 - Do not launch or control Final Cut Pro.

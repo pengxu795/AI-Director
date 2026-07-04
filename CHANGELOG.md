@@ -2,6 +2,8 @@
 
 ## 2026-07-03
 
+- Fixed Module 12 evidence usability so incomplete evidence and duplicate `evidence_id` entries cannot confirm blocker or major findings.
+- Added `unusable_evidence_entry` handling and tests for missing evidence fields, duplicate evidence ids, and mixed complete/incomplete evidence.
 - Fixed Module 12 evidence traceability so findings reference real Module 11 `evidence_id` values instead of asset ids, checklist ids, or empty placeholders.
 - Added `related_entities` for affected assets, checklist items, and error codes.
 - Added `evidence_incomplete` handling and `requires_evidence_before_implementation` for findings without linked manual evidence.

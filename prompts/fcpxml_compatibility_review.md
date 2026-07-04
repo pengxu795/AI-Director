@@ -6,6 +6,8 @@ Module 12 reviews Module 11 manual acceptance records.
 - Preserve source `.fcpxml`, source design, git commit, and serializer commit fingerprints.
 - Extract findings from non-online media, failed or blocked checklist items, import errors, and validation warnings.
 - Put only real Module 11 `evidence_id` values in `finding.evidence_refs`.
+- Use only complete and unique evidence entries: non-empty `evidence_id`, `evidence_type`, `description`, `path_or_reference`, and list-valued relation fields.
+- Never use incomplete evidence or duplicate `evidence_id` entries to confirm blocker or major findings.
 - Put affected asset ids, checklist ids, and error codes in `related_entities`, not in `evidence_refs`.
 - Match media findings by `related_asset_ids`, checklist findings by `related_check_ids`, and import-error findings by `related_error_codes`.
 - If blocker or major findings lack matching evidence, mark `evidence_status: missing`, downgrade them to warning, set review status to `evidence_incomplete`, and require evidence before implementation.

@@ -47,6 +47,16 @@ Every compatibility finding must distinguish evidence from affected entities:
 
 Asset ids, checklist ids, and error codes must not be used as `evidence_refs`.
 
+`evidence_id` is only an index. Module 12 may use an evidence entry to confirm a finding only when the entry is complete and uniquely identified:
+
+- `evidence_id` is non-empty and appears exactly once in the record.
+- `evidence_type` is non-empty.
+- `description` is non-empty.
+- `path_or_reference` is non-empty.
+- `related_asset_ids`, `related_check_ids`, and `related_error_codes` are lists.
+
+Incomplete evidence and duplicate evidence ids produce `unusable_evidence_entry` or `duplicate_evidence_id` warnings. They must not appear in `finding.evidence_refs`.
+
 Blocker or major findings require at least one matching evidence id before they can be treated as confirmed. If matching evidence is missing, the finding is downgraded to warning severity, keeps `original_severity`, sets `evidence_status: "missing"`, and the review status becomes `evidence_incomplete`.
 
 Import-error findings match evidence through `related_error_codes`. Missing import-error evidence produces `missing_evidence_for_import_error`.

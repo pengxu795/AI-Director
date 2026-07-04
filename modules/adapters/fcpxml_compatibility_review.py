@@ -112,7 +112,7 @@ def write_fcpxml_compatibility_review(review: dict[str, Any], output_path: str |
 
 def _findings_from_record(record: dict[str, Any]) -> list[dict[str, Any]]:
     findings = []
-    evidence = _safe_list(record.get("evidence"))
+    evidence = _usable_evidence(_safe_list(record.get("evidence")))
     for asset in _safe_list(record.get("asset_results")):
         if asset.get("import_state") != "online":
             asset_id = str(asset.get("asset_id", ""))
@@ -285,27 +285,61 @@ def _review_status(validation_result: dict[str, Any], findings: list[dict[str, A
 
 def _validate_evidence_schema(evidence: list[dict[str, Any]], warnings: list[dict[str, str]]) -> None:
     evidence_ids = []
+    seen_ids: set[str] = set()
+    duplicate_ids: set[str] = set()
     for index, item in enumerate(evidence):
         prefix = f"acceptance_record.evidence[{index}]"
+        unusable = False
         for field in ("evidence_id", "evidence_type", "description", "path_or_reference"):
             if not item.get(field):
-                warnings.append(_issue("incomplete_evidence_entry", f"{prefix}.{field}", "Evidence entry is missing a stable field."))
+                unusable = True
+                warnings.append(_issue("unusable_evidence_entry", f"{prefix}.{field}", "Evidence entry is missing a field required for audit use."))
         for field in ("related_asset_ids", "related_check_ids", "related_error_codes"):
             if not isinstance(item.get(field), list):
-                warnings.append(_issue("incomplete_evidence_entry", f"{prefix}.{field}", "Evidence relation fields should be lists."))
+                unusable = True
+                warnings.append(_issue("unusable_evidence_entry", f"{prefix}.{field}", "Evidence relation fields must be lists before this evidence can support a finding."))
         if item.get("evidence_id"):
-            evidence_ids.append(str(item.get("evidence_id")))
-    if len(evidence_ids) != len(set(evidence_ids)):
-        warnings.append(_issue("duplicate_evidence_id", "acceptance_record.evidence", "Evidence ids should be unique."))
+            evidence_id = str(item.get("evidence_id"))
+            evidence_ids.append(evidence_id)
+            if evidence_id in seen_ids:
+                duplicate_ids.add(evidence_id)
+            seen_ids.add(evidence_id)
+        if unusable:
+            warnings.append(_issue("unusable_evidence_entry", prefix, "This evidence entry cannot be used to confirm a compatibility finding."))
+    for evidence_id in sorted(duplicate_ids):
+        warnings.append(_issue("duplicate_evidence_id", "acceptance_record.evidence", f"Evidence id is duplicated and all matching entries are unusable: {evidence_id}."))
 
 
 def _missing_evidence_warnings(record: dict[str, Any], evidence: list[dict[str, Any]]) -> list[dict[str, str]]:
     warnings = []
+    usable_evidence = _usable_evidence(evidence)
     for error in _safe_list(record.get("import_errors")):
         code = str(error.get("code", ""))
-        if code and not _evidence_refs_for_error(evidence, code):
+        if code and not _evidence_refs_for_error(usable_evidence, code):
             warnings.append(_issue("missing_evidence_for_import_error", "acceptance_record.import_errors", f"No evidence is linked to import error: {code}."))
     return warnings
+
+
+def _usable_evidence(evidence: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    id_counts: dict[str, int] = {}
+    for item in evidence:
+        evidence_id = str(item.get("evidence_id", ""))
+        if evidence_id:
+            id_counts[evidence_id] = id_counts.get(evidence_id, 0) + 1
+    return [item for item in evidence if _is_usable_evidence(item, id_counts)]
+
+
+def _is_usable_evidence(item: dict[str, Any], id_counts: dict[str, int]) -> bool:
+    evidence_id = str(item.get("evidence_id", ""))
+    if not evidence_id or id_counts.get(evidence_id, 0) != 1:
+        return False
+    for field in ("evidence_type", "description", "path_or_reference"):
+        if not item.get(field):
+            return False
+    for field in ("related_asset_ids", "related_check_ids", "related_error_codes"):
+        if not isinstance(item.get(field), list):
+            return False
+    return True
 
 
 def _evidence_refs_for_asset(evidence: list[dict[str, Any]], asset_id: str) -> list[str]:

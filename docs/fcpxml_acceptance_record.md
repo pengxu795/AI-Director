@@ -63,6 +63,8 @@ Each evidence entry must use stable evidence identifiers:
 
 `evidence_id` values must be unique within the record. The relation lists connect manual proof such as screenshots, copied Final Cut Pro error text, reviewer notes, or external references to the exact assets, checklist items, or importer error codes they support.
 
+An `evidence_id` is only an index. It becomes usable audit evidence only when the entry is complete and unique. Missing `evidence_type`, `description`, `path_or_reference`, or non-list relation fields make the evidence unusable for Module 12 finding confirmation. Duplicate `evidence_id` values make every matching entry unusable.
+
 ## Artifact Safety
 
 The manual result artifact identifiers must match the Module 10 protocol:

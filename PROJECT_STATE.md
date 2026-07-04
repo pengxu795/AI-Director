@@ -37,6 +37,7 @@
 - Confirm findings are derived from Module 11 acceptance records without guessing.
 - Confirm non-online media, failed/blocked checks, import errors, and validation warnings become traceable findings.
 - Confirm `finding.evidence_refs` contains only real Module 11 `evidence_id` values.
+- Confirm only complete and unique evidence entries can confirm blocker or major findings.
 - Confirm affected asset ids, checklist ids, and error codes stay in `related_entities` and do not masquerade as evidence.
 - Confirm missing evidence produces `evidence_incomplete` and requires evidence before remediation implementation.
 - Confirm successful records produce informational findings and no remediation items.
