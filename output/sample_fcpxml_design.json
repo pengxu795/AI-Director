@@ -13,6 +13,23 @@
     "selected_version_reason": "Apple's current public DTD page is the baseline; import must be verified in a later gated module."
   },
   "status": "designed",
+  "references": [
+    {
+      "name": "Apple FCPXML Reference",
+      "url": "https://developer.apple.com/documentation/professional-video-applications/fcpxml-reference",
+      "usage": "Primary reference for FCPXML as media, metadata, and Final Cut Pro interchange."
+    },
+    {
+      "name": "Apple FCPXML Document Type Definition",
+      "url": "https://developer.apple.com/documentation/professional-video-applications/document-type-definition",
+      "usage": "Primary DTD reference; Module 8 uses it for design only."
+    },
+    {
+      "name": "Apple Legacy FCPXML DTD Notes",
+      "url": "https://developer.apple.com/library/archive/documentation/Miscellaneous/Conceptual/LegacyDTDsFinalCutPro/FCPXMLDTDv1.7/FCPXMLDTDv1.7.html",
+      "usage": "Confirms FCPXML time attributes are rational seconds."
+    }
+  ],
   "time_model": {
     "fcpxml_time_format": "rational_seconds",
     "internal_timecode_format": "HH:MM:SS.mmm",
@@ -30,6 +47,48 @@
     "marker_id_prefix": "marker_",
     "stability": "deterministic_from_adapter_plan_order"
   },
+  "field_mapping": [
+    {
+      "adapter_plan": "register_media_asset.media_asset_id",
+      "fcpxml_design": "resources.asset.id"
+    },
+    {
+      "adapter_plan": "register_media_asset.source_file",
+      "fcpxml_design": "resources.asset.src"
+    },
+    {
+      "adapter_plan": "register_media_asset.duration",
+      "fcpxml_design": "resources.asset.duration"
+    },
+    {
+      "adapter_plan": "target_profile.sequence_fps or project_settings.sequence_fps",
+      "fcpxml_design": "resources.sequence_format.frameDuration"
+    },
+    {
+      "adapter_plan": "register_media_asset.fps",
+      "fcpxml_design": "resources.asset.frameDuration"
+    },
+    {
+      "adapter_plan": "place_clip.media_asset_id",
+      "fcpxml_design": "spine.asset-clip.ref"
+    },
+    {
+      "adapter_plan": "place_clip.timeline_start",
+      "fcpxml_design": "spine.asset-clip.offset"
+    },
+    {
+      "adapter_plan": "place_clip.source_in",
+      "fcpxml_design": "spine.asset-clip.start"
+    },
+    {
+      "adapter_plan": "place_clip.source_out - source_in",
+      "fcpxml_design": "spine.asset-clip.duration"
+    },
+    {
+      "adapter_plan": "add_narration_cue.text",
+      "fcpxml_design": "marker_or_note.value"
+    }
+  ],
   "resources": {
     "sequence_format": {
       "id": "fmt001",
@@ -44,6 +103,17 @@
       {
         "id": "asset_001",
         "media_asset_id": "m001",
+        "src": "/media/drama_episode_01.mp4",
+        "name": "drama_episode_01.mp4",
+        "duration": "10s",
+        "fps": 25.0,
+        "frameDuration": "1/25s",
+        "hasAudio": "1",
+        "format": "fmt001"
+      },
+      {
+        "id": "asset_002",
+        "media_asset_id": "m002",
         "src": "/media/drama_episode_01.mp4",
         "name": "drama_episode_01.mp4",
         "duration": "10s",
@@ -69,13 +139,35 @@
         "source_story_block_id": "b001",
         "source_timeline_item_id": "t001",
         "reuse_policy": "primary"
+      },
+      {
+        "id": "clip_002",
+        "element": "asset-clip",
+        "ref": "asset_002",
+        "name": "drama_episode_01.mp4",
+        "offset": "37/25s",
+        "start": "7s",
+        "duration": "37/25s",
+        "source_story_block_id": "b002",
+        "source_timeline_item_id": "t002",
+        "reuse_policy": "primary"
       }
     ],
     "markers": [
       {
         "id": "marker_001",
         "narration_segment_id": "n001",
+        "source_timeline_item_id": "t001",
+        "timeline_start": "0s",
         "value": "她终于发现真相",
+        "mapping": "marker_or_note_design_only"
+      },
+      {
+        "id": "marker_002",
+        "narration_segment_id": "n002",
+        "source_timeline_item_id": "t002",
+        "timeline_start": "38/25s",
+        "value": "她开始反击",
         "mapping": "marker_or_note_design_only"
       }
     ]
@@ -86,7 +178,8 @@
       "resources": {
         "format": "fmt001",
         "assets": [
-          "asset_001"
+          "asset_001",
+          "asset_002"
         ]
       },
       "library": {
@@ -95,10 +188,12 @@
             "sequence": {
               "format": "fmt001",
               "spine": [
-                "clip_001"
+                "clip_001",
+                "clip_002"
               ],
               "markers": [
-                "marker_001"
+                "marker_001",
+                "marker_002"
               ]
             }
           }
@@ -112,7 +207,12 @@
     "warnings": [
       {
         "code": "narration_cue_design_only",
-        "field": "operations[3]",
+        "field": "operations[5]",
+        "message": "Module 8 maps narration cues as marker/text design only; no audio asset is generated."
+      },
+      {
+        "code": "narration_cue_design_only",
+        "field": "operations[6]",
         "message": "Module 8 maps narration cues as marker/text design only; no audio asset is generated."
       }
     ]

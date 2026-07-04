@@ -3,7 +3,7 @@
 ## Current Status
 
 - Current phase: Module 9 Review
-- Latest completed work: Module 9 minimal FCPXML serialization and file export
+- Latest completed work: Module 9 minimal FCPXML serialization, file export, and marker time mapping
 - Next module: FCPXML import validation / editor compatibility testing
 - Gate: Module 9 Review passes before launching Final Cut Pro or validating editor import
 
@@ -33,6 +33,7 @@
 - Review Module 9 minimal FCPXML serializer.
 - Confirm only validated Module 8 designs can be serialized.
 - Confirm `.fcpxml` output preserves resources, asset refs, clip source ranges, offsets, durations, and narration markers.
+- Confirm narration markers map to the correct clip and use clip-relative marker start.
 - Confirm serializer does not read media, probe files, render video, launch Final Cut Pro, or validate editor import.
 - Confirm blocked designs do not write files.
 

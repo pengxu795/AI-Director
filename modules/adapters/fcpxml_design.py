@@ -160,7 +160,7 @@ def build_fcpxml_minimal_design(adapter_plan: dict[str, Any]) -> dict[str, Any]:
     sequence_fps = _sequence_fps(adapter_plan)
     media_assets = _media_asset_resources(operations)
     clips = _clip_designs(operations, media_assets)
-    narration_markers = _narration_marker_designs(operations)
+    narration_markers = _narration_marker_designs(operations, clips)
 
     return {
         "schema_version": FCPXML_DESIGN_SCHEMA_VERSION,
@@ -329,23 +329,38 @@ def _clip_designs(
     return clips
 
 
-def _narration_marker_designs(operations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _narration_marker_designs(operations: list[dict[str, Any]], clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
     markers = []
+    clip_by_timeline_item = {clip["source_timeline_item_id"]: clip for clip in clips if clip.get("source_timeline_item_id")}
     for operation in operations:
         if operation.get("type") != "add_narration_cue":
             continue
         text = str(operation.get("text", ""))
         if not text:
             continue
+        source_timeline_item_id = str(operation.get("source_timeline_item_id", ""))
+        matched_clip = clip_by_timeline_item.get(source_timeline_item_id, {})
+        timeline_start = str(operation.get("timeline_start", "") or matched_clip.get("offset", ""))
         markers.append(
             {
                 "id": f"marker_{len(markers) + 1:03d}",
                 "narration_segment_id": str(operation.get("narration_segment_id", "")),
+                "source_timeline_item_id": source_timeline_item_id,
+                "timeline_start": _timecode_to_fcpxml_time(timeline_start),
                 "value": text,
                 "mapping": "marker_or_note_design_only",
             }
         )
     return markers
+
+
+def _timecode_to_fcpxml_time(value: str) -> str:
+    if value.endswith("s"):
+        return value
+    milliseconds = _timecode_to_ms(value)
+    if milliseconds is None:
+        return ""
+    return _milliseconds_to_rational_seconds(milliseconds)
 
 
 def _sequence_format_resource(sequence_fps: Any) -> dict[str, Any]:

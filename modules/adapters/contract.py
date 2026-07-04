@@ -227,12 +227,21 @@ def plan_adapter_export(adapter_input: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
+    first_shot_by_narration_id = {}
+    for shot in _safe_list(adapter_input.get("shot_list")):
+        narration_segment_id = str(shot.get("narration_segment_id", ""))
+        if narration_segment_id and narration_segment_id not in first_shot_by_narration_id:
+            first_shot_by_narration_id[narration_segment_id] = shot
+
     if target_profile.get("supports_narration_track"):
         for segment in _safe_list(_safe_dict(adapter_input.get("narration_script")).get("segments")):
+            source_shot = first_shot_by_narration_id.get(str(segment.get("id", "")), {})
             operations.append(
                 {
                     "type": "add_narration_cue",
                     "narration_segment_id": str(segment.get("id", "")),
+                    "source_timeline_item_id": str(source_shot.get("source_timeline_item_id", "")),
+                    "timeline_start": str(source_shot.get("timeline_start", "")),
                     "text": str(segment.get("text", "")),
                 }
             )

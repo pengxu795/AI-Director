@@ -330,6 +330,7 @@ output/sample_fcpxml_design.json
 - 只接受 `status: "designed"` 的 FCPXML design
 - 拒绝 blocked / invalid design
 - 写出 `.fcpxml` 文件
+- marker 必须根据真实 timeline position 挂到覆盖该时间点的 clip，并转换为 clip-relative start
 - 不读取视频
 - 不探测媒体文件
 - 不转码、不渲染、不导出成片

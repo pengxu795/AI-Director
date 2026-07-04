@@ -5,6 +5,10 @@ Module 9 serializes a validated Module 8 abstract FCPXML design to `.fcpxml`.
 - Only accept `status: "designed"` FCPXML design objects.
 - Never serialize blocked or unresolved designs.
 - Preserve resources, asset refs, clip offsets, clip starts, clip durations, and narration marker text.
+- Require each narration marker to carry a real timeline position.
+- Attach each marker to the clip covering its timeline position.
+- Convert marker timeline position to clip-relative marker start.
+- Block markers in gaps, outside sequence duration, or overlapping multiple clips.
 - Use existing rational seconds from the design.
 - Do not round times.
 - Do not read, probe, transcode, cut, render, or export video.

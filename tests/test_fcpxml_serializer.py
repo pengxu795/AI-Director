@@ -15,30 +15,57 @@ from modules.adapters import (
 )
 
 
-def fcpxml_design():
-    adapter_input = build_canonical_adapter_input(
-        {"schema_version": "1.0"},
-        {"schema_version": "1.0", "sequence": {"id": "seq001"}},
-        {"schema_version": "1.0", "segments": [{"id": "n001", "text": "她终于发现真相"}]},
-        [
+def fcpxml_design(two_clips=False):
+    shots = [
+        {
+            "id": "v001",
+            "source_timeline_item_id": "t001",
+            "narration_segment_id": "n001",
+            "source_story_block_id": "b001",
+            "source_start": "00:00:05.000",
+            "source_end": "00:00:06.480",
+            "timeline_start": "00:00:00.000",
+            "timeline_end": "00:00:01.480",
+            "reuse_policy": "primary",
+        }
+    ]
+    segments = [{"id": "n001", "text": "她终于发现真相"}]
+    if two_clips:
+        shots.append(
             {
-                "id": "v001",
-                "source_timeline_item_id": "t001",
-                "narration_segment_id": "n001",
-                "source_story_block_id": "b001",
-                "source_start": "00:00:05.000",
-                "source_end": "00:00:06.480",
-                "timeline_start": "00:00:00.000",
-                "timeline_end": "00:00:01.480",
+                "id": "v002",
+                "source_timeline_item_id": "t002",
+                "narration_segment_id": "n002",
+                "source_story_block_id": "b002",
+                "source_start": "00:00:07.000",
+                "source_end": "00:00:08.480",
+                "timeline_start": "00:00:01.480",
+                "timeline_end": "00:00:02.960",
                 "reuse_policy": "primary",
             }
-        ],
-        [],
-        [
+        )
+        segments.append({"id": "n002", "text": "她开始反击"})
+    bindings = [
+        {
+            "media_asset_id": "m001",
+            "source_story_block_id": "b001",
+            "source_timeline_item_id": "t001",
+            "source_file": "/media/drama_episode_01.mp4",
+            "source_in": "00:00:00.000",
+            "source_out": "00:00:10.000",
+            "duration": "00:00:10.000",
+            "fps": 25.0,
+            "audio_available": True,
+            "status": "bound",
+            "validation_errors": [],
+        }
+    ]
+    if two_clips:
+        bindings.append(
             {
-                "media_asset_id": "m001",
-                "source_story_block_id": "b001",
-                "source_timeline_item_id": "t001",
+                "media_asset_id": "m002",
+                "source_story_block_id": "b002",
+                "source_timeline_item_id": "t002",
                 "source_file": "/media/drama_episode_01.mp4",
                 "source_in": "00:00:00.000",
                 "source_out": "00:00:10.000",
@@ -48,7 +75,14 @@ def fcpxml_design():
                 "status": "bound",
                 "validation_errors": [],
             }
-        ],
+        )
+    adapter_input = build_canonical_adapter_input(
+        {"schema_version": "1.0"},
+        {"schema_version": "1.0", "sequence": {"id": "seq001"}},
+        {"schema_version": "1.0", "segments": segments},
+        shots,
+        [],
+        bindings,
         default_target_profiles()["fcpxml"],
     )
     plan = plan_adapter_export(adapter_input)
@@ -83,7 +117,63 @@ def test_serialize_minimal_fcpxml_structure():
         "duration": "37/25s",
     }
     marker = root.find("./library/event/project/sequence/spine/asset-clip/marker")
+    assert marker.attrib["start"] == "0s"
     assert marker.attrib["value"] == "她终于发现真相"
+
+
+def test_markers_attach_to_matching_clip_with_relative_start():
+    xml_text = serialize_fcpxml(fcpxml_design(two_clips=True))
+    root = ET.fromstring(xml_text.split("<!DOCTYPE fcpxml>\n", 1)[1])
+    clips = root.findall("./library/event/project/sequence/spine/asset-clip")
+
+    assert len(clips) == 2
+    first_marker = clips[0].find("marker")
+    second_marker = clips[1].find("marker")
+    assert first_marker.attrib["value"] == "她终于发现真相"
+    assert first_marker.attrib["start"] == "0s"
+    assert second_marker.attrib["value"] == "她开始反击"
+    assert second_marker.attrib["start"] == "0s"
+
+
+def test_marker_one_frame_after_second_clip_start_is_not_zero():
+    design = fcpxml_design(two_clips=True)
+    design["sequence_design"]["markers"][1]["timeline_start"] = "38/25s"
+    xml_text = serialize_fcpxml(design)
+    root = ET.fromstring(xml_text.split("<!DOCTYPE fcpxml>\n", 1)[1])
+    second_marker = root.findall("./library/event/project/sequence/spine/asset-clip")[1].find("marker")
+
+    assert second_marker.attrib["start"] == "1/25s"
+
+
+def test_marker_in_gap_between_clips_blocks_serialization():
+    design = fcpxml_design(two_clips=True)
+    design["sequence_design"]["spine"][1]["offset"] = "2s"
+    design["sequence_design"]["markers"][1]["timeline_start"] = "37/25s"
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "marker_outside_clip_range" for error in result["errors"])
+    with pytest.raises(ValueError):
+        serialize_fcpxml(design)
+
+
+def test_marker_outside_sequence_blocks_serialization():
+    design = fcpxml_design()
+    design["sequence_design"]["markers"][0]["timeline_start"] = "99s"
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "marker_outside_sequence_range" for error in result["errors"])
+
+
+def test_marker_with_ambiguous_clip_target_blocks_serialization():
+    design = fcpxml_design(two_clips=True)
+    design["sequence_design"]["spine"][1]["offset"] = "1s"
+    design["sequence_design"]["markers"][1]["timeline_start"] = "1s"
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "ambiguous_marker_clip_target" for error in result["errors"])
 
 
 def test_blocked_design_does_not_serialize():

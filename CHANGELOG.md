@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Fixed Module 9 narration marker placement so markers attach to the clip covering their timeline position.
+- Added clip-relative marker start calculation and validation for gaps, out-of-sequence markers, and ambiguous overlapping clips.
+- Updated the sample FCPXML to include two clips and two markers at different times.
 - Added Module 9 minimal FCPXML serializer and CLI.
 - Added `.fcpxml` file export from validated Module 8 abstract designs only.
 - Added tests for XML structure, blocked design refusal, unknown asset refs, `.fcpxml` suffix enforcement, file writing, and no media-processing imports.

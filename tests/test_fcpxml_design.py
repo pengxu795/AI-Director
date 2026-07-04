@@ -193,6 +193,8 @@ def test_design_preserves_narration_as_marker_design_only():
         {
             "id": "marker_001",
             "narration_segment_id": "n001",
+            "source_timeline_item_id": "t001",
+            "timeline_start": "0s",
             "value": "她终于发现真相",
             "mapping": "marker_or_note_design_only",
         }

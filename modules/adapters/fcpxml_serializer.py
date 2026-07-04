@@ -47,7 +47,7 @@ def validate_fcpxml_serialization_input(design: dict[str, Any]) -> dict[str, Any
     _validate_sequence_format(sequence_format, errors)
     asset_ids = _validate_assets(assets, errors)
     _validate_clips(clips, asset_ids, errors)
-    _validate_markers(markers, warnings)
+    _validate_markers(markers, clips, warnings, errors)
 
     return {
         "valid": not errors,
@@ -110,7 +110,7 @@ def serialize_fcpxml(design: dict[str, Any]) -> str:
         },
     )
     spine_el = ET.SubElement(sequence_el, "spine")
-    first_clip_el: ET.Element | None = None
+    clip_elements: list[tuple[dict[str, Any], ET.Element]] = []
     for clip in clips:
         clip_el = ET.SubElement(
             spine_el,
@@ -126,16 +126,18 @@ def serialize_fcpxml(design: dict[str, Any]) -> str:
         metadata = _clip_metadata(clip)
         if metadata:
             clip_el.append(ET.Comment(metadata))
-        if first_clip_el is None:
-            first_clip_el = clip_el
+        clip_elements.append((clip, clip_el))
 
-    marker_parent = first_clip_el if first_clip_el is not None else spine_el
     for marker in markers:
+        clip, marker_parent = _marker_clip_target(marker, clip_elements)
+        marker_start = _fraction_to_fcpxml_time(
+            _rational_time_to_fraction(str(marker.get("timeline_start", "0s"))) - _rational_time_to_fraction(str(clip.get("offset", "0s")))
+        )
         ET.SubElement(
             marker_parent,
             "marker",
             {
-                "start": "0s",
+                "start": marker_start,
                 "duration": _first_frame_duration(sequence_format),
                 "value": str(marker.get("value", "")),
             },
@@ -208,9 +210,32 @@ def _validate_clips(clips: list[dict[str, Any]], asset_ids: set[str], errors: li
                 errors.append(_issue("invalid_rational_time", f"{prefix}.{field}", "Clip time fields must be rational seconds."))
 
 
-def _validate_markers(markers: list[dict[str, Any]], warnings: list[dict[str, str]]) -> None:
+def _validate_markers(
+    markers: list[dict[str, Any]],
+    clips: list[dict[str, Any]],
+    warnings: list[dict[str, str]],
+    errors: list[dict[str, str]],
+) -> None:
     if markers:
         warnings.append(_issue("markers_design_only", "sequence_design.markers", "Markers preserve narration text only; no audio is generated."))
+    sequence_duration = _rational_time_to_fraction(_sequence_duration(clips))
+    for index, marker in enumerate(markers):
+        field = f"sequence_design.markers[{index}]"
+        if not marker.get("timeline_start"):
+            errors.append(_issue("missing_marker_timeline_start", f"{field}.timeline_start", "Marker must include timeline_start."))
+            continue
+        if not _is_rational_time(marker.get("timeline_start")):
+            errors.append(_issue("invalid_rational_time", f"{field}.timeline_start", "Marker timeline_start must be rational seconds."))
+            continue
+        marker_time = _rational_time_to_fraction(str(marker.get("timeline_start")))
+        if marker_time < 0 or marker_time >= sequence_duration:
+            errors.append(_issue("marker_outside_sequence_range", f"{field}.timeline_start", "Marker must fall inside sequence duration."))
+            continue
+        matches = _clips_covering_time(marker_time, clips)
+        if not matches:
+            errors.append(_issue("marker_outside_clip_range", f"{field}.timeline_start", "Marker must fall inside a clip range."))
+        elif len(matches) > 1:
+            errors.append(_issue("ambiguous_marker_clip_target", f"{field}.timeline_start", "Marker matches multiple clips."))
 
 
 def _file_url(path: str) -> str:
@@ -230,6 +255,32 @@ def _sequence_duration(clips: list[dict[str, Any]]) -> str:
     if max_end <= 0:
         return "0s"
     return _fraction_to_fcpxml_time(max_end)
+
+
+def _clips_covering_time(marker_time: Fraction, clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    matches = []
+    for clip in clips:
+        offset = _rational_time_to_fraction(str(clip.get("offset", "0s")))
+        duration = _rational_time_to_fraction(str(clip.get("duration", "0s")))
+        if offset <= marker_time < offset + duration:
+            matches.append(clip)
+    return matches
+
+
+def _marker_clip_target(
+    marker: dict[str, Any],
+    clip_elements: list[tuple[dict[str, Any], ET.Element]],
+) -> tuple[dict[str, Any], ET.Element]:
+    marker_time = _rational_time_to_fraction(str(marker.get("timeline_start", "0s")))
+    matches = []
+    for clip, element in clip_elements:
+        offset = _rational_time_to_fraction(str(clip.get("offset", "0s")))
+        duration = _rational_time_to_fraction(str(clip.get("duration", "0s")))
+        if offset <= marker_time < offset + duration:
+            matches.append((clip, element))
+    if len(matches) != 1:
+        raise ValueError("Marker must resolve to exactly one clip.")
+    return matches[0]
 
 
 def _first_frame_duration(sequence_format: dict[str, Any]) -> str:
