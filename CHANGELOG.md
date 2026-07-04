@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Added Module 5 phase 1 edit timeline generation.
+- Added editor-agnostic edit timeline schema with `sequence`, `edit_segments`, `tracks`, and `unresolved_items`.
+- Added edit timeline CLI and sample output.
+- Added tests for sequential clip layout, multi-range segments, unresolved items, invalid ranges, traceability preservation, empty text skipping, and JSON serialization.
 - Added range-level Module 4 `reuse_policy` so mixed first-use and reused story blocks remain visible to Module 5.
 - Added `mixed` timeline item reuse policy for narration segments with both primary and reused video ranges.
 - Added tests for mixed regular reuse, mixed ending-hook reuse, all-duplicate ranges, and all-callback ranges.

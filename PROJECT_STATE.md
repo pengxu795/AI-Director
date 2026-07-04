@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 4 Review
-- Latest completed work: Module 4 shot matching and timeline planning phase 1
-- Next module: Module 5 Video Editing / Export Planning
-- Gate: Do not start Module 5 until Module 4 Review passes
+- Current phase: Module 5 Review
+- Latest completed work: Module 5 edit timeline generation phase 1
+- Next module: Module 6 Export
+- Gate: Do not start Module 6 until Module 5 Review passes
 
 ## Completed
 
@@ -21,13 +21,14 @@
 - Module 4 phase 1: rule-based shot matching and timeline planning
 - Module 4 Review fix: callback reuse policy, partial matching coverage, and duplicate block-id cleanup
 - Module 4 Review fix: range-level reuse policy for mixed primary, duplicate, and callback ranges
+- Module 5 phase 1: editor-agnostic edit timeline generation
 
 ## Pending Review
 
-- Review Module 4 timeline schema.
-- Confirm every matched video range traces back to Module 2 story blocks.
-- Confirm unresolved segments never output guessed video ranges.
-- Confirm Module 4 should proceed before Module 5 video editing/export work.
+- Review Module 5 edit timeline schema.
+- Confirm edit clips preserve Module 4 traceability and reuse policy.
+- Confirm unresolved or invalid ranges never create clip decisions.
+- Confirm Module 5 should proceed before Module 6 export work.
 
 ## Development Rule
 

@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.0",
+  "source_timeline_schema_version": "1.0",
+  "sequence": {
+    "id": "seq001",
+    "start": "00:00:00.000",
+    "end": "00:00:21.000",
+    "duration_ms": 21000
+  },
+  "edit_segments": [
+    {
+      "id": "e001",
+      "source_timeline_item_id": "t001",
+      "narration_segment_id": "n001",
+      "segment_type": "hook",
+      "text": "她以为一切已经结束，没想到可门外的孩子，却喊了她一声妈妈",
+      "clip_ids": [
+        "v001"
+      ],
+      "narration_cue_id": "a001",
+      "timeline_start": "00:00:00.000",
+      "timeline_end": "00:00:03.500",
+      "duration_ms": 3500,
+      "reuse_policy": "primary",
+      "source_status": "matched",
+      "confidence": 0.75
+    },
+    {
+      "id": "e002",
+      "source_timeline_item_id": "t002",
+      "narration_segment_id": "n002",
+      "segment_type": "setup",
+      "text": "故事里，女主、妈妈、孩子之间的关系并不简单，亲子关系被否定。",
+      "clip_ids": [
+        "v002"
+      ],
+      "narration_cue_id": "a002",
+      "timeline_start": "00:00:03.500",
+      "timeline_end": "00:00:07.100",
+      "duration_ms": 3600,
+      "reuse_policy": "primary",
+      "source_status": "matched",
+      "confidence": 0.65
+    },
+    {
+      "id": "e003",
+      "source_timeline_item_id": "t003",
+      "narration_segment_id": "n003",
+      "segment_type": "conflict",
+      "text": "真正的矛盾出现了：你不是我的亲生女儿",
+      "clip_ids": [
+        "v003"
+      ],
+      "narration_cue_id": "a003",
+      "timeline_start": "00:00:07.100",
+      "timeline_end": "00:00:10.700",
+      "duration_ms": 3600,
+      "reuse_policy": "duplicate",
+      "source_status": "matched",
+      "confidence": 0.65
+    },
+    {
+      "id": "e004",
+      "source_timeline_item_id": "t004",
+      "narration_segment_id": "n004",
+      "segment_type": "development",
+      "text": "女主愣住了，她终于明白自己被隐瞒多年",
+      "clip_ids": [
+        "v004"
+      ],
+      "narration_cue_id": "a004",
+      "timeline_start": "00:00:10.700",
+      "timeline_end": "00:00:14.000",
+      "duration_ms": 3300,
+      "reuse_policy": "primary",
+      "source_status": "matched",
+      "confidence": 0.65
+    },
+    {
+      "id": "e005",
+      "source_timeline_item_id": "t005",
+      "narration_segment_id": "n005",
+      "segment_type": "climax",
+      "text": "直到这里，可门外的孩子，却喊了她一声妈妈",
+      "clip_ids": [
+        "v005"
+      ],
+      "narration_cue_id": "a005",
+      "timeline_start": "00:00:14.000",
+      "timeline_end": "00:00:17.500",
+      "duration_ms": 3500,
+      "reuse_policy": "duplicate",
+      "source_status": "matched",
+      "confidence": 0.75
+    },
+    {
+      "id": "e006",
+      "source_timeline_item_id": "t006",
+      "narration_segment_id": "n-ending",
+      "segment_type": "ending_hook",
+      "text": "而这声称呼背后，还藏着更大的秘密。",
+      "clip_ids": [
+        "v006"
+      ],
+      "narration_cue_id": "a006",
+      "timeline_start": "00:00:17.500",
+      "timeline_end": "00:00:21.000",
+      "duration_ms": 3500,
+      "reuse_policy": "callback",
+      "source_status": "matched",
+      "confidence": 0.75
+    }
+  ],
+  "tracks": {
+    "video": [
+      {
+        "id": "v001",
+        "source_timeline_item_id": "t001",
+        "narration_segment_id": "n001",
+        "source_story_block_id": "b003",
+        "source_start": "00:02:23.000",
+        "source_end": "00:02:26.500",
+        "timeline_start": "00:00:00.000",
+        "timeline_end": "00:00:03.500",
+        "duration_ms": 3500,
+        "priority": 1,
+        "reuse_policy": "primary",
+        "edit_segment_id": "e001"
+      },
+      {
+        "id": "v002",
+        "source_timeline_item_id": "t002",
+        "narration_segment_id": "n002",
+        "source_story_block_id": "b001",
+        "source_start": "00:02:15.200",
+        "source_end": "00:02:18.800",
+        "timeline_start": "00:00:03.500",
+        "timeline_end": "00:00:07.100",
+        "duration_ms": 3600,
+        "priority": 1,
+        "reuse_policy": "primary",
+        "edit_segment_id": "e002"
+      },
+      {
+        "id": "v003",
+        "source_timeline_item_id": "t003",
+        "narration_segment_id": "n003",
+        "source_story_block_id": "b001",
+        "source_start": "00:02:15.200",
+        "source_end": "00:02:18.800",
+        "timeline_start": "00:00:07.100",
+        "timeline_end": "00:00:10.700",
+        "duration_ms": 3600,
+        "priority": 1,
+        "reuse_policy": "duplicate",
+        "edit_segment_id": "e003"
+      },
+      {
+        "id": "v004",
+        "source_timeline_item_id": "t004",
+        "narration_segment_id": "n004",
+        "source_story_block_id": "b002",
+        "source_start": "00:02:19.100",
+        "source_end": "00:02:22.400",
+        "timeline_start": "00:00:10.700",
+        "timeline_end": "00:00:14.000",
+        "duration_ms": 3300,
+        "priority": 1,
+        "reuse_policy": "primary",
+        "edit_segment_id": "e004"
+      },
+      {
+        "id": "v005",
+        "source_timeline_item_id": "t005",
+        "narration_segment_id": "n005",
+        "source_story_block_id": "b003",
+        "source_start": "00:02:23.000",
+        "source_end": "00:02:26.500",
+        "timeline_start": "00:00:14.000",
+        "timeline_end": "00:00:17.500",
+        "duration_ms": 3500,
+        "priority": 1,
+        "reuse_policy": "duplicate",
+        "edit_segment_id": "e005"
+      },
+      {
+        "id": "v006",
+        "source_timeline_item_id": "t006",
+        "narration_segment_id": "n-ending",
+        "source_story_block_id": "b003",
+        "source_start": "00:02:23.000",
+        "source_end": "00:02:26.500",
+        "timeline_start": "00:00:17.500",
+        "timeline_end": "00:00:21.000",
+        "duration_ms": 3500,
+        "priority": 1,
+        "reuse_policy": "callback",
+        "edit_segment_id": "e006"
+      }
+    ],
+    "narration": [
+      {
+        "id": "a001",
+        "edit_segment_id": "e001",
+        "source_timeline_item_id": "t001",
+        "narration_segment_id": "n001",
+        "text": "她以为一切已经结束，没想到可门外的孩子，却喊了她一声妈妈",
+        "timeline_start": "00:00:00.000",
+        "timeline_end": "00:00:03.500",
+        "duration_ms": 3500,
+        "clip_ids": [
+          "v001"
+        ],
+        "confidence": 0.75
+      },
+      {
+        "id": "a002",
+        "edit_segment_id": "e002",
+        "source_timeline_item_id": "t002",
+        "narration_segment_id": "n002",
+        "text": "故事里，女主、妈妈、孩子之间的关系并不简单，亲子关系被否定。",
+        "timeline_start": "00:00:03.500",
+        "timeline_end": "00:00:07.100",
+        "duration_ms": 3600,
+        "clip_ids": [
+          "v002"
+        ],
+        "confidence": 0.65
+      },
+      {
+        "id": "a003",
+        "edit_segment_id": "e003",
+        "source_timeline_item_id": "t003",
+        "narration_segment_id": "n003",
+        "text": "真正的矛盾出现了：你不是我的亲生女儿",
+        "timeline_start": "00:00:07.100",
+        "timeline_end": "00:00:10.700",
+        "duration_ms": 3600,
+        "clip_ids": [
+          "v003"
+        ],
+        "confidence": 0.65
+      },
+      {
+        "id": "a004",
+        "edit_segment_id": "e004",
+        "source_timeline_item_id": "t004",
+        "narration_segment_id": "n004",
+        "text": "女主愣住了，她终于明白自己被隐瞒多年",
+        "timeline_start": "00:00:10.700",
+        "timeline_end": "00:00:14.000",
+        "duration_ms": 3300,
+        "clip_ids": [
+          "v004"
+        ],
+        "confidence": 0.65
+      },
+      {
+        "id": "a005",
+        "edit_segment_id": "e005",
+        "source_timeline_item_id": "t005",
+        "narration_segment_id": "n005",
+        "text": "直到这里，可门外的孩子，却喊了她一声妈妈",
+        "timeline_start": "00:00:14.000",
+        "timeline_end": "00:00:17.500",
+        "duration_ms": 3500,
+        "clip_ids": [
+          "v005"
+        ],
+        "confidence": 0.75
+      },
+      {
+        "id": "a006",
+        "edit_segment_id": "e006",
+        "source_timeline_item_id": "t006",
+        "narration_segment_id": "n-ending",
+        "text": "而这声称呼背后，还藏着更大的秘密。",
+        "timeline_start": "00:00:17.500",
+        "timeline_end": "00:00:21.000",
+        "duration_ms": 3500,
+        "clip_ids": [
+          "v006"
+        ],
+        "confidence": 0.75
+      }
+    ]
+  },
+  "unresolved_items": [],
+  "metadata": {
+    "builder": "rule_based",
+    "source_timeline_item_count": 6,
+    "edit_segment_count": 6,
+    "video_clip_count": 6,
+    "narration_cue_count": 6,
+    "unresolved_count": 0,
+    "video_editing_performed": false
+  }
+}
