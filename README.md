@@ -276,6 +276,8 @@ python app/export_package.py output/sample_edit_timeline.json output/sample_scri
 
 Media Asset Binding 是外部注入层，用于把抽象 `source_story_block_id` / `source_timeline_item_id` 绑定到真实媒体资产。Module 1-6 不负责知道本地视频路径，也不得猜测 `source_file`。
 
+只有 `status: "bound"` 且 `validation_errors: []` 的 binding 可以参与 adapter plan；`pending`、`unresolved`、`invalid` 或带校验错误的 binding 会阻断计划，并让对应 shot 保持 unresolved。
+
 文档：
 
 ```text

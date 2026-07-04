@@ -116,6 +116,7 @@ def validate_adapter_input(adapter_input: dict[str, Any]) -> dict[str, Any]:
     _validate_target_profile(target_profile, errors, required_missing_fields)
     _validate_target_compatibility(target_profile, shot_list, narration_segments, errors, warnings)
 
+    all_binding_index = _binding_index(bindings)
     binding_index = _validate_media_asset_bindings(bindings, errors, required_missing_fields)
     if target_profile.get("requires_media_asset_binding") and not bindings:
         errors.append(_issue("missing_media_asset_bindings", "media_asset_bindings", "Target requires media bindings."))
@@ -123,12 +124,13 @@ def validate_adapter_input(adapter_input: dict[str, Any]) -> dict[str, Any]:
     for shot in shot_list:
         binding = _matching_binding(shot, binding_index)
         if not binding:
+            unusable_binding = _matching_binding(shot, all_binding_index)
             unresolved_items.append(
                 {
                     "source_timeline_item_id": str(shot.get("source_timeline_item_id", "")),
                     "narration_segment_id": str(shot.get("narration_segment_id", "")),
                     "source_story_block_id": str(shot.get("source_story_block_id", "")),
-                    "reason": "missing_media_asset_binding",
+                    "reason": _unusable_binding_reason(unusable_binding),
                 }
             )
 
@@ -167,14 +169,14 @@ def plan_adapter_export(adapter_input: dict[str, Any]) -> dict[str, Any]:
             "media_files_read": False,
         }
 
-    binding_index = _binding_index(_safe_list(adapter_input.get("media_asset_bindings")))
+    binding_index = _usable_binding_index(_safe_list(adapter_input.get("media_asset_bindings")))
     operations = [
         {
             "type": "create_sequence",
             "sequence": _safe_dict(adapter_input.get("edit_timeline")).get("sequence", {}),
         }
     ]
-    for binding in _safe_list(adapter_input.get("media_asset_bindings")):
+    for binding in _unique_bindings(binding_index.values()):
         operations.append(
             {
                 "type": "register_media_asset",
@@ -323,7 +325,40 @@ def _validate_media_asset_bindings(
             errors.append(_issue("invalid_field_type", f"{prefix}.validation_errors", "validation_errors must be a list."))
         if binding.get("status") not in ("bound", "unresolved", "invalid", "pending"):
             errors.append(_issue("invalid_binding_status", f"{prefix}.status", "Unsupported binding status."))
-    return _binding_index(bindings)
+        elif binding.get("status") != "bound":
+            errors.append(_issue("binding_not_bound", f"{prefix}.status", "Binding must be bound before adapter planning."))
+        if isinstance(binding.get("validation_errors"), list) and binding.get("validation_errors"):
+            errors.append(
+                _issue(
+                    "binding_has_validation_errors",
+                    f"{prefix}.validation_errors",
+                    "Binding validation_errors must be empty before adapter planning.",
+                )
+            )
+    return _usable_binding_index(bindings)
+
+
+def _usable_binding_index(bindings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    usable = [
+        binding
+        for binding in bindings
+        if binding.get("status") == "bound"
+        and isinstance(binding.get("validation_errors"), list)
+        and not binding.get("validation_errors")
+    ]
+    return _binding_index(usable)
+
+
+def _unique_bindings(bindings: Any) -> list[dict[str, Any]]:
+    unique = []
+    seen = set()
+    for binding in bindings:
+        key = str(binding.get("media_asset_id", "")) or str(id(binding))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(binding)
+    return unique
 
 
 def _binding_index(bindings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -342,6 +377,16 @@ def _matching_binding(shot: dict[str, Any], binding_index: dict[str, dict[str, A
     story_id = str(shot.get("source_story_block_id", ""))
     timeline_id = str(shot.get("source_timeline_item_id", ""))
     return binding_index.get(f"story:{story_id}") or binding_index.get(f"timeline:{timeline_id}")
+
+
+def _unusable_binding_reason(binding: dict[str, Any] | None) -> str:
+    if not binding:
+        return "missing_media_asset_binding"
+    if isinstance(binding.get("validation_errors"), list) and binding.get("validation_errors"):
+        return "binding_has_validation_errors"
+    if binding.get("status") != "bound":
+        return "binding_not_bound"
+    return "missing_media_asset_binding"
 
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:

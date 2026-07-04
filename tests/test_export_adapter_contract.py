@@ -33,23 +33,27 @@ def narration_script():
     }
 
 
+def shot(**overrides):
+    item = {
+        "id": "v001",
+        "edit_segment_id": "e001",
+        "source_timeline_item_id": "t001",
+        "narration_segment_id": "n001",
+        "source_story_block_id": "b001",
+        "source_start": "00:00:05.000",
+        "source_end": "00:00:06.000",
+        "timeline_start": "00:00:00.000",
+        "timeline_end": "00:00:01.000",
+        "duration_ms": 1000,
+        "priority": 1,
+        "reuse_policy": "primary",
+    }
+    item.update(overrides)
+    return item
+
+
 def shot_list():
-    return [
-        {
-            "id": "v001",
-            "edit_segment_id": "e001",
-            "source_timeline_item_id": "t001",
-            "narration_segment_id": "n001",
-            "source_story_block_id": "b001",
-            "source_start": "00:00:05.000",
-            "source_end": "00:00:06.000",
-            "timeline_start": "00:00:00.000",
-            "timeline_end": "00:00:01.000",
-            "duration_ms": 1000,
-            "priority": 1,
-            "reuse_policy": "primary",
-        }
-    ]
+    return [shot()]
 
 
 def media_binding(**overrides):
@@ -70,13 +74,13 @@ def media_binding(**overrides):
     return binding
 
 
-def adapter_input(bindings=None, target_id="fcpxml", unresolved=None):
+def adapter_input(bindings=None, target_id="fcpxml", unresolved=None, shots=None):
     profiles = default_target_profiles()
     return build_canonical_adapter_input(
         manifest(),
         edit_timeline(),
         narration_script(),
-        shot_list(),
+        shots if shots is not None else shot_list(),
         unresolved if unresolved is not None else [],
         bindings if bindings is not None else [media_binding()],
         profiles[target_id],
@@ -108,6 +112,62 @@ def test_missing_source_file_fps_and_duration_report_explicit_errors():
     assert "media_asset_bindings[0].fps" in missing_fields
     assert "media_asset_bindings[0].duration" in missing_fields
     assert result["valid"] is False
+
+
+@pytest.mark.parametrize("status", ["pending", "unresolved", "invalid"])
+def test_non_bound_media_asset_binding_blocks_planning(status):
+    result = validate_adapter_input(adapter_input(bindings=[media_binding(status=status)]))
+    plan = plan_adapter_export(adapter_input(bindings=[media_binding(status=status)]))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "binding_not_bound" for error in result["errors"])
+    assert result["unresolved_items"] == [
+        {
+            "source_timeline_item_id": "t001",
+            "narration_segment_id": "n001",
+            "source_story_block_id": "b001",
+            "reason": "binding_not_bound",
+        }
+    ]
+    assert plan["status"] == "blocked"
+    assert not any(operation.get("type") == "place_clip" for operation in plan["operations"])
+
+
+def test_media_asset_binding_with_validation_errors_blocks_planning():
+    binding = media_binding(validation_errors=["source file does not exist"])
+    result = validate_adapter_input(adapter_input(bindings=[binding]))
+    plan = plan_adapter_export(adapter_input(bindings=[binding]))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "binding_has_validation_errors" for error in result["errors"])
+    assert result["unresolved_items"][0]["reason"] == "binding_has_validation_errors"
+    assert plan["status"] == "blocked"
+    assert not any(operation.get("type") == "place_clip" for operation in plan["operations"])
+
+
+def test_mixed_bound_and_pending_bindings_only_unresolve_pending_shot():
+    shots = [
+        shot(id="v001", source_story_block_id="b001", source_timeline_item_id="t001"),
+        shot(id="v002", source_story_block_id="b002", source_timeline_item_id="t002", narration_segment_id="n002"),
+    ]
+    bindings = [
+        media_binding(media_asset_id="m001", source_story_block_id="b001", source_timeline_item_id="t001"),
+        media_binding(media_asset_id="m002", source_story_block_id="b002", source_timeline_item_id="t002", status="pending"),
+    ]
+    result = validate_adapter_input(adapter_input(bindings=bindings, shots=shots))
+    plan = plan_adapter_export(adapter_input(bindings=bindings, shots=shots))
+
+    assert result["valid"] is False
+    assert result["unresolved_items"] == [
+        {
+            "source_timeline_item_id": "t002",
+            "narration_segment_id": "n002",
+            "source_story_block_id": "b002",
+            "reason": "binding_not_bound",
+        }
+    ]
+    assert plan["status"] == "blocked"
+    assert plan["operations"] == []
 
 
 def test_existing_unresolved_items_never_become_fake_clip_operations():

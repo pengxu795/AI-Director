@@ -2,6 +2,8 @@
 
 ## 2026-07-03
 
+- Fixed Module 7 media asset binding validation so only bound bindings with empty validation errors can be planned.
+- Added tests for pending, unresolved, invalid, and validation-error bindings, plus mixed bound/pending shot validation.
 - Added Module 7 export target research and adapter contract.
 - Added `media_asset_bindings` schema, target profiles, validation result, and abstract adapter planning.
 - Added export target research matrix for Jianying, Premiere Pro, DaVinci Resolve, and FCPXML / Final Cut Pro.

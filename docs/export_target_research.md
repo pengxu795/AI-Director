@@ -43,6 +43,8 @@ Rules:
 - Bindings are injected after the JSON export package is created.
 - Missing bindings block real editor export validation.
 - Missing `source_file`, `fps`, or `duration` is a validation error.
+- Only `status: "bound"` with `validation_errors: []` is usable for adapter planning.
+- `pending`, `unresolved`, `invalid`, or non-empty `validation_errors` must block planning and keep matching shots unresolved.
 - No adapter may infer filenames from subtitle text, story blocks, or narration.
 - Unbound shots remain unresolved; they must not become fake clips.
 
