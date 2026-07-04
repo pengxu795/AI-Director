@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0",
+  "target_profile": {
+    "target_id": "fcpxml",
+    "target_version": "1.10",
+    "schema_version": "1.0",
+    "stage": "discovery_minimal_export_design",
+    "output_kind": "abstract_fcpxml_design",
+    "design_only": true,
+    "xml_generated": false,
+    "project_file_written": false,
+    "media_files_read": false,
+    "selected_version_reason": "Apple's current public DTD page is the baseline; import must be verified in a later gated module."
+  },
+  "status": "designed",
+  "time_model": {
+    "fcpxml_time_format": "rational_seconds",
+    "internal_timecode_format": "HH:MM:SS.mmm",
+    "conversion": "timecode_ms_to_reduced_rational_seconds",
+    "frame_duration_policy": "derive from media fps as rational seconds per frame",
+    "drop_frame_policy": "not modeled in Module 8"
+  },
+  "resource_id_strategy": {
+    "format_id": "fmt001",
+    "asset_id_prefix": "asset_",
+    "clip_id_prefix": "clip_",
+    "marker_id_prefix": "marker_",
+    "stability": "deterministic_from_adapter_plan_order"
+  },
+  "resources": {
+    "format": {
+      "id": "fmt001",
+      "name": "FFVideoFormat25.0",
+      "frameDuration": "1/25s",
+      "width": null,
+      "height": null,
+      "note": "Width and height require media probing and are intentionally unknown in Module 8."
+    },
+    "assets": [
+      {
+        "id": "asset_001",
+        "media_asset_id": "m001",
+        "src": "/media/drama_episode_01.mp4",
+        "name": "drama_episode_01.mp4",
+        "duration": "10s",
+        "fps": 25.0,
+        "frameDuration": "1/25s",
+        "hasAudio": "1",
+        "format": "fmt001"
+      }
+    ]
+  },
+  "sequence_design": {
+    "project_name": "AI-Director Minimal FCPXML Design",
+    "event_name": "AI-Director",
+    "spine": [
+      {
+        "id": "clip_001",
+        "element": "asset-clip",
+        "ref": "asset_001",
+        "name": "drama_episode_01.mp4",
+        "offset": "0s",
+        "start": "5s",
+        "duration": "3/2s",
+        "source_story_block_id": "b001",
+        "source_timeline_item_id": "t001",
+        "reuse_policy": "primary"
+      }
+    ],
+    "markers": [
+      {
+        "id": "marker_001",
+        "narration_segment_id": "n001",
+        "value": "她终于发现真相",
+        "mapping": "marker_or_note_design_only"
+      }
+    ]
+  },
+  "minimal_outline": {
+    "fcpxml": {
+      "version": "1.10",
+      "resources": {
+        "format": "fmt001",
+        "assets": [
+          "asset_001"
+        ]
+      },
+      "library": {
+        "event": {
+          "project": {
+            "sequence": {
+              "format": "fmt001",
+              "spine": [
+                "clip_001"
+              ],
+              "markers": [
+                "marker_001"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "validation_result": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      {
+        "code": "narration_cue_design_only",
+        "field": "operations[3]",
+        "message": "Module 8 maps narration cues as marker/text design only; no audio asset is generated."
+      }
+    ]
+  },
+  "xml_generated": false,
+  "project_file_written": false,
+  "media_files_read": false
+}

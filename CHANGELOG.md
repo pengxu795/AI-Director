@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Added Module 8 FCPXML adapter discovery and minimal export design.
+- Added abstract FCPXML target profile, rational time conversion, resource ID strategy, field mapping, and minimal outline.
+- Added `output/sample_fcpxml_design.json` as design-only sample data, not FCPXML or an editor project.
+- Added tests for FCPXML design validation, source range mapping, time conversion, narration marker design, blocked inputs, and no file output.
 - Fixed Module 7 adapter planning to use shot-level source ranges for `place_clip`.
 - Added validation for shot source ranges, binding containment, and ambiguous media binding conflicts.
 - Added tests for multiple shots sharing a binding, out-of-range shots, invalid shot ranges, duplicate binding conflicts, and exact duplicate deduplication.

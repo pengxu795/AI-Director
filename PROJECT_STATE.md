@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 7 Review
-- Latest completed work: Module 7 export adapter contract research, binding validation, source range validation, and ambiguity checks
-- Next module: editor-specific adapter implementation
-- Gate: Module 7 Review passes before selecting one actual export target
+- Current phase: Module 8 Review
+- Latest completed work: Module 8 FCPXML adapter discovery and minimal export design
+- Next module: real FCPXML adapter implementation
+- Gate: Module 8 Review passes before generating real FCPXML, XML, or editor project files
 
 ## Completed
 
@@ -25,15 +25,14 @@
 - Module 5 Review fix: range-level unresolved records for rejected video ranges
 - Module 6 phase 1: JSON/TXT export package generation
 - Module 7: export target research, media asset binding schema, and adapter contract
+- Module 8: FCPXML adapter discovery, source mapping design, time conversion, and minimal outline
 
 ## Pending Review
 
-- Review Module 7 adapter contract.
-- Confirm media asset bindings are external and required before real editor export.
-- Confirm only bound media asset bindings with empty validation errors can enter adapter planning.
-- Confirm `place_clip` uses shot-level source ranges and blocks out-of-binding ranges.
-- Confirm ambiguous media asset bindings block planning instead of being selected silently.
-- Confirm adapter validation blocks missing media paths, fps, duration, and unsupported targets.
+- Review Module 8 FCPXML discovery and minimal export design.
+- Confirm FCPXML version baseline, field mapping, resource IDs, and rational time conversion are clear.
+- Confirm `place_clip` design uses shot-level source ranges.
+- Confirm narration remains marker or note design only, with no generated audio asset.
 - Confirm no editor project, XML, FCPXML, EDL, AAF, media read, render, or video export was introduced.
 
 ## Development Rule
