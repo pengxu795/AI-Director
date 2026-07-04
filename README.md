@@ -550,6 +550,9 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 关键约束：
 
 - selection JSON 文件必须存在，并冻结 `source_selection_sha256`
+- 正式可写入、可供后续模块使用的 authorization 只能由文件入口生成
+- 直接传内存 selection 的授权必须阻断，错误码为 `source_selection_artifact_not_verified`
+- 调用方提供的 selection 路径或 SHA 与实际读取文件不一致时必须阻断，错误码为 `source_selection_fingerprint_mismatch`
 - selection 必须为 `status="selected"`
 - selection 必须保持 `execution_allowed=false` 和 `serializer_change_allowed=false`
 - 必须存在 Module 13 的 immutable selection snapshot

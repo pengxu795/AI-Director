@@ -20,6 +20,10 @@ This module defines future allowed files, prohibited files, verification command
 
 The selection file must exist so Module 14 can compute and freeze `source_selection_sha256`.
 
+Formal authorization contracts that can be written to disk or used by a later module must be generated through `build_fcpxml_remediation_authorization_from_file(...)`. Direct in-memory authorization calls are treated as unverified and blocked with `source_selection_artifact_not_verified`.
+
+If the caller supplies `source_selection_artifact` or `source_selection_sha256`, Module 14 verifies those values against the actual file read from disk. Mismatches are blocked with `source_selection_fingerprint_mismatch`.
+
 ## Validation Rules
 
 Authorization requires:
@@ -30,6 +34,7 @@ Authorization requires:
 - selection keeps `requires_module_14_approval: true`
 - immutable Module 13 selection snapshot exists
 - source selection path and SHA-256 are present
+- source selection path and SHA-256 were verified from the file read by Module 14
 - allowed files are listed
 - prohibited files are listed
 - allowed and prohibited paths do not overlap

@@ -4,6 +4,9 @@ Module 14 creates an implementation scope contract from one Module 13 selection.
 
 - Require an existing Module 13 selection JSON file.
 - Freeze `source_selection_sha256`.
+- Generate formal writable authorization only from `build_fcpxml_remediation_authorization_from_file(...)`.
+- Block direct in-memory authorization with `source_selection_artifact_not_verified`.
+- Block caller-provided path or SHA mismatches with `source_selection_fingerprint_mismatch`.
 - Require selection status `selected`.
 - Require `execution_allowed: false`, `serializer_change_allowed: false`, and `requires_module_14_approval: true`.
 - Require an immutable selection snapshot.

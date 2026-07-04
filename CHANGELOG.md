@@ -2,6 +2,8 @@
 
 ## 2026-07-04
 
+- Fixed Module 14 selection traceability so writable authorization must be generated from a verified selection file.
+- Added mismatch checks for caller-provided selection paths or SHA-256 values, plus tests for direct builder blocking and changed selection file hashes.
 - Hardened Module 14 FCPXML implementation scope validation so writer, generator, builder, project, app, doc, and test paths are blocked unless the selected remediation allows serializer changes.
 - Added tests for FCPXML writer, generator, project builder, writer tests, writer docs, and generate FCPXML app paths.
 - Hardened Module 14 scope validation with semantic serializer/export path patterns and human-review allowed-file whitelisting.

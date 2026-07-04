@@ -52,8 +52,21 @@ def authorization_request():
     }
 
 
+def authorization_request_without_fingerprint():
+    request = authorization_request()
+    request.pop("source_selection_artifact", None)
+    request.pop("source_selection_sha256", None)
+    return request
+
+
+def write_selection(tmp_path, selection):
+    path = tmp_path / "selection.json"
+    path.write_text(json.dumps(selection, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 def test_authorization_records_scope_contract_without_execution():
-    authorization = build_fcpxml_remediation_authorization(load_selection(), authorization_request())
+    authorization = build_fcpxml_remediation_authorization_from_file("output/sample_fcpxml_remediation_selection.json", authorization_request())
 
     assert authorization["status"] == "authorization_ready"
     assert authorization["authorization_id"] == "auth_r001"
@@ -93,6 +106,47 @@ def test_authorization_from_file_records_selection_sha256():
     assert authorization["status"] == "authorization_ready"
     assert authorization["source_selection"]["source_selection_artifact"] == str(path)
     assert authorization["source_selection"]["source_selection_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_authorization_from_file_blocks_forged_selection_sha256():
+    request = authorization_request()
+    request["source_selection_sha256"] = "not-the-real-sha"
+
+    authorization = build_fcpxml_remediation_authorization_from_file("output/sample_fcpxml_remediation_selection.json", request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "source_selection_fingerprint_mismatch" for error in authorization["validation_result"]["errors"])
+
+
+def test_authorization_from_file_blocks_forged_selection_path():
+    request = authorization_request()
+    request["source_selection_artifact"] = "output/other_selection.json"
+
+    authorization = build_fcpxml_remediation_authorization_from_file("output/sample_fcpxml_remediation_selection.json", request)
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "source_selection_fingerprint_mismatch" for error in authorization["validation_result"]["errors"])
+
+
+def test_direct_builder_cannot_create_authorization_ready():
+    authorization = build_fcpxml_remediation_authorization(load_selection(), authorization_request())
+
+    assert authorization["status"] == "blocked"
+    assert any(error["code"] == "source_selection_artifact_not_verified" for error in authorization["validation_result"]["errors"])
+
+
+def test_authorization_from_file_sha_changes_when_selection_file_changes(tmp_path):
+    selection = load_selection()
+    first_path = write_selection(tmp_path, selection)
+    first = build_fcpxml_remediation_authorization_from_file(first_path, authorization_request_without_fingerprint())
+
+    selection["selection_rationale"] = "Changed selection content."
+    second_path = write_selection(tmp_path, selection)
+    second = build_fcpxml_remediation_authorization_from_file(second_path, authorization_request_without_fingerprint())
+
+    assert first["status"] == "authorization_ready"
+    assert second["status"] == "authorization_ready"
+    assert first["source_selection"]["source_selection_sha256"] != second["source_selection"]["source_selection_sha256"]
 
 
 def test_authorization_from_file_blocks_missing_selection_file():
@@ -184,18 +238,19 @@ def test_serializer_change_false_rejects_fcpxml_implementation_paths(path):
 
 
 def test_human_review_remediation_allows_record_and_documentation_only_scope():
-    authorization = build_fcpxml_remediation_authorization(load_selection(), authorization_request())
+    authorization = build_fcpxml_remediation_authorization_from_file("output/sample_fcpxml_remediation_selection.json", authorization_request())
 
     assert authorization["status"] == "authorization_ready"
     assert authorization["implementation_scope"]["manual_follow_up_required"] is True
     assert all("fcpxml_serializer.py" not in path for path in authorization["implementation_scope"]["allowed_files"])
 
 
-def test_serializer_remediation_can_authorize_serializer_files_only_when_selected_remediation_allows_it():
+def test_serializer_remediation_can_authorize_serializer_files_only_when_selected_remediation_allows_it(tmp_path):
     selection = load_selection()
     selection["immutable_selection_snapshot"]["remediation"]["owner"] = "engineering"
     selection["immutable_selection_snapshot"]["remediation"]["serializer_change_allowed"] = True
-    request = authorization_request()
+    selection_path = write_selection(tmp_path, selection)
+    request = authorization_request_without_fingerprint()
     request["allowed_files"] = [
         "modules/adapters/fcpxml_serializer.py",
         "modules/adapters/fcpxml_export_helper.py",
@@ -212,7 +267,7 @@ def test_serializer_remediation_can_authorize_serializer_files_only_when_selecte
         "PROJECT_STATE.md",
     ]
 
-    authorization = build_fcpxml_remediation_authorization(selection, request)
+    authorization = build_fcpxml_remediation_authorization_from_file(selection_path, request)
 
     assert authorization["status"] == "authorization_ready"
     assert authorization["manual_follow_up_required"] is False
@@ -241,9 +296,10 @@ def test_authorization_blocks_media_or_editor_verification_commands():
     assert any(error["code"] == "forbidden_verification_command" for error in authorization["validation_result"]["errors"])
 
 
-def test_authorization_snapshot_is_immutable_after_selection_changes():
+def test_authorization_snapshot_is_immutable_after_selection_changes(tmp_path):
     selection = load_selection()
-    authorization = build_fcpxml_remediation_authorization(selection, authorization_request())
+    selection_path = write_selection(tmp_path, selection)
+    authorization = build_fcpxml_remediation_authorization_from_file(selection_path, authorization_request_without_fingerprint())
 
     selection["selected_remediation_id"] = "changed"
     selection["immutable_selection_snapshot"]["remediation"]["action"] = "changed"
@@ -253,7 +309,7 @@ def test_authorization_snapshot_is_immutable_after_selection_changes():
 
 
 def test_authorization_write_outputs_json_only(tmp_path):
-    authorization = build_fcpxml_remediation_authorization(load_selection(), authorization_request())
+    authorization = build_fcpxml_remediation_authorization_from_file("output/sample_fcpxml_remediation_selection.json", authorization_request())
     output = tmp_path / "authorization.json"
 
     result = write_fcpxml_remediation_authorization(authorization, output)

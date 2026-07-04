@@ -57,13 +57,23 @@ def build_fcpxml_remediation_authorization_from_file(selection_path: str | Path,
             authorization_request,
             [_issue("remediation_selection_file_not_found", "remediation_selection_json", "Module 14 requires an existing Module 13 selection file.")],
         )
-    selection_text = path.read_text(encoding="utf-8")
+    selection_bytes = path.read_bytes()
+    source_selection_artifact = str(path)
+    source_selection_sha256 = hashlib.sha256(selection_bytes).hexdigest()
+    requested_artifact = authorization_request.get("source_selection_artifact")
+    requested_sha256 = authorization_request.get("source_selection_sha256")
+    if (requested_artifact and str(requested_artifact) != source_selection_artifact) or (requested_sha256 and str(requested_sha256) != source_selection_sha256):
+        return _blocked_authorization(
+            authorization_request,
+            [_issue("source_selection_fingerprint_mismatch", "authorization_request.source_selection_sha256", "Caller-provided selection path or SHA-256 does not match the file read by Module 14.")],
+        )
     request = {
         **authorization_request,
-        "source_selection_artifact": str(path),
-        "source_selection_sha256": hashlib.sha256(selection_text.encode("utf-8")).hexdigest(),
+        "source_selection_artifact": source_selection_artifact,
+        "source_selection_sha256": source_selection_sha256,
+        "_source_selection_verified": True,
     }
-    return build_fcpxml_remediation_authorization(json.loads(selection_text), request)
+    return build_fcpxml_remediation_authorization(json.loads(selection_bytes.decode("utf-8")), request)
 
 
 def build_fcpxml_remediation_authorization(selection: dict[str, Any], authorization_request: dict[str, Any]) -> dict[str, Any]:
@@ -120,6 +130,8 @@ def validate_fcpxml_remediation_authorization_input(selection: dict[str, Any], a
             errors.append(_issue("missing_authorization_metadata", f"authorization_request.{field}", "Authorization requires approver, timestamp, and rationale."))
     if not authorization_request.get("source_selection_artifact") or not authorization_request.get("source_selection_sha256"):
         errors.append(_issue("missing_source_selection_fingerprint", "authorization_request.source_selection_sha256", "Authorization must freeze the source selection artifact path and SHA-256."))
+    if authorization_request.get("_source_selection_verified") is not True:
+        errors.append(_issue("source_selection_artifact_not_verified", "authorization_request.source_selection_artifact", "Writable Module 14 authorization must be generated from a verified selection file."))
 
     allowed_files = _safe_string_list(authorization_request.get("allowed_files"))
     prohibited_files = _safe_string_list(authorization_request.get("prohibited_files"))
