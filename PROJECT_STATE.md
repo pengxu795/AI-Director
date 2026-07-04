@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 6 Review
-- Latest completed work: Module 6 export package generation phase 1
-- Next module: Export target research
-- Gate: Do not start editor-specific export until Module 6 Review passes
+- Current phase: Module 7 Review
+- Latest completed work: Module 7 export adapter contract research
+- Next module: editor-specific adapter implementation
+- Gate: Module 7 Review passes before selecting one actual export target
 
 ## Completed
 
@@ -24,13 +24,14 @@
 - Module 5 phase 1: editor-agnostic edit timeline generation
 - Module 5 Review fix: range-level unresolved records for rejected video ranges
 - Module 6 phase 1: JSON/TXT export package generation
+- Module 7: export target research, media asset binding schema, and adapter contract
 
 ## Pending Review
 
-- Review Module 6 export package schema.
-- Confirm exported shot list preserves traceability and reuse policy.
-- Confirm unresolved items are preserved in exported files.
-- Confirm no video, editor project, render, or app automation export was introduced.
+- Review Module 7 adapter contract.
+- Confirm media asset bindings are external and required before real editor export.
+- Confirm adapter validation blocks missing media paths, fps, duration, and unsupported targets.
+- Confirm no editor project, XML, FCPXML, EDL, AAF, media read, render, or video export was introduced.
 
 ## Development Rule
 

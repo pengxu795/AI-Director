@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Added Module 7 export target research and adapter contract.
+- Added `media_asset_bindings` schema, target profiles, validation result, and abstract adapter planning.
+- Added export target research matrix for Jianying, Premiere Pro, DaVinci Resolve, and FCPXML / Final Cut Pro.
+- Added tests for valid adapter input, missing media bindings, missing media fields, unresolved preservation, unsupported capabilities, abstract-only planning, and forbidden media-library imports.
 - Added Module 6 phase 1 JSON/TXT export package generation.
 - Added export package CLI, manifest, narration script, shot list, unresolved item export, and sample output directory.
 - Added tests for manifest files, shot traceability, narration text, unresolved merging, file writing, and JSON serialization.
