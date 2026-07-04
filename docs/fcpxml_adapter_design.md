@@ -35,9 +35,30 @@ FCPXML time attributes use rational seconds, for example:
 Module 8 conversion policy:
 
 - Convert internal milliseconds to reduced rational seconds.
-- Derive `frameDuration` from fps as seconds per frame.
+- Sequence fps must be explicit in `target_profile.sequence_fps` or `project_settings.sequence_fps`.
+- Derive the sequence `frameDuration` from the explicit sequence fps.
+- Asset fps must match the sequence fps in the MVP.
+- Mixed fps is not supported in the MVP and must return `mixed_fps_not_supported`.
+- Every clip source and timeline edit point must align exactly to the sequence frame duration.
+- Non-frame-aligned edit points must return `time_not_frame_aligned`.
+- Rounding to the nearest frame is forbidden in Module 8.
 - Do not model drop-frame behavior yet.
 - Do not infer frame rate from media files.
+
+Supported fps validation examples:
+
+- `25` -> `1/25s`
+- `30` -> `1/30s`
+- `30000/1001` -> `1001/30000s`
+
+## Sequence Format and Asset Format
+
+Module 8 separates sequence format from asset metadata:
+
+- `resources.sequence_format` comes from explicit project or target settings.
+- `resources.assets[].frameDuration` reflects each bound asset fps.
+- For the MVP, all asset fps values must equal the sequence fps.
+- Width and height stay unknown because discovering them would require media probing.
 
 ## Resource ID Strategy
 
@@ -57,7 +78,8 @@ These IDs are design IDs only. A later real adapter may revise them if Final Cut
 | `register_media_asset.media_asset_id` | `resources.asset.id` |
 | `register_media_asset.source_file` | `resources.asset.src` |
 | `register_media_asset.duration` | `resources.asset.duration` |
-| `register_media_asset.fps` | `resources.format.frameDuration` |
+| `target_profile.sequence_fps` or `project_settings.sequence_fps` | `resources.sequence_format.frameDuration` |
+| `register_media_asset.fps` | `resources.asset.frameDuration` |
 | `place_clip.media_asset_id` | `spine.asset-clip.ref` |
 | `place_clip.timeline_start` | `spine.asset-clip.offset` |
 | `place_clip.source_in` | `spine.asset-clip.start` |

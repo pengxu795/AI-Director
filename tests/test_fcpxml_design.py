@@ -16,7 +16,14 @@ from modules.adapters import (
 )
 
 
-def adapter_plan():
+def adapter_plan(
+    sequence_fps=25.0,
+    asset_fps=25.0,
+    source_start="00:00:05.000",
+    source_end="00:00:06.480",
+    timeline_start="00:00:00.000",
+    timeline_end="00:00:01.480",
+):
     adapter_input = build_canonical_adapter_input(
         {"schema_version": "1.0"},
         {"schema_version": "1.0", "sequence": {"id": "seq001"}},
@@ -27,10 +34,10 @@ def adapter_plan():
                 "source_timeline_item_id": "t001",
                 "narration_segment_id": "n001",
                 "source_story_block_id": "b001",
-                "source_start": "00:00:05.000",
-                "source_end": "00:00:06.500",
-                "timeline_start": "00:00:00.000",
-                "timeline_end": "00:00:01.500",
+                "source_start": source_start,
+                "source_end": source_end,
+                "timeline_start": timeline_start,
+                "timeline_end": timeline_end,
                 "reuse_policy": "primary",
             }
         ],
@@ -44,7 +51,7 @@ def adapter_plan():
                 "source_in": "00:00:00.000",
                 "source_out": "00:00:10.000",
                 "duration": "00:00:10.000",
-                "fps": 25.0,
+                "fps": asset_fps,
                 "audio_available": True,
                 "status": "bound",
                 "validation_errors": [],
@@ -52,7 +59,9 @@ def adapter_plan():
         ],
         default_target_profiles()["fcpxml"],
     )
-    return plan_adapter_export(adapter_input)
+    plan = plan_adapter_export(adapter_input)
+    plan["target_profile"] = {"target_id": "fcpxml", "sequence_fps": sequence_fps}
+    return plan
 
 
 def test_fcpxml_target_profile_is_design_only():
@@ -69,8 +78,10 @@ def test_fcpxml_target_profile_is_design_only():
 
 def test_timecode_conversion_uses_rational_seconds():
     assert fcpxml_time_from_timecode("00:00:05.000") == "5s"
-    assert fcpxml_time_from_timecode("00:00:01.500") == "3/2s"
+    assert fcpxml_time_from_timecode("00:00:01.480") == "37/25s"
     assert frame_duration_from_fps(25.0) == "1/25s"
+    assert frame_duration_from_fps(30) == "1/30s"
+    assert frame_duration_from_fps("30000/1001") == "1001/30000s"
 
 
 def test_minimal_design_maps_resources_and_shot_ranges():
@@ -80,15 +91,85 @@ def test_minimal_design_maps_resources_and_shot_ranges():
     assert design["xml_generated"] is False
     assert design["project_file_written"] is False
     assert design["media_files_read"] is False
-    assert design["resources"]["format"]["id"] == "fmt001"
+    assert design["time_model"]["sequence_fps"] == "25.0"
+    assert design["time_model"]["sequence_frame_duration"] == "1/25s"
+    assert design["resources"]["sequence_format"]["id"] == "fmt001"
+    assert design["resources"]["sequence_format"]["fps"] == "25.0"
     assert design["resources"]["assets"][0]["id"] == "asset_001"
     assert design["resources"]["assets"][0]["src"] == "/media/drama_episode_01.mp4"
     clip = design["sequence_design"]["spine"][0]
     assert clip["ref"] == "asset_001"
     assert clip["offset"] == "0s"
     assert clip["start"] == "5s"
-    assert clip["duration"] == "3/2s"
+    assert clip["duration"] == "37/25s"
     assert clip["source_story_block_id"] == "b001"
+
+
+def test_sequence_fps_must_be_explicit():
+    plan = adapter_plan()
+    plan.pop("target_profile")
+    result = validate_fcpxml_design_input(plan)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "missing_sequence_fps" for error in result["errors"])
+
+
+def test_sequence_fps_can_come_from_project_settings():
+    plan = adapter_plan()
+    plan.pop("target_profile")
+    plan["project_settings"] = {"sequence_fps": 25.0}
+    result = validate_fcpxml_design_input(plan)
+
+    assert result["valid"] is True
+
+
+def test_mixed_fps_is_blocked():
+    plan = adapter_plan(sequence_fps=25.0)
+    operations = [dict(operation) for operation in plan["operations"]]
+    operations.insert(
+        2,
+        {
+            "type": "register_media_asset",
+            "media_asset_id": "m002",
+            "source_file": "/media/other.mp4",
+            "fps": 30.0,
+            "duration": "00:00:10.000",
+        },
+    )
+    plan["operations"] = operations
+    result = validate_fcpxml_design_input(plan)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "mixed_fps_not_supported" for error in result["errors"])
+
+
+def test_sequence_fps_must_match_asset_fps_for_mvp():
+    result = validate_fcpxml_design_input(adapter_plan(sequence_fps=30.0, asset_fps=25.0))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "sequence_fps_asset_fps_mismatch" for error in result["errors"])
+
+
+def test_non_frame_aligned_time_is_blocked_without_rounding():
+    result = validate_fcpxml_design_input(adapter_plan(source_end="00:00:06.500", timeline_end="00:00:01.500"))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "time_not_frame_aligned" for error in result["errors"])
+
+
+def test_30000_1001_fps_frame_alignment_is_exact():
+    result = validate_fcpxml_design_input(
+        adapter_plan(
+            sequence_fps="30000/1001",
+            asset_fps="30000/1001",
+            source_start="00:00:05.005",
+            source_end="00:00:06.006",
+            timeline_start="00:00:00.000",
+            timeline_end="00:00:01.001",
+        )
+    )
+
+    assert result["valid"] is True
 
 
 def test_design_preserves_narration_as_marker_design_only():

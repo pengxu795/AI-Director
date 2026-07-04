@@ -3,7 +3,7 @@
 ## Current Status
 
 - Current phase: Module 8 Review
-- Latest completed work: Module 8 FCPXML adapter discovery and minimal export design
+- Latest completed work: Module 8 FCPXML adapter discovery, minimal export design, fps contract, and frame alignment validation
 - Next module: real FCPXML adapter implementation
 - Gate: Module 8 Review passes before generating real FCPXML, XML, or editor project files
 
@@ -31,6 +31,8 @@
 
 - Review Module 8 FCPXML discovery and minimal export design.
 - Confirm FCPXML version baseline, field mapping, resource IDs, and rational time conversion are clear.
+- Confirm sequence fps is explicit and mixed fps is blocked for MVP.
+- Confirm non-frame-aligned source or timeline times are blocked without rounding.
 - Confirm `place_clip` design uses shot-level source ranges.
 - Confirm narration remains marker or note design only, with no generated audio asset.
 - Confirm no editor project, XML, FCPXML, EDL, AAF, media read, render, or video export was introduced.

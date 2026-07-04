@@ -296,6 +296,10 @@ docs/export_target_research.md
 
 - FCPXML baseline：`1.10`
 - 时间模型：`HH:MM:SS.mmm` 转 rational seconds
+- Sequence fps 必须显式来自 target profile 或 project settings
+- MVP 禁止 mixed fps，asset fps 必须与 sequence fps 一致
+- 所有 source/timeline edit point 必须精确帧对齐，不做 rounding
+- Sequence format 与 asset metadata 分离
 - 资源 ID：`fmt001`、`asset_001`、`clip_001`、`marker_001`
 - 字段映射：`register_media_asset`、`place_clip`、`add_narration_cue`
 - 最小结构草案：resources、library、event、project、sequence、spine

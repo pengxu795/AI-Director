@@ -81,6 +81,19 @@ def validate_fcpxml_design_input(adapter_plan: dict[str, Any]) -> dict[str, Any]
         errors.append(_issue("missing_operations", "operations", "Adapter plan must contain abstract operations."))
 
     media_assets = set()
+    sequence_fps = _sequence_fps(adapter_plan)
+    if sequence_fps is None:
+        errors.append(
+            _issue(
+                "missing_sequence_fps",
+                "target_profile.sequence_fps",
+                "Module 8 requires explicit sequence fps from target_profile or project_settings.",
+            )
+        )
+    elif not _valid_fps(sequence_fps):
+        errors.append(_issue("invalid_sequence_fps", "target_profile.sequence_fps", "sequence_fps must be a positive fps value."))
+
+    asset_fps_values = set()
     for index, operation in enumerate(operations):
         operation_type = str(operation.get("type", ""))
         field = f"operations[{index}]"
@@ -90,8 +103,9 @@ def validate_fcpxml_design_input(adapter_plan: dict[str, Any]) -> dict[str, Any]
             _validate_register_media_asset(operation, field, errors)
             if not any(error["field"].startswith(field) for error in errors):
                 media_assets.add(str(operation.get("media_asset_id", "")))
+                asset_fps_values.add(_fps_fraction(operation.get("fps")))
         elif operation_type == "place_clip":
-            _validate_place_clip(operation, field, media_assets, errors)
+            _validate_place_clip(operation, field, media_assets, sequence_fps, errors)
         elif operation_type == "add_narration_cue":
             warnings.append(
                 _issue(
@@ -100,6 +114,17 @@ def validate_fcpxml_design_input(adapter_plan: dict[str, Any]) -> dict[str, Any]
                     "Module 8 maps narration cues as marker/text design only; no audio asset is generated.",
                 )
             )
+
+    if len(asset_fps_values) > 1:
+        errors.append(_issue("mixed_fps_not_supported", "operations", "Module 8 MVP requires all bound assets to share one fps."))
+    if sequence_fps is not None and asset_fps_values and _fps_fraction(sequence_fps) not in asset_fps_values:
+        errors.append(
+            _issue(
+                "sequence_fps_asset_fps_mismatch",
+                "target_profile.sequence_fps",
+                "Module 8 MVP requires sequence fps to match the asset fps.",
+            )
+        )
 
     return {
         "valid": not errors,
@@ -123,6 +148,7 @@ def build_fcpxml_minimal_design(adapter_plan: dict[str, Any]) -> dict[str, Any]:
         }
 
     operations = _safe_list(adapter_plan.get("operations"))
+    sequence_fps = _sequence_fps(adapter_plan)
     media_assets = _media_asset_resources(operations)
     clips = _clip_designs(operations, media_assets)
     narration_markers = _narration_marker_designs(operations)
@@ -136,7 +162,10 @@ def build_fcpxml_minimal_design(adapter_plan: dict[str, Any]) -> dict[str, Any]:
             "fcpxml_time_format": "rational_seconds",
             "internal_timecode_format": "HH:MM:SS.mmm",
             "conversion": "timecode_ms_to_reduced_rational_seconds",
-            "frame_duration_policy": "derive from media fps as rational seconds per frame",
+            "sequence_fps": str(sequence_fps),
+            "sequence_frame_duration": frame_duration_from_fps(sequence_fps),
+            "frame_duration_policy": "sequence fps is explicit; asset fps must match in Module 8 MVP",
+            "frame_alignment_policy": "all source and timeline edit points must align exactly to sequence fps",
             "drop_frame_policy": "not modeled in Module 8",
         },
         "resource_id_strategy": {
@@ -148,7 +177,7 @@ def build_fcpxml_minimal_design(adapter_plan: dict[str, Any]) -> dict[str, Any]:
         },
         "field_mapping": _field_mapping(),
         "resources": {
-            "format": _format_resource(media_assets),
+            "sequence_format": _sequence_format_resource(sequence_fps),
             "assets": list(media_assets.values()),
         },
         "sequence_design": {
@@ -173,11 +202,12 @@ def fcpxml_time_from_timecode(timecode: str) -> str:
     return _milliseconds_to_rational_seconds(milliseconds)
 
 
-def frame_duration_from_fps(fps: float | int) -> str:
+def frame_duration_from_fps(fps: float | int | str) -> str:
     """Return a rational seconds-per-frame value for an fps value."""
-    if not isinstance(fps, (float, int)) or fps <= 0:
+    fps_fraction = _fps_fraction(fps)
+    if fps_fraction is None or fps_fraction <= 0:
         raise ValueError("fps must be a positive number.")
-    fraction = Fraction(1, 1) / Fraction(str(fps))
+    fraction = Fraction(1, 1) / fps_fraction
     return _fraction_to_fcpxml_time(fraction)
 
 
@@ -196,7 +226,7 @@ def _validate_register_media_asset(
             errors.append(_issue("missing_required_field", f"{field}.{name}", f"Missing media asset field: {name}."))
     if _timecode_to_ms(operation.get("duration")) is None:
         errors.append(_issue("invalid_duration_timecode", f"{field}.duration", "Media duration must use HH:MM:SS.mmm."))
-    if not isinstance(operation.get("fps"), (float, int)) or operation.get("fps") <= 0:
+    if not _valid_fps(operation.get("fps")):
         errors.append(_issue("invalid_fps", f"{field}.fps", "fps must be a positive number."))
 
 
@@ -204,6 +234,7 @@ def _validate_place_clip(
     operation: dict[str, Any],
     field: str,
     media_assets: set[str],
+    sequence_fps: Any,
     errors: list[dict[str, str]],
 ) -> None:
     media_asset_id = str(operation.get("media_asset_id", ""))
@@ -218,6 +249,17 @@ def _validate_place_clip(
         errors.append(_issue("invalid_source_range", field, "Clip source range must have positive duration."))
     if _valid_range_ms(operation.get("timeline_start"), operation.get("timeline_end")) is None:
         errors.append(_issue("invalid_timeline_range", field, "Clip timeline range must have positive duration."))
+    if sequence_fps is not None and _valid_fps(sequence_fps):
+        for name in ("source_in", "source_out", "timeline_start", "timeline_end"):
+            milliseconds = _timecode_to_ms(operation.get(name))
+            if milliseconds is not None and not _time_is_frame_aligned(milliseconds, sequence_fps):
+                errors.append(
+                    _issue(
+                        "time_not_frame_aligned",
+                        f"{field}.{name}",
+                        "Clip time must align exactly to the explicit sequence fps; rounding is forbidden.",
+                    )
+                )
 
 
 def _media_asset_resources(operations: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -287,16 +329,15 @@ def _narration_marker_designs(operations: list[dict[str, Any]]) -> list[dict[str
     return markers
 
 
-def _format_resource(media_assets: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    first_asset = next(iter(media_assets.values()), {})
-    fps = first_asset.get("fps", 25.0)
+def _sequence_format_resource(sequence_fps: Any) -> dict[str, Any]:
     return {
         "id": "fmt001",
-        "name": f"FFVideoFormat{fps}",
-        "frameDuration": frame_duration_from_fps(fps),
+        "name": f"FFVideoFormat{sequence_fps}",
+        "fps": str(sequence_fps),
+        "frameDuration": frame_duration_from_fps(sequence_fps),
         "width": None,
         "height": None,
-        "note": "Width and height require media probing and are intentionally unknown in Module 8.",
+        "note": "Sequence format is explicit. Width and height require media probing and are intentionally unknown in Module 8.",
     }
 
 
@@ -305,7 +346,8 @@ def _field_mapping() -> list[dict[str, str]]:
         {"adapter_plan": "register_media_asset.media_asset_id", "fcpxml_design": "resources.asset.id"},
         {"adapter_plan": "register_media_asset.source_file", "fcpxml_design": "resources.asset.src"},
         {"adapter_plan": "register_media_asset.duration", "fcpxml_design": "resources.asset.duration"},
-        {"adapter_plan": "register_media_asset.fps", "fcpxml_design": "resources.format.frameDuration"},
+        {"adapter_plan": "target_profile.sequence_fps or project_settings.sequence_fps", "fcpxml_design": "resources.sequence_format.frameDuration"},
+        {"adapter_plan": "register_media_asset.fps", "fcpxml_design": "resources.asset.frameDuration"},
         {"adapter_plan": "place_clip.media_asset_id", "fcpxml_design": "spine.asset-clip.ref"},
         {"adapter_plan": "place_clip.timeline_start", "fcpxml_design": "spine.asset-clip.offset"},
         {"adapter_plan": "place_clip.source_in", "fcpxml_design": "spine.asset-clip.start"},
@@ -359,6 +401,40 @@ def _timecode_to_ms(value: Any) -> int | None:
     if minutes > 59 or seconds > 59:
         return None
     return ((hours * 60 + minutes) * 60 + seconds) * 1000 + milliseconds
+
+
+def _sequence_fps(adapter_plan: dict[str, Any]) -> Any:
+    target_profile = adapter_plan.get("target_profile")
+    if isinstance(target_profile, dict) and "sequence_fps" in target_profile:
+        return target_profile.get("sequence_fps")
+    project_settings = adapter_plan.get("project_settings")
+    if isinstance(project_settings, dict) and "sequence_fps" in project_settings:
+        return project_settings.get("sequence_fps")
+    return None
+
+
+def _valid_fps(value: Any) -> bool:
+    fps = _fps_fraction(value)
+    return fps is not None and fps > 0
+
+
+def _fps_fraction(value: Any) -> Fraction | None:
+    if isinstance(value, (float, int)):
+        return Fraction(str(value))
+    if isinstance(value, str):
+        try:
+            return Fraction(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _time_is_frame_aligned(milliseconds: int, fps: Any) -> bool:
+    fps_fraction = _fps_fraction(fps)
+    if fps_fraction is None or fps_fraction <= 0:
+        return False
+    seconds = Fraction(milliseconds, 1000)
+    return (seconds * fps_fraction).denominator == 1
 
 
 def _milliseconds_to_rational_seconds(milliseconds: int) -> str:

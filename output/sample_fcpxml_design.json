@@ -17,7 +17,10 @@
     "fcpxml_time_format": "rational_seconds",
     "internal_timecode_format": "HH:MM:SS.mmm",
     "conversion": "timecode_ms_to_reduced_rational_seconds",
-    "frame_duration_policy": "derive from media fps as rational seconds per frame",
+    "sequence_fps": "25.0",
+    "sequence_frame_duration": "1/25s",
+    "frame_duration_policy": "sequence fps is explicit; asset fps must match in Module 8 MVP",
+    "frame_alignment_policy": "all source and timeline edit points must align exactly to sequence fps",
     "drop_frame_policy": "not modeled in Module 8"
   },
   "resource_id_strategy": {
@@ -28,13 +31,14 @@
     "stability": "deterministic_from_adapter_plan_order"
   },
   "resources": {
-    "format": {
+    "sequence_format": {
       "id": "fmt001",
       "name": "FFVideoFormat25.0",
+      "fps": "25.0",
       "frameDuration": "1/25s",
       "width": null,
       "height": null,
-      "note": "Width and height require media probing and are intentionally unknown in Module 8."
+      "note": "Sequence format is explicit. Width and height require media probing and are intentionally unknown in Module 8."
     },
     "assets": [
       {
@@ -61,7 +65,7 @@
         "name": "drama_episode_01.mp4",
         "offset": "0s",
         "start": "5s",
-        "duration": "3/2s",
+        "duration": "37/25s",
         "source_story_block_id": "b001",
         "source_timeline_item_id": "t001",
         "reuse_policy": "primary"
