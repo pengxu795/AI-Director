@@ -24,6 +24,8 @@ Formal plans that can be written to disk or used by a later module must be gener
 
 If the caller supplies `source_authorization_artifact` or `source_authorization_sha256`, Module 15 verifies those values against the actual file read from disk. Mismatches are blocked with `source_authorization_fingerprint_mismatch`.
 
+The verified authorization file must also be internally consistent. Top-level remediation id, finding id, evidence refs, related entities, source review SHA, implementation scope, and execution flags must match the immutable authorization snapshot. Any mismatch is blocked with `authorization_snapshot_integrity_mismatch`.
+
 ## Validation Rules
 
 Planning requires:
@@ -35,6 +37,7 @@ Planning requires:
 - authorization keeps `requires_module_15_implementation_review: true`
 - immutable Module 14 authorization snapshot exists
 - selection snapshot identity was verified by Module 14
+- top-level authorization identity and scope match the immutable authorization snapshot
 - source authorization path and SHA-256 are present
 - source authorization path and SHA-256 were verified from the file read by Module 15
 - planned file changes are listed
@@ -78,6 +81,8 @@ The plan JSON contains:
 `planned_file_changes` defines the future implementation intent. It does not modify those files in Module 15.
 
 `immutable_plan_snapshot` freezes the source authorization, authorization SHA-256, planned changes, acceptance criteria, review checklist, rollback checkpoints, and planning rationale.
+
+`immutable_plan_snapshot` records `verified_authorization_identity`, `selected_remediation_id`, `selected_finding_id`, `source_selection_sha256`, `source_review_sha256`, `allowed_files`, `prohibited_files`, and `authorization_snapshot_verified: true` so a later implementation module cannot mix top-level authorization fields with a different frozen authorization snapshot.
 
 `implementation_execution_allowed` and `serializer_change_execution_allowed` are fixed to `false` in Module 15. A later reviewed module must explicitly implement the approved plan.
 

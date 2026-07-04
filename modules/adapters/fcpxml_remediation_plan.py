@@ -96,6 +96,7 @@ def validate_fcpxml_remediation_plan_input(authorization: dict[str, Any], plan_r
         errors.append(_issue("missing_immutable_authorization_snapshot", "authorization.immutable_authorization_snapshot", "Module 15 requires the immutable Module 14 authorization snapshot."))
     if snapshot and snapshot.get("selection_snapshot_verified") is not True:
         errors.append(_issue("authorization_selection_snapshot_not_verified", "authorization.immutable_authorization_snapshot.selection_snapshot_verified", "Module 15 requires a verified selection snapshot identity."))
+    errors.extend(_authorization_snapshot_integrity_errors(authorization))
 
     metadata = _safe_dict(authorization.get("metadata"))
     for field in ("code_changes_applied", "serializer_modified", "fcpxml_generated", "media_files_read", "editor_launched", "automatic_import_performed", "video_export_performed"):
@@ -123,8 +124,9 @@ def validate_fcpxml_remediation_plan_input(authorization: dict[str, Any], plan_r
     if not rollback_checkpoints:
         errors.append(_issue("missing_rollback_checkpoints", "plan_request.rollback_checkpoints", "Module 15 must define rollback checkpoints."))
 
-    allowed_files = _safe_string_list(_safe_dict(authorization.get("implementation_scope")).get("allowed_files"))
-    prohibited_files = _safe_string_list(_safe_dict(authorization.get("implementation_scope")).get("prohibited_files"))
+    verified_identity = _authorization_identity(authorization)
+    allowed_files = _safe_string_list(verified_identity.get("allowed_files"))
+    prohibited_files = _safe_string_list(verified_identity.get("prohibited_files"))
     for index, change in enumerate(planned_file_changes):
         path = str(change.get("path", ""))
         if not path:
@@ -169,34 +171,34 @@ def write_fcpxml_remediation_plan(plan: dict[str, Any], output_path: str | Path)
 
 
 def _plan_payload(authorization: dict[str, Any], plan_request: dict[str, Any]) -> dict[str, Any]:
-    selected_remediation_id = str(authorization.get("selected_remediation_id", ""))
+    verified_identity = _authorization_identity(authorization)
+    selected_remediation_id = str(verified_identity.get("selected_remediation_id", ""))
     plan_id = f"plan_{selected_remediation_id or 'unknown'}"
     planned_file_changes = _safe_plan_changes(plan_request.get("planned_file_changes"))
     acceptance_criteria = _safe_string_list(plan_request.get("acceptance_criteria"))
     review_checklist = _safe_string_list(plan_request.get("review_checklist"))
     rollback_checkpoints = _safe_string_list(plan_request.get("rollback_checkpoints"))
-    implementation_scope = _safe_dict(authorization.get("implementation_scope"))
     return {
         "plan_id": plan_id,
         "source_authorization": {
             "authorization_id": str(authorization.get("authorization_id", "")),
             "selected_remediation_id": selected_remediation_id,
-            "selected_finding_id": str(authorization.get("selected_finding_id", "")),
+            "selected_finding_id": str(verified_identity.get("selected_finding_id", "")),
             "source_authorization_artifact": str(plan_request.get("source_authorization_artifact", "")),
             "source_authorization_sha256": str(plan_request.get("source_authorization_sha256", "")),
-            "source_selection_sha256": str(_safe_dict(authorization.get("source_selection")).get("source_selection_sha256", "")),
-            "source_review_sha256": str(_safe_dict(authorization.get("source_selection")).get("source_review_sha256", "")),
+            "source_selection_sha256": str(verified_identity.get("source_selection_sha256", "")),
+            "source_review_sha256": str(verified_identity.get("source_review_sha256", "")),
         },
         "planned_by": str(plan_request.get("planned_by", "")),
         "planned_at": str(plan_request.get("planned_at", "")),
         "planning_rationale": str(plan_request.get("planning_rationale", "")),
         "selected_remediation_id": selected_remediation_id,
-        "selected_finding_id": str(authorization.get("selected_finding_id", "")),
-        "evidence_refs": _safe_string_list(authorization.get("evidence_refs")),
-        "related_entities": copy.deepcopy(_safe_dict(authorization.get("related_entities"))),
+        "selected_finding_id": str(verified_identity.get("selected_finding_id", "")),
+        "evidence_refs": copy.deepcopy(verified_identity.get("evidence_refs", [])),
+        "related_entities": copy.deepcopy(verified_identity.get("related_entities", {})),
         "planned_file_changes": copy.deepcopy(planned_file_changes),
-        "allowed_files": copy.deepcopy(_safe_string_list(implementation_scope.get("allowed_files"))),
-        "prohibited_files": copy.deepcopy(_safe_string_list(implementation_scope.get("prohibited_files"))),
+        "allowed_files": copy.deepcopy(verified_identity.get("allowed_files", [])),
+        "prohibited_files": copy.deepcopy(verified_identity.get("prohibited_files", [])),
         "verification_plan": copy.deepcopy(_safe_dict(authorization.get("verification_plan"))),
         "rollback_plan": copy.deepcopy(_safe_dict(authorization.get("rollback_plan"))),
         "acceptance_criteria": acceptance_criteria,
@@ -207,9 +209,15 @@ def _plan_payload(authorization: dict[str, Any], plan_request: dict[str, Any]) -
         "requires_module_16_approval": True,
         "immutable_plan_snapshot": {
             "authorization": copy.deepcopy(authorization),
+            "verified_authorization_identity": copy.deepcopy(verified_identity),
+            "authorization_snapshot_verified": True,
             "source_authorization_sha256": str(plan_request.get("source_authorization_sha256", "")),
             "selected_remediation_id": selected_remediation_id,
-            "selected_finding_id": str(authorization.get("selected_finding_id", "")),
+            "selected_finding_id": str(verified_identity.get("selected_finding_id", "")),
+            "source_selection_sha256": str(verified_identity.get("source_selection_sha256", "")),
+            "source_review_sha256": str(verified_identity.get("source_review_sha256", "")),
+            "allowed_files": copy.deepcopy(verified_identity.get("allowed_files", [])),
+            "prohibited_files": copy.deepcopy(verified_identity.get("prohibited_files", [])),
             "planned_file_changes": copy.deepcopy(planned_file_changes),
             "acceptance_criteria": copy.deepcopy(acceptance_criteria),
             "review_checklist": copy.deepcopy(review_checklist),
@@ -249,6 +257,72 @@ def _blocked_plan(plan_request: dict[str, Any], errors: list[dict[str, str]]) ->
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:
     return {"code": code, "field": field, "message": message}
+
+
+def _authorization_snapshot_integrity_errors(authorization: dict[str, Any]) -> list[dict[str, str]]:
+    top_identity = _top_level_authorization_identity(authorization)
+    snapshot_identity = _authorization_identity(authorization)
+    checks = (
+        ("selected_remediation_id", "authorization.selected_remediation_id"),
+        ("selected_finding_id", "authorization.selected_finding_id"),
+        ("evidence_refs", "authorization.evidence_refs"),
+        ("related_entities", "authorization.related_entities"),
+        ("source_review_sha256", "authorization.source_selection.source_review_sha256"),
+        ("allowed_files", "authorization.implementation_scope.allowed_files"),
+        ("prohibited_files", "authorization.implementation_scope.prohibited_files"),
+        ("implementation_execution_allowed", "authorization.implementation_execution_allowed"),
+        ("serializer_change_execution_allowed", "authorization.serializer_change_execution_allowed"),
+    )
+    errors: list[dict[str, str]] = []
+    for key, field in checks:
+        if top_identity.get(key) != snapshot_identity.get(key):
+            errors.append(
+                _issue(
+                    "authorization_snapshot_integrity_mismatch",
+                    field,
+                    f"Top-level authorization {key} must match immutable_authorization_snapshot {key}.",
+                )
+            )
+    return errors
+
+
+def _top_level_authorization_identity(authorization: dict[str, Any]) -> dict[str, Any]:
+    source_selection = _safe_dict(authorization.get("source_selection"))
+    implementation_scope = _safe_dict(authorization.get("implementation_scope"))
+    return {
+        "selected_remediation_id": str(authorization.get("selected_remediation_id", "")),
+        "selected_finding_id": str(authorization.get("selected_finding_id", "")),
+        "evidence_refs": _safe_string_list(authorization.get("evidence_refs")),
+        "related_entities": _safe_dict(authorization.get("related_entities")),
+        "source_selection_sha256": str(source_selection.get("source_selection_sha256", "")),
+        "source_review_sha256": str(source_selection.get("source_review_sha256", "")),
+        "allowed_files": _safe_string_list(implementation_scope.get("allowed_files")),
+        "prohibited_files": _safe_string_list(implementation_scope.get("prohibited_files")),
+        "implementation_execution_allowed": authorization.get("implementation_execution_allowed"),
+        "serializer_change_execution_allowed": authorization.get("serializer_change_execution_allowed"),
+    }
+
+
+def _authorization_identity(authorization: dict[str, Any]) -> dict[str, Any]:
+    snapshot = _safe_dict(authorization.get("immutable_authorization_snapshot"))
+    verified_selection_identity = _safe_dict(snapshot.get("verified_selection_identity"))
+    frozen_authorization = _safe_dict(snapshot.get("authorization"))
+    frozen_source_selection = _safe_dict(frozen_authorization.get("source_selection"))
+    frozen_scope = _safe_dict(frozen_authorization.get("implementation_scope"))
+    frozen_allowed_files = _safe_string_list(frozen_scope.get("allowed_files")) or _safe_string_list(snapshot.get("allowed_files"))
+    frozen_prohibited_files = _safe_string_list(frozen_scope.get("prohibited_files")) or _safe_string_list(snapshot.get("prohibited_files"))
+    return {
+        "selected_remediation_id": str(verified_selection_identity.get("selected_remediation_id") or snapshot.get("selected_remediation_id") or ""),
+        "selected_finding_id": str(verified_selection_identity.get("selected_finding_id") or snapshot.get("selected_finding_id") or ""),
+        "evidence_refs": _safe_string_list(verified_selection_identity.get("evidence_refs")),
+        "related_entities": _safe_dict(verified_selection_identity.get("related_entities")),
+        "source_selection_sha256": str(frozen_source_selection.get("source_selection_sha256") or snapshot.get("source_selection_sha256") or ""),
+        "source_review_sha256": str(verified_selection_identity.get("source_review_sha256") or snapshot.get("source_review_sha256") or ""),
+        "allowed_files": frozen_allowed_files,
+        "prohibited_files": frozen_prohibited_files,
+        "implementation_execution_allowed": frozen_authorization.get("implementation_execution_allowed", False),
+        "serializer_change_execution_allowed": frozen_authorization.get("serializer_change_execution_allowed", False),
+    }
 
 
 def _path_allowed(path: str, allowed_files: list[str]) -> bool:

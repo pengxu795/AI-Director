@@ -2,6 +2,8 @@
 
 ## 2026-07-04
 
+- Fixed Module 15 authorization snapshot integrity validation so top-level authorization identity and scope must match the immutable authorization snapshot before a plan can become ready.
+- Added tests blocking mismatched remediation ids, finding ids, evidence refs, related entities, review SHA values, allowed/prohibited file scope, and execution flags even when the authorization file SHA is valid.
 - Added Module 15 authorized remediation implementation plan generation.
 - Added authorization SHA-256 freezing, planned file change validation against Module 14 scope, acceptance criteria, review checklist, rollback checkpoints, and immutable plan snapshots.
 - Added tests for missing authorization files, unverified direct planning, forged authorization fingerprints, out-of-scope or prohibited planned files, required review controls, forbidden media/editor requirements, JSON-only writing, and no editor/media automation imports.

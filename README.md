@@ -619,6 +619,7 @@ python app/authorize_fcpxml_remediation.py output/sample_fcpxml_remediation_sele
 - 正式可写入、可供后续模块使用的 plan 只能由文件入口生成
 - 直接传内存 authorization 的计划必须阻断，错误码为 `source_authorization_artifact_not_verified`
 - 调用方提供的 authorization 路径或 SHA 与实际读取文件不一致时必须阻断，错误码为 `source_authorization_fingerprint_mismatch`
+- authorization 顶层身份、证据、scope、review SHA 和执行 flag 必须与 `immutable_authorization_snapshot` 一致；任一不一致都必须阻断，错误码为 `authorization_snapshot_integrity_mismatch`
 - authorization 必须为 `status="authorization_ready"` 且 `validation_result.valid=true`
 - authorization 必须保持 `implementation_execution_allowed=false` 和 `serializer_change_execution_allowed=false`
 - authorization 必须包含已验证的 `immutable_authorization_snapshot.selection_snapshot_verified=true`
@@ -630,6 +631,7 @@ python app/authorize_fcpxml_remediation.py output/sample_fcpxml_remediation_sele
 - `implementation_execution_allowed=false`
 - `serializer_change_execution_allowed=false`
 - `requires_module_16_approval=true`
+- `immutable_plan_snapshot` 必须记录 `verified_authorization_identity`、`selected_remediation_id`、`selected_finding_id`、`source_selection_sha256`、`source_review_sha256`、`allowed_files`、`prohibited_files` 和 `authorization_snapshot_verified=true`
 - 不实施修复，不改 serializer，不改授权文件所列文件，不生成或重写 FCPXML
 - 不启动或控制 Final Cut Pro，不自动导入，不读取媒体，不转码、不渲染、不导出成片
 

@@ -138,6 +138,95 @@ def test_plan_from_file_sha_changes_when_authorization_file_changes(tmp_path):
     assert first["source_authorization"]["source_authorization_sha256"] != second["source_authorization"]["source_authorization_sha256"]
 
 
+@pytest.mark.parametrize(
+    ("mutate", "field"),
+    [
+        (lambda authorization: authorization.update({"selected_remediation_id": "r999"}), "authorization.selected_remediation_id"),
+        (lambda authorization: authorization.update({"selected_finding_id": "f999"}), "authorization.selected_finding_id"),
+        (lambda authorization: authorization.update({"evidence_refs": ["ev_other"]}), "authorization.evidence_refs"),
+        (lambda authorization: authorization.update({"related_entities": {"asset_ids": ["asset_999"], "check_ids": [], "error_codes": []}}), "authorization.related_entities"),
+        (lambda authorization: authorization["source_selection"].update({"source_review_sha256": "different-review-sha"}), "authorization.source_selection.source_review_sha256"),
+    ],
+)
+def test_plan_from_file_blocks_authorization_snapshot_identity_mismatch(tmp_path, mutate, field):
+    authorization = load_authorization()
+    mutate(authorization)
+    authorization_path = write_authorization(tmp_path, authorization)
+
+    plan = build_fcpxml_remediation_plan_from_file(authorization_path, plan_request_without_fingerprint())
+
+    assert plan["status"] == "blocked"
+    assert any(
+        error["code"] == "authorization_snapshot_integrity_mismatch" and error["field"] == field
+        for error in plan["validation_result"]["errors"]
+    )
+
+
+def test_plan_from_file_blocks_expanded_allowed_files_in_authorization_top_level(tmp_path):
+    authorization = load_authorization()
+    authorization["implementation_scope"]["allowed_files"].append("docs/unapproved_followup.md")
+    authorization_path = write_authorization(tmp_path, authorization)
+
+    plan = build_fcpxml_remediation_plan_from_file(authorization_path, plan_request_without_fingerprint())
+
+    assert plan["status"] == "blocked"
+    assert any(
+        error["code"] == "authorization_snapshot_integrity_mismatch" and error["field"] == "authorization.implementation_scope.allowed_files"
+        for error in plan["validation_result"]["errors"]
+    )
+
+
+def test_plan_from_file_blocks_deleted_prohibited_files_in_authorization_top_level(tmp_path):
+    authorization = load_authorization()
+    authorization["implementation_scope"]["prohibited_files"] = []
+    authorization_path = write_authorization(tmp_path, authorization)
+
+    plan = build_fcpxml_remediation_plan_from_file(authorization_path, plan_request_without_fingerprint())
+
+    assert plan["status"] == "blocked"
+    assert any(
+        error["code"] == "authorization_snapshot_integrity_mismatch" and error["field"] == "authorization.implementation_scope.prohibited_files"
+        for error in plan["validation_result"]["errors"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("implementation_execution_allowed", True),
+        ("serializer_change_execution_allowed", True),
+    ],
+)
+def test_plan_from_file_blocks_execution_flag_mismatch(tmp_path, field, value):
+    authorization = load_authorization()
+    authorization[field] = value
+    authorization_path = write_authorization(tmp_path, authorization)
+
+    plan = build_fcpxml_remediation_plan_from_file(authorization_path, plan_request_without_fingerprint())
+
+    assert plan["status"] == "blocked"
+    assert any(
+        error["code"] == "authorization_snapshot_integrity_mismatch" and error["field"] == f"authorization.{field}"
+        for error in plan["validation_result"]["errors"]
+    )
+
+
+def test_plan_payload_uses_verified_authorization_identity():
+    plan = build_fcpxml_remediation_plan_from_file("output/sample_fcpxml_remediation_authorization.json", plan_request())
+
+    snapshot = plan["immutable_plan_snapshot"]
+    assert plan["status"] == "plan_ready"
+    assert plan["plan_id"] == "plan_r001"
+    assert plan["selected_remediation_id"] == "r001"
+    assert plan["selected_finding_id"] == "f001"
+    assert snapshot["authorization_snapshot_verified"] is True
+    assert snapshot["verified_authorization_identity"]["selected_remediation_id"] == "r001"
+    assert snapshot["selected_remediation_id"] == "r001"
+    assert snapshot["selected_finding_id"] == "f001"
+    assert snapshot["allowed_files"] == plan["allowed_files"]
+    assert snapshot["prohibited_files"] == plan["prohibited_files"]
+
+
 def test_plan_rejects_file_outside_authorized_scope():
     request = plan_request()
     request["planned_file_changes"].append(

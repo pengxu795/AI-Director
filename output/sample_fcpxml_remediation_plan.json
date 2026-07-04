@@ -425,9 +425,72 @@
         "video_export_performed": false
       }
     },
+    "verified_authorization_identity": {
+      "selected_remediation_id": "r001",
+      "selected_finding_id": "f001",
+      "evidence_refs": [
+        "ev_asset_001",
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
+      ],
+      "related_entities": {
+        "asset_ids": [
+          "asset_001"
+        ],
+        "check_ids": [],
+        "error_codes": []
+      },
+      "source_selection_sha256": "6ed43d56f1e4eede3a148304d0c4a63b7bd025c7a9609321904bcf3a1cceaed1",
+      "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+      "allowed_files": [
+        "docs/fcpxml_acceptance_record.md",
+        "docs/fcpxml_compatibility_review.md",
+        "output/sample_fcpxml_acceptance_record_offline_blocked.json",
+        "output/sample_fcpxml_compatibility_review.json",
+        "CHANGELOG.md",
+        "PROJECT_STATE.md"
+      ],
+      "prohibited_files": [
+        "modules/adapters/fcpxml_serializer.py",
+        "tests/test_fcpxml_serializer.py",
+        "docs/fcpxml_serializer.md",
+        "app/export_fcpxml.py",
+        "output/*.fcpxml",
+        "modules/story/",
+        "modules/script/",
+        "modules/timeline/",
+        "data/",
+        "media/"
+      ],
+      "implementation_execution_allowed": false,
+      "serializer_change_execution_allowed": false
+    },
+    "authorization_snapshot_verified": true,
     "source_authorization_sha256": "c7d86df4f34783d497414bf45e3b5a9fc1923b3a88a8448cd3aa35c1b440a7a0",
     "selected_remediation_id": "r001",
     "selected_finding_id": "f001",
+    "source_selection_sha256": "6ed43d56f1e4eede3a148304d0c4a63b7bd025c7a9609321904bcf3a1cceaed1",
+    "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+    "allowed_files": [
+      "docs/fcpxml_acceptance_record.md",
+      "docs/fcpxml_compatibility_review.md",
+      "output/sample_fcpxml_acceptance_record_offline_blocked.json",
+      "output/sample_fcpxml_compatibility_review.json",
+      "CHANGELOG.md",
+      "PROJECT_STATE.md"
+    ],
+    "prohibited_files": [
+      "modules/adapters/fcpxml_serializer.py",
+      "tests/test_fcpxml_serializer.py",
+      "docs/fcpxml_serializer.md",
+      "app/export_fcpxml.py",
+      "output/*.fcpxml",
+      "modules/story/",
+      "modules/script/",
+      "modules/timeline/",
+      "data/",
+      "media/"
+    ],
     "planned_file_changes": [
       {
         "path": "docs/fcpxml_acceptance_record.md",
