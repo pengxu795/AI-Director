@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Fixed Module 10 traceability by recording `.fcpxml` SHA-256 and optional design/revision metadata.
+- Added `missing_artifact_revision_metadata`, `fully_traceable`, and `acceptance_ready` handling.
+- Blocked missing `.fcpxml` paths with `fcpxml_file_not_found`.
+- Added tests for artifact fingerprint stability, changed file content, missing FCPXML files, and manual result artifact identifiers.
 - Added Module 10 FCPXML manual import acceptance protocol.
 - Added expected asset, clip, and marker observations for manual Final Cut Pro import review.
 - Added acceptance checklist and result template that start as `not_run` and do not pre-fill compatibility PASS/FAIL.

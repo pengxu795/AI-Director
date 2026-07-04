@@ -354,6 +354,7 @@ python app/export_fcpxml.py output/sample_fcpxml_design.json output/sample_minim
 当前输出：
 
 - `target_editor`
+- `source_artifacts`
 - `source_design`
 - `expected_assets`
 - `expected_clips`
@@ -366,10 +367,12 @@ python app/export_fcpxml.py output/sample_fcpxml_design.json output/sample_minim
 关键约束：
 
 - 所有 checklist 初始状态必须是 `not_run`
+- 协议必须记录 `.fcpxml` 文件的 SHA-256 指纹
+- 缺少 `git_commit` 或 `serializer_commit` 时必须 warning，且不能标记为 `acceptance_ready`
 - 不自动判断 PASS / FAIL
 - 不启动或控制 Final Cut Pro
 - 不自动导入 `.fcpxml`
-- 不读取、探测、转码、渲染或导出媒体
+- 允许读取 `.fcpxml` 文本计算文件指纹，但不读取、探测、转码、渲染或导出媒体
 - 人工验收必须核对资源路径、clip source in/out、timeline offset、marker 位置和异常文件报错行为
 
 运行示例：

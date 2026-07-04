@@ -1,4 +1,5 @@
 import ast
+import hashlib
 import json
 from pathlib import Path
 
@@ -27,6 +28,13 @@ def test_acceptance_protocol_builds_manual_checklist_from_design():
     assert protocol["metadata"]["media_files_read"] is False
     assert protocol["metadata"]["editor_launched"] is False
     assert protocol["metadata"]["video_export_performed"] is False
+    assert protocol["metadata"]["fcpxml_file_read_for_sha256"] is True
+    assert protocol["source_artifacts"]["fcpxml_path"] == "output/sample_minimal.fcpxml"
+    assert len(protocol["source_artifacts"]["fcpxml_sha256"]) == 64
+    assert protocol["source_artifacts"]["git_commit"] == ""
+    assert protocol["source_artifacts"]["fully_traceable"] is False
+    assert protocol["source_artifacts"]["acceptance_ready"] is False
+    assert any(error["code"] == "missing_artifact_revision_metadata" for error in protocol["validation_result"]["warnings"])
     assert {item["category"] for item in protocol["checklist"]} >= {
         "preflight",
         "resources",
@@ -35,6 +43,7 @@ def test_acceptance_protocol_builds_manual_checklist_from_design():
         "error_behavior",
     }
     assert all(item["status"] == "not_run" for item in protocol["checklist"])
+    assert "SHA-256" in protocol["checklist"][0]["expected_result"]
 
 
 def test_acceptance_protocol_preserves_expected_clip_and_marker_observations():
@@ -95,6 +104,69 @@ def test_acceptance_protocol_validation_rejects_non_fcpxml_path():
     assert any(error["code"] == "invalid_fcpxml_suffix" for error in result["errors"])
 
 
+def test_acceptance_protocol_records_stable_fcpxml_sha256(tmp_path):
+    fcpxml = tmp_path / "sample.fcpxml"
+    fcpxml.write_text("<fcpxml version=\"1.10\" />\n", encoding="utf-8")
+    protocol = build_fcpxml_import_acceptance_protocol(sample_design(), fcpxml, git_commit="abc123", serializer_commit="abc123")
+
+    expected = hashlib.sha256(fcpxml.read_bytes()).hexdigest()
+
+    assert protocol["status"] == "protocol_ready"
+    assert protocol["source_artifacts"]["fcpxml_sha256"] == expected
+    assert protocol["source_artifacts"]["fully_traceable"] is True
+    assert protocol["source_artifacts"]["acceptance_ready"] is True
+
+
+def test_acceptance_protocol_sha256_changes_when_fcpxml_changes(tmp_path):
+    fcpxml = tmp_path / "sample.fcpxml"
+    fcpxml.write_text("first", encoding="utf-8")
+    first = build_fcpxml_import_acceptance_protocol(sample_design(), fcpxml, git_commit="abc123", serializer_commit="abc123")
+    fcpxml.write_text("second", encoding="utf-8")
+    second = build_fcpxml_import_acceptance_protocol(sample_design(), fcpxml, git_commit="abc123", serializer_commit="abc123")
+
+    assert first["source_artifacts"]["fcpxml_sha256"] != second["source_artifacts"]["fcpxml_sha256"]
+
+
+def test_acceptance_protocol_blocks_missing_fcpxml_file(tmp_path):
+    missing = tmp_path / "missing.fcpxml"
+    protocol = build_fcpxml_import_acceptance_protocol(sample_design(), missing, git_commit="abc123", serializer_commit="abc123")
+
+    assert protocol["status"] == "blocked"
+    assert protocol["source_artifacts"]["fcpxml_sha256"] == ""
+    assert protocol["source_artifacts"]["acceptance_ready"] is False
+    assert any(error["code"] == "fcpxml_file_not_found" for error in protocol["validation_result"]["errors"])
+
+
+def test_acceptance_protocol_records_source_design_fingerprint_and_revision_metadata(tmp_path):
+    design_path = tmp_path / "design.json"
+    design_path.write_text(json.dumps(sample_design(), ensure_ascii=False), encoding="utf-8")
+    protocol = build_fcpxml_import_acceptance_protocol(
+        sample_design(),
+        "output/sample_minimal.fcpxml",
+        source_design_path=design_path,
+        git_commit="abc123",
+        serializer_module_version="1.0",
+        serializer_commit="def456",
+        generated_at="2026-07-04T00:00:00+00:00",
+    )
+
+    assert protocol["source_artifacts"]["source_design_path"] == str(design_path)
+    assert protocol["source_artifacts"]["source_design_sha256"] == hashlib.sha256(design_path.read_bytes()).hexdigest()
+    assert protocol["source_artifacts"]["git_commit"] == "abc123"
+    assert protocol["source_artifacts"]["serializer_module_version"] == "1.0"
+    assert protocol["source_artifacts"]["serializer_commit"] == "def456"
+    assert protocol["source_artifacts"]["protocol_generated_at"] == "2026-07-04T00:00:00+00:00"
+    assert protocol["source_artifacts"]["fully_traceable"] is True
+    assert protocol["source_artifacts"]["acceptance_ready"] is True
+    assert protocol["validation_result"]["warnings"] == [
+        {
+            "code": "markers_design_only",
+            "field": "sequence_design.markers",
+            "message": "Markers preserve narration text only; no audio is generated.",
+        }
+    ]
+
+
 def test_acceptance_protocol_validation_rejects_prefilled_manual_results():
     protocol = build_fcpxml_import_acceptance_protocol(sample_design(), "output/sample_minimal.fcpxml")
     protocol["checklist"][0]["status"] = "passed"
@@ -130,6 +202,8 @@ def test_write_acceptance_protocol_writes_json_only(tmp_path):
     assert result["video_export_performed"] is False
     saved = json.loads(output.read_text(encoding="utf-8"))
     assert saved["manual_result_template"]["status"] == "not_run"
+    assert saved["manual_result_template"]["artifact_identifiers"]["fcpxml_sha256"]
+    assert "git_commit" in saved["manual_result_template"]["artifact_identifiers"]
 
 
 def test_acceptance_module_does_not_import_editor_or_media_automation_libraries():

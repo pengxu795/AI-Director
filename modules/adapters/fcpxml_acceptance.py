@@ -7,7 +7,9 @@ control editors, read media files, transcode, render, or export video.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from fractions import Fraction
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -21,8 +23,8 @@ CHECKLIST_DEFINITIONS = [
     (
         "preflight_fcpxml_file",
         "preflight",
-        "Confirm the generated .fcpxml file is the exact file under review.",
-        "File path, commit hash, and serializer output are recorded before import.",
+        "Confirm the generated .fcpxml file fingerprint matches the protocol before import.",
+        "File path, SHA-256, design fingerprint, commit hash, and serializer metadata are recorded before import.",
     ),
     (
         "preflight_environment",
@@ -72,15 +74,39 @@ CHECKLIST_DEFINITIONS = [
 def build_fcpxml_import_acceptance_protocol(
     fcpxml_design: dict[str, Any],
     fcpxml_path: str | Path,
+    source_design_path: str | Path = "",
+    git_commit: str = "",
+    serializer_module_version: str = FCPXML_ACCEPTANCE_SCHEMA_VERSION,
+    serializer_commit: str = "",
+    generated_at: str = "",
 ) -> dict[str, Any]:
     """Build a manual acceptance protocol from a Module 8/9 FCPXML design."""
     path = str(fcpxml_path)
+    design_path = str(source_design_path)
     serialization_validation = validate_fcpxml_serialization_input(fcpxml_design)
     protocol_errors: list[dict[str, str]] = []
+    protocol_warnings: list[dict[str, str]] = []
+    fcpxml_sha256 = ""
+    source_design_sha256 = ""
     if not path:
         protocol_errors.append(_issue("missing_fcpxml_path", "fcpxml_path", "A generated .fcpxml path is required."))
     elif not path.endswith(".fcpxml"):
         protocol_errors.append(_issue("invalid_fcpxml_suffix", "fcpxml_path", "Acceptance protocol must point at a .fcpxml file."))
+    elif not Path(path).is_file():
+        protocol_errors.append(_issue("fcpxml_file_not_found", "fcpxml_path", "The .fcpxml file under review was not found."))
+    else:
+        fcpxml_sha256 = _sha256_file(Path(path))
+
+    if design_path and Path(design_path).is_file():
+        source_design_sha256 = _sha256_file(Path(design_path))
+    if not git_commit or not serializer_commit:
+        protocol_warnings.append(
+            _issue(
+                "missing_artifact_revision_metadata",
+                "source_artifacts",
+                "git_commit and serializer_commit should be supplied before manual acceptance.",
+            )
+        )
 
     resources = _safe_dict(fcpxml_design.get("resources"))
     sequence_design = _safe_dict(fcpxml_design.get("sequence_design"))
@@ -91,8 +117,9 @@ def build_fcpxml_import_acceptance_protocol(
     validation_result = {
         "valid": serialization_validation["valid"] and not protocol_errors,
         "errors": protocol_errors + list(serialization_validation["errors"]),
-        "warnings": list(serialization_validation["warnings"]),
+        "warnings": protocol_warnings + list(serialization_validation["warnings"]),
     }
+    fully_traceable = bool(fcpxml_sha256 and git_commit and serializer_commit)
 
     return {
         "schema_version": FCPXML_ACCEPTANCE_SCHEMA_VERSION,
@@ -100,6 +127,18 @@ def build_fcpxml_import_acceptance_protocol(
         "name": "FCPXML Import Validation / Manual Acceptance Protocol",
         "status": "protocol_ready" if validation_result["valid"] else "blocked",
         "fcpxml_path": path,
+        "source_artifacts": {
+            "fcpxml_path": path,
+            "fcpxml_sha256": fcpxml_sha256,
+            "source_design_path": design_path,
+            "source_design_sha256": source_design_sha256,
+            "git_commit": git_commit,
+            "serializer_module_version": serializer_module_version,
+            "serializer_commit": serializer_commit,
+            "protocol_generated_at": generated_at or _utc_now(),
+            "fully_traceable": fully_traceable,
+            "acceptance_ready": validation_result["valid"] and fully_traceable,
+        },
         "target_editor": {
             "name": "Final Cut Pro",
             "validation_mode": "manual_import_only",
@@ -115,7 +154,15 @@ def build_fcpxml_import_acceptance_protocol(
         "expected_clips": _expected_clips(clips),
         "expected_markers": _expected_markers(markers, clips),
         "checklist": _checklist(),
-        "manual_result_template": _manual_result_template(),
+        "manual_result_template": _manual_result_template(
+            path,
+            fcpxml_sha256,
+            design_path,
+            source_design_sha256,
+            git_commit,
+            serializer_module_version,
+            serializer_commit,
+        ),
         "validation_result": validation_result,
         "metadata": {
             "protocol_generated": True,
@@ -124,6 +171,7 @@ def build_fcpxml_import_acceptance_protocol(
             "media_files_read": False,
             "editor_launched": False,
             "video_export_performed": False,
+            "fcpxml_file_read_for_sha256": bool(fcpxml_sha256),
         },
     }
 
@@ -139,6 +187,13 @@ def validate_fcpxml_import_acceptance_protocol(protocol: dict[str, Any]) -> dict
         errors.append(_issue("invalid_protocol_status", "status", "Protocol status must be protocol_ready or blocked."))
     if not str(protocol.get("fcpxml_path", "")).endswith(".fcpxml"):
         errors.append(_issue("invalid_fcpxml_suffix", "fcpxml_path", "Protocol must reference a .fcpxml file."))
+    source_artifacts = _safe_dict(protocol.get("source_artifacts"))
+    if source_artifacts.get("fcpxml_path") != protocol.get("fcpxml_path"):
+        errors.append(_issue("artifact_path_mismatch", "source_artifacts.fcpxml_path", "Artifact path must match top-level fcpxml_path."))
+    if protocol.get("status") == "protocol_ready" and not source_artifacts.get("fcpxml_sha256"):
+        errors.append(_issue("missing_fcpxml_sha256", "source_artifacts.fcpxml_sha256", "Protocol-ready runs must fingerprint the .fcpxml file."))
+    if source_artifacts.get("acceptance_ready") and not source_artifacts.get("fully_traceable"):
+        errors.append(_issue("acceptance_ready_requires_traceability", "source_artifacts.acceptance_ready", "Acceptance readiness requires full traceability."))
 
     metadata = _safe_dict(protocol.get("metadata"))
     for field in ("media_files_read", "editor_launched", "video_export_performed", "import_validation_performed"):
@@ -271,9 +326,26 @@ def _checklist() -> list[dict[str, Any]]:
     ]
 
 
-def _manual_result_template() -> dict[str, Any]:
+def _manual_result_template(
+    fcpxml_path: str,
+    fcpxml_sha256: str,
+    source_design_path: str,
+    source_design_sha256: str,
+    git_commit: str,
+    serializer_module_version: str,
+    serializer_commit: str,
+) -> dict[str, Any]:
     return {
         "status": "not_run",
+        "artifact_identifiers": {
+            "fcpxml_path": fcpxml_path,
+            "fcpxml_sha256": fcpxml_sha256,
+            "source_design_path": source_design_path,
+            "source_design_sha256": source_design_sha256,
+            "git_commit": git_commit,
+            "serializer_module_version": serializer_module_version,
+            "serializer_commit": serializer_commit,
+        },
         "tester": "",
         "run_at": "",
         "final_cut_pro_version": "",
@@ -327,6 +399,18 @@ def _fraction_to_time(value: Fraction) -> str:
 
 def _issue(code: str, field: str, message: str) -> dict[str, str]:
     return {"code": code, "field": field, "message": message}
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
 def _safe_dict(value: Any) -> dict[str, Any]:

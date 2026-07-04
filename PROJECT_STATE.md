@@ -32,6 +32,8 @@
 ## Pending Review
 
 - Review Module 10 manual acceptance protocol.
+- Confirm the exact `.fcpxml` artifact is locked with SHA-256 before manual import.
+- Confirm missing revision metadata produces `missing_artifact_revision_metadata` and does not mark the protocol `acceptance_ready`.
 - Confirm checklist covers resource paths, clip source ranges, timeline offsets, marker positions, and importer error behavior.
 - Confirm expected clips and markers are derived from the Module 8/9 design without guessing.
 - Confirm every checklist item starts as `not_run` and no PASS/FAIL is pre-filled.

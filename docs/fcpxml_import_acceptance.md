@@ -11,7 +11,7 @@ This module does not automate Final Cut Pro, validate import by code, read media
 - Module 8 FCPXML design JSON
 - Module 9 generated `.fcpxml` path
 
-The `.fcpxml` path is recorded for the tester, but Module 10 does not open the file in Final Cut Pro.
+The `.fcpxml` path and SHA-256 fingerprint are recorded for the tester. Module 10 may read the generated `.fcpxml` text file to calculate this fingerprint, but it does not open the file in Final Cut Pro and does not read any media files.
 
 ## Output
 
@@ -19,6 +19,7 @@ The protocol JSON contains:
 
 - `schema_version`
 - `target_editor`
+- `source_artifacts`
 - `source_design`
 - `expected_assets`
 - `expected_clips`
@@ -30,6 +31,25 @@ The protocol JSON contains:
 
 All checklist items start with `status: "not_run"`. Module 10 must not pre-fill pass/fail results.
 
+## Artifact Traceability
+
+`source_artifacts` records:
+
+- `fcpxml_path`
+- `fcpxml_sha256`
+- `source_design_path`
+- `source_design_sha256`
+- `git_commit`
+- `serializer_module_version`
+- `serializer_commit`
+- `protocol_generated_at`
+- `fully_traceable`
+- `acceptance_ready`
+
+Default protocol generation allows `git_commit` and `serializer_commit` to be empty, but it emits `missing_artifact_revision_metadata` and keeps `fully_traceable` / `acceptance_ready` false.
+
+If the `.fcpxml` path does not exist, protocol generation returns `status: "blocked"` with `fcpxml_file_not_found`.
+
 ## Manual Acceptance Scope
 
 The tester manually imports the `.fcpxml` into Final Cut Pro and records:
@@ -38,6 +58,7 @@ The tester manually imports the `.fcpxml` into Final Cut Pro and records:
 - macOS version
 - library and project names
 - whether media asset paths resolve or appear offline
+- whether the imported `.fcpxml` file SHA-256 matches the protocol
 - clip count and order
 - clip source in/out
 - timeline offsets and durations
@@ -78,5 +99,7 @@ Module 10 does not:
 - Verify editor import by code.
 - Read, probe, relink, transcode, cut, render, or export media.
 - Mark compatibility as passed without manual evidence.
+
+It may read the generated `.fcpxml` text to calculate `fcpxml_sha256`. That fingerprinting step is explicitly separate from media reading or editor import.
 
 The protocol can be used to collect evidence, but PASS/FAIL remains a human review decision until a later gated module defines any editor automation.

@@ -20,10 +20,22 @@ def main() -> None:
     parser.add_argument("design_json", help="Path to Module 8 FCPXML design JSON.")
     parser.add_argument("fcpxml_path", help="Path to generated .fcpxml file under manual review.")
     parser.add_argument("output_json", help="Output protocol JSON path.")
+    parser.add_argument("--git-commit", default="", help="Git commit that produced the FCPXML under review.")
+    parser.add_argument("--serializer-module-version", default="1.0", help="Module 10 serializer/protocol version label.")
+    parser.add_argument("--serializer-commit", default="", help="Serializer commit or revision identifier.")
+    parser.add_argument("--generated-at", default="", help="Explicit protocol timestamp, if reproducible output is needed.")
     args = parser.parse_args()
 
     design = json.loads(Path(args.design_json).read_text(encoding="utf-8"))
-    protocol = build_fcpxml_import_acceptance_protocol(design, args.fcpxml_path)
+    protocol = build_fcpxml_import_acceptance_protocol(
+        design,
+        args.fcpxml_path,
+        source_design_path=args.design_json,
+        git_commit=args.git_commit,
+        serializer_module_version=args.serializer_module_version,
+        serializer_commit=args.serializer_commit,
+        generated_at=args.generated_at,
+    )
     result = write_fcpxml_import_acceptance_protocol(protocol, args.output_json)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

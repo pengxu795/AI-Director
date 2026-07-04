@@ -4,6 +4,18 @@
   "name": "FCPXML Import Validation / Manual Acceptance Protocol",
   "status": "protocol_ready",
   "fcpxml_path": "output/sample_minimal.fcpxml",
+  "source_artifacts": {
+    "fcpxml_path": "output/sample_minimal.fcpxml",
+    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+    "source_design_path": "output/sample_fcpxml_design.json",
+    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+    "git_commit": "",
+    "serializer_module_version": "1.0",
+    "serializer_commit": "",
+    "protocol_generated_at": "2026-07-04T00:00:00+00:00",
+    "fully_traceable": false,
+    "acceptance_ready": false
+  },
   "target_editor": {
     "name": "Final Cut Pro",
     "validation_mode": "manual_import_only",
@@ -81,8 +93,8 @@
     {
       "id": "preflight_fcpxml_file",
       "category": "preflight",
-      "instruction": "Confirm the generated .fcpxml file is the exact file under review.",
-      "expected_result": "File path, commit hash, and serializer output are recorded before import.",
+      "instruction": "Confirm the generated .fcpxml file fingerprint matches the protocol before import.",
+      "expected_result": "File path, SHA-256, design fingerprint, commit hash, and serializer metadata are recorded before import.",
       "evidence_required": [
         "manual_note",
         "screenshot_or_screen_recording"
@@ -177,6 +189,15 @@
   ],
   "manual_result_template": {
     "status": "not_run",
+    "artifact_identifiers": {
+      "fcpxml_path": "output/sample_minimal.fcpxml",
+      "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+      "source_design_path": "output/sample_fcpxml_design.json",
+      "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+      "git_commit": "",
+      "serializer_module_version": "1.0",
+      "serializer_commit": ""
+    },
     "tester": "",
     "run_at": "",
     "final_cut_pro_version": "",
@@ -251,6 +272,11 @@
     "errors": [],
     "warnings": [
       {
+        "code": "missing_artifact_revision_metadata",
+        "field": "source_artifacts",
+        "message": "git_commit and serializer_commit should be supplied before manual acceptance."
+      },
+      {
         "code": "markers_design_only",
         "field": "sequence_design.markers",
         "message": "Markers preserve narration text only; no audio is generated."
@@ -263,6 +289,7 @@
     "manual_review_required": true,
     "media_files_read": false,
     "editor_launched": false,
-    "video_export_performed": false
+    "video_export_performed": false,
+    "fcpxml_file_read_for_sha256": true
   }
 }
