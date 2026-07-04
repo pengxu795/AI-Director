@@ -7,7 +7,7 @@ Module 15 creates a non-executable implementation plan from one Module 14 author
 - Generate formal writable plans only from `build_fcpxml_remediation_plan_from_file(...)`.
 - Block direct in-memory planning with `source_authorization_artifact_not_verified`.
 - Block caller-provided path or SHA mismatches with `source_authorization_fingerprint_mismatch`.
-- Block authorization files whose top-level remediation, finding, evidence refs, related entities, source review SHA, implementation scope, or execution flags do not match `immutable_authorization_snapshot`, using `authorization_snapshot_integrity_mismatch`.
+- Block authorization files whose top-level remediation, finding, evidence refs, related entities, source review SHA, implementation scope, verification plan, rollback plan, or execution flags do not match `immutable_authorization_snapshot`, using `authorization_snapshot_integrity_mismatch`.
 - Require authorization status `authorization_ready`.
 - Require `implementation_execution_allowed: false`, `serializer_change_execution_allowed: false`, and `requires_module_15_implementation_review: true`.
 - Require Module 14 `selection_snapshot_verified: true`.
@@ -20,7 +20,7 @@ Module 15 creates a non-executable implementation plan from one Module 14 author
 - Define future implementation plan only; do not implement the remediation.
 - Keep `implementation_execution_allowed: false`.
 - Keep `serializer_change_execution_allowed: false`.
-- Record `verified_authorization_identity` and `authorization_snapshot_verified: true` only after the top-level authorization and immutable snapshot match.
+- Record `verified_authorization_identity`, `verified_verification_plan`, `verified_rollback_plan`, and `authorization_snapshot_verified: true` only after the top-level authorization and immutable snapshot match.
 - Keep `code_changes_applied: false`.
 - Keep `fcpxml_generated: false`.
 - Do not launch or control Final Cut Pro.

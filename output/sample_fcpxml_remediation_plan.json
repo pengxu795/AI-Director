@@ -462,6 +462,26 @@
         "data/",
         "media/"
       ],
+      "verification_plan": {
+        "commands": [
+          "python -m pytest -q",
+          "python -m compileall modules app tests",
+          "git diff --check"
+        ],
+        "required_results": [
+          "all_commands_pass",
+          "git_diff_limited_to_allowed_files",
+          "no_boundary_violations"
+        ]
+      },
+      "rollback_plan": {
+        "steps": [
+          "Stop implementation immediately.",
+          "Revert only files changed by the future implementation module.",
+          "Record the failed verification result before requesting Review."
+        ],
+        "requires_review_if_rollback_needed": true
+      },
       "implementation_execution_allowed": false,
       "serializer_change_execution_allowed": false
     },
@@ -491,6 +511,26 @@
       "data/",
       "media/"
     ],
+    "verified_verification_plan": {
+      "commands": [
+        "python -m pytest -q",
+        "python -m compileall modules app tests",
+        "git diff --check"
+      ],
+      "required_results": [
+        "all_commands_pass",
+        "git_diff_limited_to_allowed_files",
+        "no_boundary_violations"
+      ]
+    },
+    "verified_rollback_plan": {
+      "steps": [
+        "Stop implementation immediately.",
+        "Revert only files changed by the future implementation module.",
+        "Record the failed verification result before requesting Review."
+      ],
+      "requires_review_if_rollback_needed": true
+    },
     "planned_file_changes": [
       {
         "path": "docs/fcpxml_acceptance_record.md",

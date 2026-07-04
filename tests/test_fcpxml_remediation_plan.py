@@ -193,6 +193,27 @@ def test_plan_from_file_blocks_deleted_prohibited_files_in_authorization_top_lev
 @pytest.mark.parametrize(
     ("field", "value"),
     [
+        ("verification_plan", {"commands": ["python -m pytest tests/test_other.py"], "required_results": ["changed"]}),
+        ("rollback_plan", {"steps": ["Changed rollback step."], "requires_review_if_rollback_needed": False}),
+    ],
+)
+def test_plan_from_file_blocks_changed_verification_or_rollback_plan(tmp_path, field, value):
+    authorization = load_authorization()
+    authorization[field] = value
+    authorization_path = write_authorization(tmp_path, authorization)
+
+    plan = build_fcpxml_remediation_plan_from_file(authorization_path, plan_request_without_fingerprint())
+
+    assert plan["status"] == "blocked"
+    assert any(
+        error["code"] == "authorization_snapshot_integrity_mismatch" and error["field"] == f"authorization.{field}"
+        for error in plan["validation_result"]["errors"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
         ("implementation_execution_allowed", True),
         ("serializer_change_execution_allowed", True),
     ],
@@ -225,6 +246,10 @@ def test_plan_payload_uses_verified_authorization_identity():
     assert snapshot["selected_finding_id"] == "f001"
     assert snapshot["allowed_files"] == plan["allowed_files"]
     assert snapshot["prohibited_files"] == plan["prohibited_files"]
+    assert plan["verification_plan"] == snapshot["verified_verification_plan"]
+    assert plan["rollback_plan"] == snapshot["verified_rollback_plan"]
+    assert snapshot["verified_verification_plan"]["commands"] == snapshot["authorization"]["immutable_authorization_snapshot"]["verification_commands"]
+    assert snapshot["verified_rollback_plan"]["steps"] == snapshot["authorization"]["immutable_authorization_snapshot"]["rollback_steps"]
 
 
 def test_plan_rejects_file_outside_authorized_scope():

@@ -41,7 +41,7 @@
 - Confirm plan requires an existing Module 14 authorization file and freezes `source_authorization_sha256`.
 - Confirm direct in-memory planning cannot become `plan_ready`.
 - Confirm caller-provided authorization path or SHA mismatches are blocked.
-- Confirm authorization top-level remediation/finding/evidence/scope/review identity matches the immutable authorization snapshot before a plan can become ready.
+- Confirm authorization top-level remediation/finding/evidence/scope/review identity, verification plan, and rollback plan match the immutable authorization snapshot before a plan can become ready.
 - Confirm authorization must be `authorization_ready` with valid Module 14 validation result.
 - Confirm Module 14 `selection_snapshot_verified=true` is required.
 - Confirm every planned file change stays within Module 14 `allowed_files`.
@@ -49,7 +49,7 @@
 - Confirm planned changes include `path`, `action`, and `summary`.
 - Confirm acceptance criteria, review checklist, and rollback checkpoints are required.
 - Confirm acceptance and review checklist items cannot require media/editor automation.
-- Confirm immutable plan snapshot preserves verified authorization identity, authorization SHA, planned changes, acceptance criteria, review checklist, and rollback checkpoints.
+- Confirm immutable plan snapshot preserves verified authorization identity, verification plan, rollback plan, authorization SHA, planned changes, acceptance criteria, review checklist, and rollback checkpoints.
 - Confirm `implementation_execution_allowed=false` and `serializer_change_execution_allowed=false`.
 - Confirm Module 15 does not modify serializer, authorized files, samples, media bindings, editor automation, or FCPXML output.
 - Confirm Module 15 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.

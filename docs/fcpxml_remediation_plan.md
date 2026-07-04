@@ -24,7 +24,7 @@ Formal plans that can be written to disk or used by a later module must be gener
 
 If the caller supplies `source_authorization_artifact` or `source_authorization_sha256`, Module 15 verifies those values against the actual file read from disk. Mismatches are blocked with `source_authorization_fingerprint_mismatch`.
 
-The verified authorization file must also be internally consistent. Top-level remediation id, finding id, evidence refs, related entities, source review SHA, implementation scope, and execution flags must match the immutable authorization snapshot. Any mismatch is blocked with `authorization_snapshot_integrity_mismatch`.
+The verified authorization file must also be internally consistent. Top-level remediation id, finding id, evidence refs, related entities, source review SHA, implementation scope, verification plan, rollback plan, and execution flags must match the immutable authorization snapshot. Any mismatch is blocked with `authorization_snapshot_integrity_mismatch`.
 
 ## Validation Rules
 
@@ -82,7 +82,7 @@ The plan JSON contains:
 
 `immutable_plan_snapshot` freezes the source authorization, authorization SHA-256, planned changes, acceptance criteria, review checklist, rollback checkpoints, and planning rationale.
 
-`immutable_plan_snapshot` records `verified_authorization_identity`, `selected_remediation_id`, `selected_finding_id`, `source_selection_sha256`, `source_review_sha256`, `allowed_files`, `prohibited_files`, and `authorization_snapshot_verified: true` so a later implementation module cannot mix top-level authorization fields with a different frozen authorization snapshot.
+`immutable_plan_snapshot` records `verified_authorization_identity`, `verified_verification_plan`, `verified_rollback_plan`, `selected_remediation_id`, `selected_finding_id`, `source_selection_sha256`, `source_review_sha256`, `allowed_files`, `prohibited_files`, and `authorization_snapshot_verified: true` so a later implementation module cannot mix top-level authorization fields with a different frozen authorization snapshot.
 
 `implementation_execution_allowed` and `serializer_change_execution_allowed` are fixed to `false` in Module 15. A later reviewed module must explicitly implement the approved plan.
 

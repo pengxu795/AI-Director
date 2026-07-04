@@ -199,8 +199,8 @@ def _plan_payload(authorization: dict[str, Any], plan_request: dict[str, Any]) -
         "planned_file_changes": copy.deepcopy(planned_file_changes),
         "allowed_files": copy.deepcopy(verified_identity.get("allowed_files", [])),
         "prohibited_files": copy.deepcopy(verified_identity.get("prohibited_files", [])),
-        "verification_plan": copy.deepcopy(_safe_dict(authorization.get("verification_plan"))),
-        "rollback_plan": copy.deepcopy(_safe_dict(authorization.get("rollback_plan"))),
+        "verification_plan": copy.deepcopy(verified_identity.get("verification_plan", {})),
+        "rollback_plan": copy.deepcopy(verified_identity.get("rollback_plan", {})),
         "acceptance_criteria": acceptance_criteria,
         "review_checklist": review_checklist,
         "rollback_checkpoints": rollback_checkpoints,
@@ -218,6 +218,8 @@ def _plan_payload(authorization: dict[str, Any], plan_request: dict[str, Any]) -
             "source_review_sha256": str(verified_identity.get("source_review_sha256", "")),
             "allowed_files": copy.deepcopy(verified_identity.get("allowed_files", [])),
             "prohibited_files": copy.deepcopy(verified_identity.get("prohibited_files", [])),
+            "verified_verification_plan": copy.deepcopy(verified_identity.get("verification_plan", {})),
+            "verified_rollback_plan": copy.deepcopy(verified_identity.get("rollback_plan", {})),
             "planned_file_changes": copy.deepcopy(planned_file_changes),
             "acceptance_criteria": copy.deepcopy(acceptance_criteria),
             "review_checklist": copy.deepcopy(review_checklist),
@@ -270,6 +272,8 @@ def _authorization_snapshot_integrity_errors(authorization: dict[str, Any]) -> l
         ("source_review_sha256", "authorization.source_selection.source_review_sha256"),
         ("allowed_files", "authorization.implementation_scope.allowed_files"),
         ("prohibited_files", "authorization.implementation_scope.prohibited_files"),
+        ("verification_plan", "authorization.verification_plan"),
+        ("rollback_plan", "authorization.rollback_plan"),
         ("implementation_execution_allowed", "authorization.implementation_execution_allowed"),
         ("serializer_change_execution_allowed", "authorization.serializer_change_execution_allowed"),
     )
@@ -298,6 +302,8 @@ def _top_level_authorization_identity(authorization: dict[str, Any]) -> dict[str
         "source_review_sha256": str(source_selection.get("source_review_sha256", "")),
         "allowed_files": _safe_string_list(implementation_scope.get("allowed_files")),
         "prohibited_files": _safe_string_list(implementation_scope.get("prohibited_files")),
+        "verification_plan": _safe_dict(authorization.get("verification_plan")),
+        "rollback_plan": _safe_dict(authorization.get("rollback_plan")),
         "implementation_execution_allowed": authorization.get("implementation_execution_allowed"),
         "serializer_change_execution_allowed": authorization.get("serializer_change_execution_allowed"),
     }
@@ -311,6 +317,8 @@ def _authorization_identity(authorization: dict[str, Any]) -> dict[str, Any]:
     frozen_scope = _safe_dict(frozen_authorization.get("implementation_scope"))
     frozen_allowed_files = _safe_string_list(frozen_scope.get("allowed_files")) or _safe_string_list(snapshot.get("allowed_files"))
     frozen_prohibited_files = _safe_string_list(frozen_scope.get("prohibited_files")) or _safe_string_list(snapshot.get("prohibited_files"))
+    frozen_verification_plan = _frozen_verification_plan(snapshot, frozen_authorization)
+    frozen_rollback_plan = _frozen_rollback_plan(snapshot, frozen_authorization)
     return {
         "selected_remediation_id": str(verified_selection_identity.get("selected_remediation_id") or snapshot.get("selected_remediation_id") or ""),
         "selected_finding_id": str(verified_selection_identity.get("selected_finding_id") or snapshot.get("selected_finding_id") or ""),
@@ -320,8 +328,36 @@ def _authorization_identity(authorization: dict[str, Any]) -> dict[str, Any]:
         "source_review_sha256": str(verified_selection_identity.get("source_review_sha256") or snapshot.get("source_review_sha256") or ""),
         "allowed_files": frozen_allowed_files,
         "prohibited_files": frozen_prohibited_files,
+        "verification_plan": frozen_verification_plan,
+        "rollback_plan": frozen_rollback_plan,
         "implementation_execution_allowed": frozen_authorization.get("implementation_execution_allowed", False),
         "serializer_change_execution_allowed": frozen_authorization.get("serializer_change_execution_allowed", False),
+    }
+
+
+def _frozen_verification_plan(snapshot: dict[str, Any], frozen_authorization: dict[str, Any]) -> dict[str, Any]:
+    full_plan = _safe_dict(frozen_authorization.get("verification_plan"))
+    if full_plan:
+        return copy.deepcopy(full_plan)
+    commands = _safe_string_list(snapshot.get("verification_commands"))
+    if not commands:
+        return {}
+    return {
+        "commands": commands,
+        "required_results": ["all_commands_pass", "git_diff_limited_to_allowed_files", "no_boundary_violations"],
+    }
+
+
+def _frozen_rollback_plan(snapshot: dict[str, Any], frozen_authorization: dict[str, Any]) -> dict[str, Any]:
+    full_plan = _safe_dict(frozen_authorization.get("rollback_plan"))
+    if full_plan:
+        return copy.deepcopy(full_plan)
+    steps = _safe_string_list(snapshot.get("rollback_steps"))
+    if not steps:
+        return {}
+    return {
+        "steps": steps,
+        "requires_review_if_rollback_needed": True,
     }
 
 
