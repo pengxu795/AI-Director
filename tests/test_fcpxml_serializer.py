@@ -145,6 +145,47 @@ def test_marker_one_frame_after_second_clip_start_is_not_zero():
     assert second_marker.attrib["start"] == "1/25s"
 
 
+def test_marker_at_sequence_start_is_frame_aligned():
+    result = validate_fcpxml_serialization_input(fcpxml_design())
+
+    assert result["valid"] is True
+    assert not any(error["code"] == "marker_time_not_frame_aligned" for error in result["errors"])
+
+
+def test_marker_at_one_frame_is_frame_aligned():
+    design = fcpxml_design()
+    design["sequence_design"]["markers"][0]["timeline_start"] = "1/25s"
+    xml_text = serialize_fcpxml(design)
+    root = ET.fromstring(xml_text.split("<!DOCTYPE fcpxml>\n", 1)[1])
+    marker = root.find("./library/event/project/sequence/spine/asset-clip/marker")
+
+    assert marker.attrib["start"] == "1/25s"
+
+
+def test_marker_inside_clip_but_not_frame_aligned_blocks_serialization():
+    design = fcpxml_design()
+    design["sequence_design"]["markers"][0]["timeline_start"] = "1/1000s"
+
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "marker_time_not_frame_aligned" for error in result["errors"])
+    with pytest.raises(ValueError):
+        serialize_fcpxml(design)
+
+
+def test_clip_relative_marker_start_must_be_frame_aligned():
+    design = fcpxml_design()
+    design["sequence_design"]["spine"][0]["offset"] = "1/100s"
+    design["sequence_design"]["spine"][0]["duration"] = "2s"
+    design["sequence_design"]["markers"][0]["timeline_start"] = "1/25s"
+
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "marker_time_not_frame_aligned" for error in result["errors"])
+
+
 def test_marker_missing_timeline_start_blocks_even_with_matching_clip():
     design = fcpxml_design()
     design["sequence_design"]["markers"][0]["timeline_start"] = ""

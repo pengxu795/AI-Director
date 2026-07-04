@@ -332,6 +332,7 @@ output/sample_fcpxml_design.json
 - 写出 `.fcpxml` 文件
 - marker 必须根据真实 timeline position 挂到覆盖该时间点的 clip，并转换为 clip-relative start
 - marker 时间只能来自真实 `timeline_start`，不得由 `source_timeline_item_id` 或 clip offset 推断
+- marker 的真实 `timeline_start` 和 clip-relative start 必须对齐 sequence `frameDuration`
 - 不读取视频
 - 不探测媒体文件
 - 不转码、不渲染、不导出成片

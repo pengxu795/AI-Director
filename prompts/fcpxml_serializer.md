@@ -9,6 +9,7 @@ Module 9 serializes a validated Module 8 abstract FCPXML design to `.fcpxml`.
 - Never infer marker time from `source_timeline_item_id` or clip offset.
 - Attach each marker to the clip covering its timeline position.
 - Convert marker timeline position to clip-relative marker start.
+- Require marker timeline position and clip-relative marker start to align to sequence `frameDuration`.
 - Block markers in gaps, outside sequence duration, or overlapping multiple clips.
 - Use existing rational seconds from the design.
 - Do not round times.

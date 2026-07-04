@@ -35,6 +35,7 @@
 - Confirm `.fcpxml` output preserves resources, asset refs, clip source ranges, offsets, durations, and narration markers.
 - Confirm narration markers map to the correct clip and use clip-relative marker start.
 - Confirm marker time is never inferred from `source_timeline_item_id` or clip offset.
+- Confirm marker timeline start and clip-relative marker start align to sequence `frameDuration`.
 - Confirm serializer does not read media, probe files, render video, launch Final Cut Pro, or validate editor import.
 - Confirm blocked designs do not write files.
 

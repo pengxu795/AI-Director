@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Added Module 9 marker frame-alignment validation against sequence `frameDuration`.
+- Blocked non-frame-aligned marker `timeline_start` and clip-relative marker starts with `marker_time_not_frame_aligned`.
+- Added tests for valid 25fps marker frame points and invalid in-clip marker timing.
 - Fixed Module 9 marker timing fallback so marker time is never inferred from clip offset.
 - Added tests for missing marker `timeline_start` with matching clips and duplicate source timeline ids.
 - Fixed Module 9 narration marker placement so markers attach to the clip covering their timeline position.

@@ -47,7 +47,7 @@ def validate_fcpxml_serialization_input(design: dict[str, Any]) -> dict[str, Any
     _validate_sequence_format(sequence_format, errors)
     asset_ids = _validate_assets(assets, errors)
     _validate_clips(clips, asset_ids, errors)
-    _validate_markers(markers, clips, warnings, errors)
+    _validate_markers(markers, clips, sequence_format, warnings, errors)
 
     return {
         "valid": not errors,
@@ -213,12 +213,14 @@ def _validate_clips(clips: list[dict[str, Any]], asset_ids: set[str], errors: li
 def _validate_markers(
     markers: list[dict[str, Any]],
     clips: list[dict[str, Any]],
+    sequence_format: dict[str, Any],
     warnings: list[dict[str, str]],
     errors: list[dict[str, str]],
 ) -> None:
     if markers:
         warnings.append(_issue("markers_design_only", "sequence_design.markers", "Markers preserve narration text only; no audio is generated."))
     sequence_duration = _rational_time_to_fraction(_sequence_duration(clips))
+    frame_duration = _frame_duration_fraction(sequence_format)
     for index, marker in enumerate(markers):
         field = f"sequence_design.markers[{index}]"
         if not marker.get("timeline_start"):
@@ -231,11 +233,32 @@ def _validate_markers(
         if marker_time < 0 or marker_time >= sequence_duration:
             errors.append(_issue("marker_outside_sequence_range", f"{field}.timeline_start", "Marker must fall inside sequence duration."))
             continue
+        marker_frame_aligned = True
+        if frame_duration and not _is_frame_aligned(marker_time, frame_duration):
+            marker_frame_aligned = False
+            errors.append(
+                _issue(
+                    "marker_time_not_frame_aligned",
+                    f"{field}.timeline_start",
+                    "Marker timeline_start must align to the sequence frame duration.",
+                )
+            )
         matches = _clips_covering_time(marker_time, clips)
         if not matches:
             errors.append(_issue("marker_outside_clip_range", f"{field}.timeline_start", "Marker must fall inside a clip range."))
         elif len(matches) > 1:
             errors.append(_issue("ambiguous_marker_clip_target", f"{field}.timeline_start", "Marker matches multiple clips."))
+        elif frame_duration:
+            clip_offset = _rational_time_to_fraction(str(matches[0].get("offset", "0s")))
+            relative_start = marker_time - clip_offset
+            if not _is_frame_aligned(relative_start, frame_duration) and marker_frame_aligned:
+                errors.append(
+                    _issue(
+                        "marker_time_not_frame_aligned",
+                        f"{field}.timeline_start",
+                        "Clip-relative marker start must align to the sequence frame duration.",
+                    )
+                )
 
 
 def _file_url(path: str) -> str:
@@ -285,6 +308,20 @@ def _marker_clip_target(
 
 def _first_frame_duration(sequence_format: dict[str, Any]) -> str:
     return str(sequence_format.get("frameDuration", "1/25s"))
+
+
+def _frame_duration_fraction(sequence_format: dict[str, Any]) -> Fraction | None:
+    frame_duration = sequence_format.get("frameDuration")
+    if not frame_duration or not _is_rational_time(frame_duration):
+        return None
+    value = _rational_time_to_fraction(str(frame_duration))
+    return value if value > 0 else None
+
+
+def _is_frame_aligned(value: Fraction, frame_duration: Fraction) -> bool:
+    if frame_duration <= 0:
+        return False
+    return (value / frame_duration).denominator == 1
 
 
 def _clip_metadata(clip: dict[str, Any]) -> str:
