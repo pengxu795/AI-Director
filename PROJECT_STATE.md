@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 9 Review
-- Latest completed work: Module 9 minimal FCPXML serialization, file export, and marker time mapping
-- Next module: FCPXML import validation / editor compatibility testing
-- Gate: Module 9 Review passes before launching Final Cut Pro or validating editor import
+- Current phase: Module 10 Review
+- Latest completed work: Module 10 FCPXML manual import acceptance protocol
+- Next module: FCPXML manual import findings review / compatibility remediation
+- Gate: Module 10 Review passes before any editor automation or compatibility remediation
 
 ## Completed
 
@@ -27,17 +27,16 @@
 - Module 7: export target research, media asset binding schema, and adapter contract
 - Module 8: FCPXML adapter discovery, source mapping design, time conversion, and minimal outline
 - Module 9: minimal FCPXML serializer and `.fcpxml` file export
+- Module 10: FCPXML manual import acceptance protocol
 
 ## Pending Review
 
-- Review Module 9 minimal FCPXML serializer.
-- Confirm only validated Module 8 designs can be serialized.
-- Confirm `.fcpxml` output preserves resources, asset refs, clip source ranges, offsets, durations, and narration markers.
-- Confirm narration markers map to the correct clip and use clip-relative marker start.
-- Confirm marker time is never inferred from `source_timeline_item_id` or clip offset.
-- Confirm marker timeline start and clip-relative marker start align to sequence `frameDuration`.
-- Confirm serializer does not read media, probe files, render video, launch Final Cut Pro, or validate editor import.
-- Confirm blocked designs do not write files.
+- Review Module 10 manual acceptance protocol.
+- Confirm checklist covers resource paths, clip source ranges, timeline offsets, marker positions, and importer error behavior.
+- Confirm expected clips and markers are derived from the Module 8/9 design without guessing.
+- Confirm every checklist item starts as `not_run` and no PASS/FAIL is pre-filled.
+- Confirm protocol generation does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
+- Confirm Module 10 stops before compatibility remediation or editor automation.
 
 ## Development Rule
 

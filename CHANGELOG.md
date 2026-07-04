@@ -2,6 +2,10 @@
 
 ## 2026-07-03
 
+- Added Module 10 FCPXML manual import acceptance protocol.
+- Added expected asset, clip, and marker observations for manual Final Cut Pro import review.
+- Added acceptance checklist and result template that start as `not_run` and do not pre-fill compatibility PASS/FAIL.
+- Added tests to ensure Module 10 does not launch editors, automate import, read media, or mark validation as performed.
 - Added Module 9 marker frame-alignment validation against sequence `frameDuration`.
 - Blocked non-frame-aligned marker `timeline_start` and clip-relative marker starts with `marker_time_not_frame_aligned`.
 - Added tests for valid 25fps marker frame points and invalid in-clip marker timing.
