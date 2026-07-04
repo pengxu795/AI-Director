@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 10 Review
-- Latest completed work: Module 10 FCPXML manual import acceptance protocol
-- Next module: FCPXML manual import findings review / compatibility remediation
-- Gate: Module 10 Review passes before any editor automation or compatibility remediation
+- Current phase: Module 11 Review
+- Latest completed work: Module 11 FCPXML manual import result capture
+- Next module: FCPXML compatibility findings review / remediation plan
+- Gate: Module 11 Review passes before compatibility remediation or editor automation
 
 ## Completed
 
@@ -28,19 +28,18 @@
 - Module 8: FCPXML adapter discovery, source mapping design, time conversion, and minimal outline
 - Module 9: minimal FCPXML serializer and `.fcpxml` file export
 - Module 10: FCPXML manual import acceptance protocol
+- Module 11: FCPXML manual import result capture and acceptance record
 
 ## Pending Review
 
-- Review Module 10 manual acceptance protocol.
-- Confirm the exact `.fcpxml` artifact is locked with SHA-256 before manual import.
-- Confirm the source design artifact is locked with path and SHA-256 before `acceptance_ready`.
-- Confirm `artifact_relationship.relationship_verified` remains false until manual confirmation.
-- Confirm missing revision metadata produces `missing_artifact_revision_metadata` and does not mark the protocol `acceptance_ready`.
-- Confirm checklist covers resource paths, clip source ranges, timeline offsets, marker positions, and importer error behavior.
-- Confirm expected clips and markers are derived from the Module 8/9 design without guessing.
-- Confirm every checklist item starts as `not_run` and no PASS/FAIL is pre-filled.
-- Confirm protocol generation does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
-- Confirm Module 10 stops before compatibility remediation or editor automation.
+- Review Module 11 manual acceptance record.
+- Confirm records require a Module 10 `acceptance_ready` protocol.
+- Confirm manual artifact identifiers must match protocol artifacts exactly.
+- Confirm relationship confirmation is human-provided and required before PASS/FAIL recording.
+- Confirm FCP version, macOS version, asset import states, checklist results, evidence, importer errors, and regression samples are captured.
+- Confirm failed and blocked results can be recorded without pretending compatibility passed.
+- Confirm Module 11 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
+- Confirm Module 11 stops before compatibility remediation or editor automation.
 
 ## Development Rule
 

@@ -1,0 +1,314 @@
+{
+  "schema_version": "1.0",
+  "module": "Module 10",
+  "name": "FCPXML Import Validation / Manual Acceptance Protocol",
+  "status": "protocol_ready",
+  "fcpxml_path": "output/sample_minimal.fcpxml",
+  "source_artifacts": {
+    "fcpxml_path": "output/sample_minimal.fcpxml",
+    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+    "source_design_path": "output/sample_fcpxml_design.json",
+    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+    "git_commit": "281ea04",
+    "serializer_module_version": "1.0",
+    "serializer_commit": "647f4e5",
+    "protocol_generated_at": "2026-07-04T00:00:00+00:00",
+    "fully_traceable": true,
+    "acceptance_ready": true
+  },
+  "artifact_relationship": {
+    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+    "serializer_commit": "647f4e5",
+    "relationship_status": "fingerprinted_unverified",
+    "relationship_verified": false,
+    "manual_confirmation_required": true
+  },
+  "target_editor": {
+    "name": "Final Cut Pro",
+    "validation_mode": "manual_import_only",
+    "editor_launched_by_code": false,
+    "automatic_import_performed": false
+  },
+  "source_design": {
+    "schema_version": "1.0",
+    "target_version": "1.10",
+    "sequence_frame_duration": "1/25s"
+  },
+  "expected_assets": [
+    {
+      "asset_id": "asset_001",
+      "media_asset_id": "m001",
+      "source_file": "/media/drama_episode_01.mp4",
+      "duration": "10s",
+      "frame_duration": "1/25s",
+      "expected_import_state": "online_or_offline_reported_explicitly"
+    },
+    {
+      "asset_id": "asset_002",
+      "media_asset_id": "m002",
+      "source_file": "/media/drama_episode_01.mp4",
+      "duration": "10s",
+      "frame_duration": "1/25s",
+      "expected_import_state": "online_or_offline_reported_explicitly"
+    }
+  ],
+  "expected_clips": [
+    {
+      "clip_id": "clip_001",
+      "asset_ref": "asset_001",
+      "name": "drama_episode_01.mp4",
+      "timeline_offset": "0s",
+      "source_start": "5s",
+      "duration": "37/25s",
+      "source_story_block_id": "b001",
+      "source_timeline_item_id": "t001",
+      "reuse_policy": "primary"
+    },
+    {
+      "clip_id": "clip_002",
+      "asset_ref": "asset_002",
+      "name": "drama_episode_01.mp4",
+      "timeline_offset": "37/25s",
+      "source_start": "7s",
+      "duration": "37/25s",
+      "source_story_block_id": "b002",
+      "source_timeline_item_id": "t002",
+      "reuse_policy": "primary"
+    }
+  ],
+  "expected_markers": [
+    {
+      "marker_id": "marker_001",
+      "narration_segment_id": "n001",
+      "source_timeline_item_id": "t001",
+      "value": "她终于发现真相",
+      "timeline_start": "0s",
+      "expected_clip_id": "clip_001",
+      "clip_relative_start": "0s"
+    },
+    {
+      "marker_id": "marker_002",
+      "narration_segment_id": "n002",
+      "source_timeline_item_id": "t002",
+      "value": "她开始反击",
+      "timeline_start": "38/25s",
+      "expected_clip_id": "clip_002",
+      "clip_relative_start": "1/25s"
+    }
+  ],
+  "checklist": [
+    {
+      "id": "preflight_fcpxml_file",
+      "category": "preflight",
+      "instruction": "Confirm the generated .fcpxml file fingerprint, source design fingerprint, and serializer revision belong to the same output chain before import.",
+      "expected_result": "FCPXML SHA-256, source design SHA-256, commit hash, and serializer metadata are manually confirmed before import.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": "",
+      "artifact_relationship": {
+        "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+        "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+        "serializer_commit": "647f4e5",
+        "relationship_status": "fingerprinted_unverified",
+        "relationship_verified": false,
+        "manual_confirmation_required": true
+      }
+    },
+    {
+      "id": "preflight_environment",
+      "category": "preflight",
+      "instruction": "Record Final Cut Pro version, macOS version, test machine, and library/project names.",
+      "expected_result": "Environment details are recorded in the manual result.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    },
+    {
+      "id": "resource_paths",
+      "category": "resources",
+      "instruction": "Import the .fcpxml and inspect whether declared media asset paths resolve or appear offline as expected.",
+      "expected_result": "Every asset path is recorded with online/offline state; missing media is not guessed or relinked silently.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    },
+    {
+      "id": "clip_count_and_order",
+      "category": "timeline",
+      "instruction": "Verify imported clips appear in the same order as the generated spine.",
+      "expected_result": "Clip count and order match expected clip ids.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    },
+    {
+      "id": "clip_source_ranges",
+      "category": "timeline",
+      "instruction": "Verify each clip source in/out matches the expected FCPXML start and duration.",
+      "expected_result": "Each imported clip uses the expected source start and duration.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    },
+    {
+      "id": "clip_timeline_offsets",
+      "category": "timeline",
+      "instruction": "Verify each clip appears at the expected timeline offset and duration.",
+      "expected_result": "Timeline offsets and durations match the expected rational seconds.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    },
+    {
+      "id": "marker_positions",
+      "category": "markers",
+      "instruction": "Verify narration markers are attached to the correct clip and clip-relative position.",
+      "expected_result": "Marker text, parent clip, timeline_start, and clip_relative_start match expectations.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    },
+    {
+      "id": "invalid_file_behavior",
+      "category": "error_behavior",
+      "instruction": "Record how Final Cut Pro reports malformed or rejected FCPXML files in a separate negative run.",
+      "expected_result": "Importer errors are recorded without editing the generated FCPXML by hand.",
+      "evidence_required": [
+        "manual_note",
+        "screenshot_or_screen_recording"
+      ],
+      "status": "not_run",
+      "actual_result": ""
+    }
+  ],
+  "manual_result_template": {
+    "status": "not_run",
+    "artifact_identifiers": {
+      "fcpxml_path": "output/sample_minimal.fcpxml",
+      "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+      "source_design_path": "output/sample_fcpxml_design.json",
+      "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+      "git_commit": "281ea04",
+      "serializer_module_version": "1.0",
+      "serializer_commit": "647f4e5"
+    },
+    "artifact_relationship": {
+      "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+      "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+      "serializer_commit": "647f4e5",
+      "relationship_status": "fingerprinted_unverified",
+      "relationship_verified": false,
+      "manual_confirmation_required": true
+    },
+    "tester": "",
+    "run_at": "",
+    "final_cut_pro_version": "",
+    "macos_version": "",
+    "library_name": "",
+    "project_name": "",
+    "imported": null,
+    "compatibility_result": "unknown",
+    "checks": [
+      {
+        "id": "preflight_fcpxml_file",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "preflight_environment",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "resource_paths",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "clip_count_and_order",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "clip_source_ranges",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "clip_timeline_offsets",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "marker_positions",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      },
+      {
+        "id": "invalid_file_behavior",
+        "status": "not_run",
+        "actual_result": "",
+        "evidence_path": "",
+        "notes": ""
+      }
+    ],
+    "blockers": [],
+    "follow_up_actions": []
+  },
+  "validation_result": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      {
+        "code": "markers_design_only",
+        "field": "sequence_design.markers",
+        "message": "Markers preserve narration text only; no audio is generated."
+      }
+    ]
+  },
+  "metadata": {
+    "protocol_generated": true,
+    "import_validation_performed": false,
+    "manual_review_required": true,
+    "media_files_read": false,
+    "editor_launched": false,
+    "video_export_performed": false,
+    "fcpxml_file_read_for_sha256": true
+  }
+}

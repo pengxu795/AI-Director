@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Added Module 11 FCPXML manual import result capture and acceptance record.
+- Added validation for acceptance-ready protocols, artifact identifier matching, relationship confirmation, checklist results, asset import states, evidence, and importer errors.
+- Added sample manual result and acceptance record data for regression review.
 - Fixed Module 10 readiness so `fully_traceable` requires source design path and SHA-256.
 - Added `artifact_relationship` with manual relationship verification status.
 - Added warnings for missing or unavailable source design artifacts.

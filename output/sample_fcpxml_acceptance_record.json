@@ -1,0 +1,151 @@
+{
+  "schema_version": "1.0",
+  "module": "Module 11",
+  "name": "FCPXML Manual Import Result Capture / Acceptance Record",
+  "status": "recorded",
+  "source_protocol": {
+    "schema_version": "1.0",
+    "fcpxml_path": "output/sample_minimal.fcpxml",
+    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+    "source_design_path": "output/sample_fcpxml_design.json",
+    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+    "git_commit": "281ea04",
+    "serializer_commit": "647f4e5",
+    "acceptance_ready": true
+  },
+  "recorded_artifacts": {
+    "fcpxml_path": "output/sample_minimal.fcpxml",
+    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+    "source_design_path": "output/sample_fcpxml_design.json",
+    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+    "git_commit": "281ea04",
+    "serializer_commit": "647f4e5"
+  },
+  "artifact_relationship_confirmation": {
+    "relationship_verified": true,
+    "confirmed_by": "manual-reviewer",
+    "confirmed_at": "2026-07-04T01:00:00+00:00",
+    "notes": "Confirmed the design JSON, FCPXML file, git commit, and serializer commit before manual import."
+  },
+  "environment": {
+    "tester": "manual-reviewer",
+    "run_at": "2026-07-04T01:05:00+00:00",
+    "final_cut_pro_version": "10.8.1",
+    "macos_version": "15.5",
+    "library_name": "AI-Director Acceptance",
+    "project_name": "Module 11 Sample"
+  },
+  "result": {
+    "status": "failed",
+    "imported": true,
+    "compatibility_result": "failed",
+    "summary": "Sample manual acceptance record showing how a failed marker-position check is captured."
+  },
+  "asset_results": [
+    {
+      "asset_id": "asset_001",
+      "source_file": "/media/drama_episode_01.mp4",
+      "import_state": "offline",
+      "notes": "Sample uses placeholder media path; offline state is recorded explicitly."
+    },
+    {
+      "asset_id": "asset_002",
+      "source_file": "/media/drama_episode_01.mp4",
+      "import_state": "offline",
+      "notes": "Sample uses placeholder media path; offline state is recorded explicitly."
+    }
+  ],
+  "check_results": [
+    {
+      "id": "preflight_fcpxml_file",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    },
+    {
+      "id": "preflight_environment",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    },
+    {
+      "id": "resource_paths",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    },
+    {
+      "id": "clip_count_and_order",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    },
+    {
+      "id": "clip_source_ranges",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    },
+    {
+      "id": "clip_timeline_offsets",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    },
+    {
+      "id": "marker_positions",
+      "status": "failed",
+      "actual_result": "Marker position mismatch recorded.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": "Sample failure used for regression planning."
+    },
+    {
+      "id": "invalid_file_behavior",
+      "status": "passed",
+      "actual_result": "Manual sample observation recorded for this checklist item.",
+      "evidence_path": "evidence/module11_sample_import.png",
+      "notes": ""
+    }
+  ],
+  "import_errors": [
+    {
+      "code": "marker_position_mismatch",
+      "message": "One marker did not appear at the expected clip-relative position in the manual sample.",
+      "severity": "blocker"
+    }
+  ],
+  "evidence": [
+    {
+      "type": "screenshot",
+      "path": "evidence/module11_sample_import.png",
+      "description": "Sample screenshot path for manual FCPXML import evidence."
+    }
+  ],
+  "regression_samples": [
+    {
+      "name": "module11_minimal_fcpxml_import_marker_position_failure",
+      "fcpxml_path": "output/sample_minimal.fcpxml",
+      "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+      "result": "failed"
+    }
+  ],
+  "validation_result": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "metadata": {
+    "record_generated": true,
+    "manual_result_capture_only": true,
+    "media_files_read": false,
+    "editor_launched": false,
+    "automatic_import_performed": false,
+    "video_export_performed": false
+  }
+}
