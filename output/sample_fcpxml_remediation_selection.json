@@ -2,7 +2,8 @@
   "schema_version": "1.0",
   "module": "Module 13",
   "name": "Evidence-Backed Remediation Selection",
-  "status": "selection_ready",
+  "selection_id": "sel_r001",
+  "status": "selected",
   "source_review": {
     "schema_version": "1.0",
     "status": "review_ready",
@@ -17,38 +18,116 @@
     }
   },
   "selection": {
-    "remediation_id": "r001",
-    "finding_id": "f001",
+    "selection_id": "sel_r001",
+    "status": "selected",
+    "selected_remediation_id": "r001",
+    "selected_finding_id": "f001",
     "selected_by": "module13-reviewer",
     "selected_at": "2026-07-04T02:10:00+00:00",
-    "selection_reason": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module.",
+    "selection_rationale": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module.",
     "priority": "P0",
-    "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
+    "priority_override_reason": "",
+    "evidence_refs": [
+      "ev_asset_001",
+      "ev_check_clip_source_ranges",
+      "ev_error_media_offline"
+    ],
+    "related_entities": {
+      "asset_ids": [
+        "asset_001"
+      ],
+      "check_ids": [],
+      "error_codes": []
+    },
+    "source_review_artifact": "output/sample_fcpxml_compatibility_review.json",
+    "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+    "source_review_git_commit": "2069668",
+    "execution_allowed": false,
+    "serializer_change_allowed": false,
+    "requires_module_14_approval": true
+  },
+  "selected_remediation_id": "r001",
+  "selected_finding_id": "f001",
+  "selected_by": "module13-reviewer",
+  "selected_at": "2026-07-04T02:10:00+00:00",
+  "selection_rationale": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module.",
+  "priority": "P0",
+  "evidence_refs": [
+    "ev_asset_001",
+    "ev_check_clip_source_ranges",
+    "ev_error_media_offline"
+  ],
+  "related_entities": {
+    "asset_ids": [
+      "asset_001"
+    ],
+    "check_ids": [],
+    "error_codes": []
+  },
+  "source_review_artifact": "output/sample_fcpxml_compatibility_review.json",
+  "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+  "source_review_git_commit": "2069668",
+  "execution_allowed": false,
+  "serializer_change_allowed": false,
+  "requires_module_14_approval": true,
+  "immutable_selection_snapshot": {
     "finding": {
+      "id": "f001",
       "code": "media_not_online",
       "severity": "blocker",
+      "original_severity": "blocker",
       "category": "media",
       "summary": "Asset asset_001 was offline.",
+      "reproduction": "Sample media manually recorded as offline.",
       "evidence_refs": [
         "ev_asset_001",
         "ev_check_clip_source_ranges",
         "ev_error_media_offline"
       ],
+      "evidence_status": "linked",
       "related_entities": {
         "asset_ids": [
           "asset_001"
         ],
         "check_ids": [],
         "error_codes": []
-      }
+      },
+      "status": "open"
     },
-    "source_review_status": "review_ready"
+    "remediation": {
+      "id": "r001",
+      "finding_id": "f001",
+      "priority": "P0",
+      "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
+      "owner": "human_review",
+      "serializer_change_allowed": false,
+      "requires_evidence_before_implementation": false,
+      "requires_review_before_implementation": true,
+      "status": "proposed"
+    },
+    "evidence_refs": [
+      "ev_asset_001",
+      "ev_check_clip_source_ranges",
+      "ev_error_media_offline"
+    ],
+    "related_entities": {
+      "asset_ids": [
+        "asset_001"
+      ],
+      "check_ids": [],
+      "error_codes": []
+    },
+    "review_status": "review_ready",
+    "review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+    "review_git_commit": "2069668",
+    "selected_priority": "P0",
+    "selection_rationale": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module."
   },
   "task_contract": {
     "status": "task_contract_ready",
     "implementation_allowed": false,
     "serializer_change_allowed": false,
-    "requires_module_review_before_implementation": true,
+    "requires_module_14_approval": true,
     "requires_linked_evidence": true,
     "selected_remediation_id": "r001",
     "selected_finding_id": "f001",
@@ -60,6 +139,7 @@
     "scope_boundary": {
       "may_define_future_fix_scope": true,
       "may_modify_serializer": false,
+      "may_create_code_patch": false,
       "may_modify_samples": false,
       "may_launch_editor": false,
       "may_read_media": false,

@@ -3,9 +3,10 @@
 ## Current Status
 
 - Current phase: Module 13 Review
+- Current scope: remediation selection contract only
 - Latest completed work: Module 13 evidence-backed remediation selection
-- Next module: FCPXML compatibility remediation implementation
-- Gate: Module 13 Review passes before modifying serializer, samples, media bindings, or editor automation
+- Next module: Module 14 remediation authorization / implementation scope contract
+- Gate: Module 13 must pass before any serializer or adapter modification is authorized
 
 ## Completed
 
@@ -37,6 +38,9 @@
 - Review Module 13 evidence-backed remediation selection.
 - Confirm selection requires Module 12 `review_ready` input.
 - Confirm selected remediation resolves to a linked-evidence finding.
+- Confirm only one explicit remediation id can be selected.
+- Confirm source review SHA-256 is frozen in the selection output.
+- Confirm immutable snapshot does not change if the source review later changes.
 - Confirm `evidence_incomplete` or missing-evidence remediation cannot be selected.
 - Confirm task contract keeps `implementation_allowed=false` and `serializer_change_allowed=false`.
 - Confirm Module 13 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.

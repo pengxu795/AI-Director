@@ -3,8 +3,9 @@
 ## 2026-07-04
 
 - Added Module 13 evidence-backed remediation selection and task contract generation.
-- Added validation that only `review_ready` Module 12 reviews with linked evidence findings can be selected.
-- Added sample remediation selection output and tests for blocked, missing, evidence-incomplete, and boundary-violating selections.
+- Added source review SHA-256 freezing, immutable selection snapshots, and explicit single-remediation selection.
+- Added validation that only `review_ready` Module 12 reviews with linked blocker/major findings can be selected.
+- Added sample remediation selection output and tests for missing files, blocked, missing, multiple, evidence-incomplete, and boundary-violating selections.
 
 ## 2026-07-03
 

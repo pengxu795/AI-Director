@@ -21,6 +21,7 @@ from .fcpxml_compatibility_review import (
 from .fcpxml_remediation_selection import (
     FCPXML_REMEDIATION_SELECTION_SCHEMA_VERSION,
     build_fcpxml_remediation_selection,
+    build_fcpxml_remediation_selection_from_file,
     validate_fcpxml_remediation_selection_input,
     write_fcpxml_remediation_selection,
 )
@@ -64,6 +65,7 @@ __all__ = [
     "build_fcpxml_compatibility_review",
     "build_fcpxml_minimal_design",
     "build_fcpxml_remediation_selection",
+    "build_fcpxml_remediation_selection_from_file",
     "default_target_profiles",
     "ensure_no_fcpxml_file_output",
     "export_adapter_project",
