@@ -149,6 +149,59 @@ def test_authorization_from_file_sha_changes_when_selection_file_changes(tmp_pat
     assert first["source_selection"]["source_selection_sha256"] != second["source_selection"]["source_selection_sha256"]
 
 
+@pytest.mark.parametrize(
+    ("mutate", "field"),
+    [
+        (lambda selection: selection.update({"selected_remediation_id": "r999"}), "selection.selected_remediation_id"),
+        (lambda selection: selection.update({"selected_finding_id": "f999"}), "selection.selected_finding_id"),
+        (lambda selection: selection.update({"evidence_refs": ["ev_other"]}), "selection.evidence_refs"),
+        (lambda selection: selection.update({"source_review_sha256": "different-review-sha"}), "selection.source_review_sha256"),
+        (lambda selection: selection.update({"source_review_git_commit": "different-review-commit"}), "selection.source_review_git_commit"),
+    ],
+)
+def test_authorization_from_file_blocks_selection_snapshot_identity_mismatch(tmp_path, mutate, field):
+    selection = load_selection()
+    mutate(selection)
+    selection_path = write_selection(tmp_path, selection)
+
+    authorization = build_fcpxml_remediation_authorization_from_file(selection_path, authorization_request_without_fingerprint())
+
+    assert authorization["status"] == "blocked"
+    assert any(
+        error["code"] == "selection_snapshot_integrity_mismatch" and error["field"] == field
+        for error in authorization["validation_result"]["errors"]
+    )
+
+
+def test_authorization_from_file_blocks_related_entities_snapshot_mismatch(tmp_path):
+    selection = load_selection()
+    selection["related_entities"] = {"asset_ids": ["asset_999"], "check_ids": [], "error_codes": []}
+    selection_path = write_selection(tmp_path, selection)
+
+    authorization = build_fcpxml_remediation_authorization_from_file(selection_path, authorization_request_without_fingerprint())
+
+    assert authorization["status"] == "blocked"
+    assert any(
+        error["code"] == "selection_snapshot_integrity_mismatch" and error["field"] == "selection.related_entities"
+        for error in authorization["validation_result"]["errors"]
+    )
+
+
+def test_authorization_payload_uses_verified_snapshot_identity():
+    authorization = build_fcpxml_remediation_authorization_from_file("output/sample_fcpxml_remediation_selection.json", authorization_request())
+
+    snapshot = authorization["immutable_authorization_snapshot"]
+    assert authorization["status"] == "authorization_ready"
+    assert authorization["authorization_id"] == "auth_r001"
+    assert authorization["selected_remediation_id"] == "r001"
+    assert authorization["selected_finding_id"] == "f001"
+    assert snapshot["selection_snapshot_verified"] is True
+    assert snapshot["selected_remediation_id"] == "r001"
+    assert snapshot["selected_finding_id"] == "f001"
+    assert snapshot["source_review_sha256"] == authorization["source_selection"]["source_review_sha256"]
+    assert snapshot["verified_selection_identity"]["selected_remediation_id"] == "r001"
+
+
 def test_authorization_from_file_blocks_missing_selection_file():
     authorization = build_fcpxml_remediation_authorization_from_file("output/missing_selection.json", authorization_request())
 

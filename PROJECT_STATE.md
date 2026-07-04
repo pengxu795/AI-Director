@@ -40,6 +40,7 @@
 - Confirm authorization requires an existing Module 13 selection file and freezes `source_selection_sha256`.
 - Confirm direct in-memory authorization cannot become `authorization_ready`.
 - Confirm caller-provided selection path or SHA mismatches are blocked.
+- Confirm selection top-level remediation/finding/evidence/review identity matches the immutable selection snapshot before authorization can become ready.
 - Confirm allowed and prohibited files are explicit and cannot overlap.
 - Confirm authorization scope matches selected remediation owner and `serializer_change_allowed`.
 - Confirm human-review remediation cannot authorize serializer, adapter implementation, FCPXML export, or media-generation files, including renamed serializer/export paths.
@@ -48,7 +49,7 @@
 - Confirm human-review remediation sets `manual_follow_up_required=true`.
 - Confirm verification and rollback plans are required.
 - Confirm media/editor automation verification commands are blocked.
-- Confirm immutable authorization snapshot preserves selection and scope.
+- Confirm immutable authorization snapshot preserves verified selection identity, source review SHA, selection, and scope.
 - Confirm `implementation_execution_allowed=false` and `serializer_change_execution_allowed=false`.
 - Confirm Module 14 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
 - Confirm Module 14 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.

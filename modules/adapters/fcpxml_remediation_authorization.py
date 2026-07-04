@@ -119,6 +119,7 @@ def validate_fcpxml_remediation_authorization_input(selection: dict[str, Any], a
         errors.append(_issue("selection_missing_module_14_gate", "selection.requires_module_14_approval", "Selection must require Module 14 approval."))
     if not _safe_dict(selection.get("immutable_selection_snapshot")):
         errors.append(_issue("missing_immutable_selection_snapshot", "selection.immutable_selection_snapshot", "Authorization requires the immutable Module 13 selection snapshot."))
+    errors.extend(_selection_snapshot_integrity_errors(selection))
 
     metadata = _safe_dict(selection.get("metadata"))
     for field in ("serializer_modified", "media_files_read", "editor_launched", "automatic_import_performed", "video_export_performed"):
@@ -211,7 +212,8 @@ def write_fcpxml_remediation_authorization(authorization: dict[str, Any], output
 
 
 def _authorization_payload(selection: dict[str, Any], authorization_request: dict[str, Any]) -> dict[str, Any]:
-    authorization_id = f"auth_{selection.get('selected_remediation_id', 'unknown')}"
+    verified_identity = _selection_identity(selection)
+    authorization_id = f"auth_{verified_identity.get('selected_remediation_id') or 'unknown'}"
     allowed_files = _safe_string_list(authorization_request.get("allowed_files"))
     prohibited_files = _safe_string_list(authorization_request.get("prohibited_files"))
     verification_commands = _safe_string_list(authorization_request.get("verification_commands"))
@@ -221,21 +223,21 @@ def _authorization_payload(selection: dict[str, Any], authorization_request: dic
     return {
         "source_selection": {
             "selection_id": str(selection.get("selection_id", "")),
-            "selected_remediation_id": str(selection.get("selected_remediation_id", "")),
-            "selected_finding_id": str(selection.get("selected_finding_id", "")),
+            "selected_remediation_id": str(verified_identity.get("selected_remediation_id", "")),
+            "selected_finding_id": str(verified_identity.get("selected_finding_id", "")),
             "source_selection_artifact": str(authorization_request.get("source_selection_artifact", "")),
             "source_selection_sha256": str(authorization_request.get("source_selection_sha256", "")),
-            "source_review_sha256": str(selection.get("source_review_sha256", "")),
-            "source_review_git_commit": str(selection.get("source_review_git_commit", "")),
+            "source_review_sha256": str(verified_identity.get("source_review_sha256", "")),
+            "source_review_git_commit": str(verified_identity.get("source_review_git_commit", "")),
         },
         "authorization_id": authorization_id,
         "authorized_by": str(authorization_request.get("authorized_by", "")),
         "authorized_at": str(authorization_request.get("authorized_at", "")),
         "authorization_rationale": str(authorization_request.get("authorization_rationale", "")),
-        "selected_remediation_id": str(selection.get("selected_remediation_id", "")),
-        "selected_finding_id": str(selection.get("selected_finding_id", "")),
-        "evidence_refs": _safe_string_list(selection.get("evidence_refs")),
-        "related_entities": _safe_dict(selection.get("related_entities")),
+        "selected_remediation_id": str(verified_identity.get("selected_remediation_id", "")),
+        "selected_finding_id": str(verified_identity.get("selected_finding_id", "")),
+        "evidence_refs": copy.deepcopy(verified_identity.get("evidence_refs", [])),
+        "related_entities": copy.deepcopy(verified_identity.get("related_entities", {})),
         "implementation_scope": {
             "allowed_files": allowed_files,
             "prohibited_files": prohibited_files,
@@ -263,6 +265,11 @@ def _authorization_payload(selection: dict[str, Any], authorization_request: dic
         "requires_module_15_implementation_review": True,
         "immutable_authorization_snapshot": {
             "selection": copy.deepcopy(selection),
+            "verified_selection_identity": copy.deepcopy(verified_identity),
+            "selected_remediation_id": str(verified_identity.get("selected_remediation_id", "")),
+            "selected_finding_id": str(verified_identity.get("selected_finding_id", "")),
+            "source_review_sha256": str(verified_identity.get("source_review_sha256", "")),
+            "selection_snapshot_verified": True,
             "allowed_files": copy.deepcopy(allowed_files),
             "prohibited_files": copy.deepcopy(prohibited_files),
             "verification_commands": copy.deepcopy(verification_commands),
@@ -308,6 +315,55 @@ def _issue(code: str, field: str, message: str) -> dict[str, str]:
 def _selected_remediation(selection: dict[str, Any]) -> dict[str, Any]:
     snapshot = _safe_dict(selection.get("immutable_selection_snapshot"))
     return _safe_dict(snapshot.get("remediation"))
+
+
+def _selection_snapshot_integrity_errors(selection: dict[str, Any]) -> list[dict[str, str]]:
+    top_identity = _top_level_selection_identity(selection)
+    snapshot_identity = _selection_identity(selection)
+    checks = (
+        ("selected_remediation_id", "selection.selected_remediation_id"),
+        ("selected_finding_id", "selection.selected_finding_id"),
+        ("evidence_refs", "selection.evidence_refs"),
+        ("related_entities", "selection.related_entities"),
+        ("source_review_sha256", "selection.source_review_sha256"),
+        ("source_review_git_commit", "selection.source_review_git_commit"),
+    )
+    errors: list[dict[str, str]] = []
+    for key, field in checks:
+        if top_identity.get(key) != snapshot_identity.get(key):
+            errors.append(
+                _issue(
+                    "selection_snapshot_integrity_mismatch",
+                    field,
+                    f"Top-level selection {key} must match immutable_selection_snapshot {key}.",
+                )
+            )
+    return errors
+
+
+def _top_level_selection_identity(selection: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "selected_remediation_id": str(selection.get("selected_remediation_id", "")),
+        "selected_finding_id": str(selection.get("selected_finding_id", "")),
+        "evidence_refs": _safe_string_list(selection.get("evidence_refs")),
+        "related_entities": _safe_dict(selection.get("related_entities")),
+        "source_review_sha256": str(selection.get("source_review_sha256", "")),
+        "source_review_git_commit": str(selection.get("source_review_git_commit", "")),
+    }
+
+
+def _selection_identity(selection: dict[str, Any]) -> dict[str, Any]:
+    snapshot = _safe_dict(selection.get("immutable_selection_snapshot"))
+    remediation = _safe_dict(snapshot.get("remediation"))
+    finding = _safe_dict(snapshot.get("finding"))
+    return {
+        "selected_remediation_id": str(remediation.get("remediation_id") or remediation.get("id") or ""),
+        "selected_finding_id": str(finding.get("finding_id") or finding.get("id") or ""),
+        "evidence_refs": _safe_string_list(snapshot.get("evidence_refs")),
+        "related_entities": _safe_dict(snapshot.get("related_entities")),
+        "source_review_sha256": str(snapshot.get("source_review_sha256") or snapshot.get("review_sha256") or ""),
+        "source_review_git_commit": str(snapshot.get("source_review_git_commit") or snapshot.get("review_git_commit") or ""),
+    }
 
 
 def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:

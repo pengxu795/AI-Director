@@ -2,6 +2,8 @@
 
 ## 2026-07-04
 
+- Fixed Module 14 selection snapshot integrity validation so top-level selection identity must match the immutable selection snapshot before authorization can become ready.
+- Added tests blocking mismatched remediation ids, finding ids, evidence refs, related entities, source review SHA values, and source review commits even when the selection file SHA is valid.
 - Fixed Module 14 selection traceability so writable authorization must be generated from a verified selection file.
 - Added mismatch checks for caller-provided selection paths or SHA-256 values, plus tests for direct builder blocking and changed selection file hashes.
 - Hardened Module 14 FCPXML implementation scope validation so writer, generator, builder, project, app, doc, and test paths are blocked unless the selected remediation allows serializer changes.

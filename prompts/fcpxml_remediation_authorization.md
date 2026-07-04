@@ -7,6 +7,7 @@ Module 14 creates an implementation scope contract from one Module 13 selection.
 - Generate formal writable authorization only from `build_fcpxml_remediation_authorization_from_file(...)`.
 - Block direct in-memory authorization with `source_selection_artifact_not_verified`.
 - Block caller-provided path or SHA mismatches with `source_selection_fingerprint_mismatch`.
+- Block selection files whose top-level remediation, finding, evidence refs, related entities, review SHA, or review commit do not match `immutable_selection_snapshot`, using `selection_snapshot_integrity_mismatch`.
 - Require selection status `selected`.
 - Require `execution_allowed: false`, `serializer_change_allowed: false`, and `requires_module_14_approval: true`.
 - Require an immutable selection snapshot.
@@ -22,6 +23,7 @@ Module 14 creates an implementation scope contract from one Module 13 selection.
 - Define future implementation scope only; do not implement the remediation.
 - Keep `implementation_execution_allowed: false`.
 - Keep `serializer_change_execution_allowed: false`.
+- Record `verified_selection_identity` and `selection_snapshot_verified: true` only after the top-level selection and immutable snapshot match.
 - Keep `code_changes_applied: false`.
 - Keep `fcpxml_generated: false`.
 - Do not launch or control Final Cut Pro.

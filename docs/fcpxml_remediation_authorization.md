@@ -24,6 +24,8 @@ Formal authorization contracts that can be written to disk or used by a later mo
 
 If the caller supplies `source_selection_artifact` or `source_selection_sha256`, Module 14 verifies those values against the actual file read from disk. Mismatches are blocked with `source_selection_fingerprint_mismatch`.
 
+The verified selection file must also be internally consistent. Top-level `selected_remediation_id`, `selected_finding_id`, `evidence_refs`, `related_entities`, `source_review_sha256`, and `source_review_git_commit` must match the immutable selection snapshot. Any mismatch is blocked with `selection_snapshot_integrity_mismatch`.
+
 ## Validation Rules
 
 Authorization requires:
@@ -33,6 +35,7 @@ Authorization requires:
 - selection keeps `serializer_change_allowed: false`
 - selection keeps `requires_module_14_approval: true`
 - immutable Module 13 selection snapshot exists
+- top-level selection identity matches the immutable selection snapshot
 - source selection path and SHA-256 are present
 - source selection path and SHA-256 were verified from the file read by Module 14
 - allowed files are listed
@@ -78,6 +81,8 @@ The authorization JSON contains:
 - `metadata`
 
 `allowed_files` defines the maximum future implementation scope. It does not modify those files in Module 14.
+
+`immutable_authorization_snapshot` records `verified_selection_identity`, `selected_remediation_id`, `selected_finding_id`, `source_review_sha256`, and `selection_snapshot_verified: true` so a later implementation module cannot mix top-level selection fields with a different snapshot remediation.
 
 `implementation_execution_allowed` and `serializer_change_execution_allowed` are fixed to `false` in Module 14. A later reviewed module must explicitly implement any authorized fix.
 

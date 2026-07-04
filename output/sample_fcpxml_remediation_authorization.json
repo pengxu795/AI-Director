@@ -253,6 +253,28 @@
         "video_export_performed": false
       }
     },
+    "verified_selection_identity": {
+      "selected_remediation_id": "r001",
+      "selected_finding_id": "f001",
+      "evidence_refs": [
+        "ev_asset_001",
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
+      ],
+      "related_entities": {
+        "asset_ids": [
+          "asset_001"
+        ],
+        "check_ids": [],
+        "error_codes": []
+      },
+      "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+      "source_review_git_commit": "2069668"
+    },
+    "selected_remediation_id": "r001",
+    "selected_finding_id": "f001",
+    "source_review_sha256": "ae3f74884062a1d43040f72da77305f2ca4bfa00dd223e3cb18a1451ab805cae",
+    "selection_snapshot_verified": true,
     "allowed_files": [
       "docs/fcpxml_acceptance_record.md",
       "docs/fcpxml_compatibility_review.md",

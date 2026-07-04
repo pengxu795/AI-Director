@@ -553,6 +553,7 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 - 正式可写入、可供后续模块使用的 authorization 只能由文件入口生成
 - 直接传内存 selection 的授权必须阻断，错误码为 `source_selection_artifact_not_verified`
 - 调用方提供的 selection 路径或 SHA 与实际读取文件不一致时必须阻断，错误码为 `source_selection_fingerprint_mismatch`
+- selection 顶层身份必须与 `immutable_selection_snapshot` 完全一致；remediation、finding、evidence refs、related entities、review SHA 和 review commit 任一不一致都必须阻断，错误码为 `selection_snapshot_integrity_mismatch`
 - selection 必须为 `status="selected"`
 - selection 必须保持 `execution_allowed=false` 和 `serializer_change_allowed=false`
 - 必须存在 Module 13 的 immutable selection snapshot
@@ -570,6 +571,7 @@ python app/select_fcpxml_remediation.py output/sample_fcpxml_compatibility_revie
 - verification commands 不得调用 Final Cut Pro、FFmpeg、OpenCV、moviepy、`osascript` 或媒体处理链路
 - `implementation_execution_allowed=false`
 - `serializer_change_execution_allowed=false`
+- `immutable_authorization_snapshot` 必须记录 `verified_selection_identity`、`selected_remediation_id`、`selected_finding_id`、`source_review_sha256` 和 `selection_snapshot_verified=true`
 - 不实施修复，不改 serializer，不改样例，不生成或重写 FCPXML
 - 不启动或控制 Final Cut Pro，不自动导入，不读取媒体，不转码、不渲染、不导出成片
 
