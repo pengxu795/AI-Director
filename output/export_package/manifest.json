@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "source_edit_timeline_schema_version": "1.0",
+  "source_script_schema_version": "1.0",
+  "source_timeline_schema_version": "1.0",
+  "files": [
+    {
+      "path": "manifest.json",
+      "kind": "manifest"
+    },
+    {
+      "path": "narration_script.json",
+      "kind": "narration_script"
+    },
+    {
+      "path": "narration_script.txt",
+      "kind": "narration_script"
+    },
+    {
+      "path": "shot_list.json",
+      "kind": "shot_list"
+    },
+    {
+      "path": "timeline.json",
+      "kind": "edit_timeline"
+    },
+    {
+      "path": "unresolved_items.json",
+      "kind": "unresolved_items"
+    }
+  ],
+  "metadata": {
+    "exporter": "json_package",
+    "edit_segment_count": 6,
+    "video_clip_count": 6,
+    "narration_cue_count": 6,
+    "shot_count": 6,
+    "unresolved_count": 0,
+    "video_export_performed": false,
+    "editor_project_exported": false
+  }
+}

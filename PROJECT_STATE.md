@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 5 Review
-- Latest completed work: Module 5 edit timeline generation phase 1
-- Next module: Module 6 Export
-- Gate: Do not start Module 6 until Module 5 Review passes
+- Current phase: Module 6 Review
+- Latest completed work: Module 6 export package generation phase 1
+- Next module: Export target research
+- Gate: Do not start editor-specific export until Module 6 Review passes
 
 ## Completed
 
@@ -23,13 +23,14 @@
 - Module 4 Review fix: range-level reuse policy for mixed primary, duplicate, and callback ranges
 - Module 5 phase 1: editor-agnostic edit timeline generation
 - Module 5 Review fix: range-level unresolved records for rejected video ranges
+- Module 6 phase 1: JSON/TXT export package generation
 
 ## Pending Review
 
-- Review Module 5 edit timeline schema.
-- Confirm edit clips preserve Module 4 traceability and reuse policy.
-- Confirm unresolved or invalid ranges never create clip decisions.
-- Confirm Module 5 should proceed before Module 6 export work.
+- Review Module 6 export package schema.
+- Confirm exported shot list preserves traceability and reuse policy.
+- Confirm unresolved items are preserved in exported files.
+- Confirm no video, editor project, render, or app automation export was introduced.
 
 ## Development Rule
 

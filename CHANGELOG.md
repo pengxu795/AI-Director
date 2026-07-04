@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Added Module 6 phase 1 JSON/TXT export package generation.
+- Added export package CLI, manifest, narration script, shot list, unresolved item export, and sample output directory.
+- Added tests for manifest files, shot traceability, narration text, unresolved merging, file writing, and JSON serialization.
 - Fixed Module 5 Review blocker where invalid ranges inside otherwise valid timeline items were silently dropped.
 - Added range-level `unresolved_items` records with source ids, source times, and explicit rejection reasons.
 - Added tests for valid plus reversed range, valid plus bad timecode, all-invalid ranges, and item-marked-unresolved handling.
