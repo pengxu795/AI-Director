@@ -2,11 +2,11 @@
 
 ## Current Status
 
-- Current phase: Module 14 Review
-- Current scope: remediation authorization and implementation scope contract only
-- Latest completed work: Module 14 remediation authorization / implementation scope contract
-- Next module: FCPXML compatibility remediation implementation
-- Gate: Module 14 Review passes before any serializer or adapter modification is executed
+- Current phase: Module 15 Review
+- Current scope: authorized remediation implementation plan only
+- Latest completed work: Module 15 authorized remediation implementation plan
+- Next module: authorized remediation implementation
+- Gate: Module 15 Review passes before any authorized file modification is executed
 
 ## Completed
 
@@ -33,26 +33,25 @@
 - Module 12: FCPXML compatibility findings review and remediation plan
 - Module 13: evidence-backed remediation selection and task contract
 - Module 14: remediation authorization and implementation scope contract
+- Module 15: authorized remediation implementation plan
 
 ## Pending Review
 
-- Review Module 14 remediation authorization scope contract.
-- Confirm authorization requires an existing Module 13 selection file and freezes `source_selection_sha256`.
-- Confirm direct in-memory authorization cannot become `authorization_ready`.
-- Confirm caller-provided selection path or SHA mismatches are blocked.
-- Confirm selection top-level remediation/finding/evidence/review identity matches the immutable selection snapshot before authorization can become ready.
-- Confirm allowed and prohibited files are explicit and cannot overlap.
-- Confirm authorization scope matches selected remediation owner and `serializer_change_allowed`.
-- Confirm human-review remediation cannot authorize serializer, adapter implementation, FCPXML export, or media-generation files, including renamed serializer/export paths.
-- Confirm `serializer_change_allowed=false` cannot authorize FCPXML writer, generator, builder, project, app, doc, or test implementation paths.
-- Confirm human-review `allowed_files` is validated by whitelist and not only by `prohibited_files`.
-- Confirm human-review remediation sets `manual_follow_up_required=true`.
-- Confirm verification and rollback plans are required.
-- Confirm media/editor automation verification commands are blocked.
-- Confirm immutable authorization snapshot preserves verified selection identity, source review SHA, selection, and scope.
+- Review Module 15 authorized remediation implementation plan.
+- Confirm plan requires an existing Module 14 authorization file and freezes `source_authorization_sha256`.
+- Confirm direct in-memory planning cannot become `plan_ready`.
+- Confirm caller-provided authorization path or SHA mismatches are blocked.
+- Confirm authorization must be `authorization_ready` with valid Module 14 validation result.
+- Confirm Module 14 `selection_snapshot_verified=true` is required.
+- Confirm every planned file change stays within Module 14 `allowed_files`.
+- Confirm planned files cannot match Module 14 `prohibited_files`.
+- Confirm planned changes include `path`, `action`, and `summary`.
+- Confirm acceptance criteria, review checklist, and rollback checkpoints are required.
+- Confirm acceptance and review checklist items cannot require media/editor automation.
+- Confirm immutable plan snapshot preserves authorization, authorization SHA, planned changes, acceptance criteria, review checklist, and rollback checkpoints.
 - Confirm `implementation_execution_allowed=false` and `serializer_change_execution_allowed=false`.
-- Confirm Module 14 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
-- Confirm Module 14 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
+- Confirm Module 15 does not modify serializer, authorized files, samples, media bindings, editor automation, or FCPXML output.
+- Confirm Module 15 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
 
 ## Development Rule
 
