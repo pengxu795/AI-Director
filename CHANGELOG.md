@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Fixed Module 7 adapter planning to use shot-level source ranges for `place_clip`.
+- Added validation for shot source ranges, binding containment, and ambiguous media binding conflicts.
+- Added tests for multiple shots sharing a binding, out-of-range shots, invalid shot ranges, duplicate binding conflicts, and exact duplicate deduplication.
 - Fixed Module 7 media asset binding validation so only bound bindings with empty validation errors can be planned.
 - Added tests for pending, unresolved, invalid, and validation-error bindings, plus mixed bound/pending shot validation.
 - Added Module 7 export target research and adapter contract.

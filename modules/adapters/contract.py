@@ -6,10 +6,12 @@ write editor projects, read media, transcode, render, or export video.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 
 ADAPTER_CONTRACT_SCHEMA_VERSION = "1.0"
+TIMECODE_PATTERN = re.compile(r"^(\d{2}):(\d{2}):(\d{2})\.(\d{3})$")
 
 MEDIA_BINDING_REQUIRED_FIELDS = (
     "media_asset_id",
@@ -116,21 +118,41 @@ def validate_adapter_input(adapter_input: dict[str, Any]) -> dict[str, Any]:
     _validate_target_profile(target_profile, errors, required_missing_fields)
     _validate_target_compatibility(target_profile, shot_list, narration_segments, errors, warnings)
 
-    all_binding_index = _binding_index(bindings)
-    binding_index = _validate_media_asset_bindings(bindings, errors, required_missing_fields)
+    all_binding_index = _binding_candidates_by_key(bindings)
+    usable_binding_index = _validate_media_asset_bindings(bindings, errors, required_missing_fields)
     if target_profile.get("requires_media_asset_binding") and not bindings:
         errors.append(_issue("missing_media_asset_bindings", "media_asset_bindings", "Target requires media bindings."))
 
     for shot in shot_list:
-        binding = _matching_binding(shot, binding_index)
+        binding, binding_reason = _resolve_binding_for_shot(shot, usable_binding_index)
+        range_reason = _shot_range_error(shot, binding) if binding else ""
         if not binding:
-            unusable_binding = _matching_binding(shot, all_binding_index)
+            unusable_binding, unusable_reason = _resolve_binding_for_shot(shot, all_binding_index)
+            reason = (
+                unusable_reason
+                if unusable_reason == "ambiguous_media_asset_binding"
+                else _unusable_binding_reason(unusable_binding)
+            )
+            if reason == "missing_media_asset_binding":
+                reason = binding_reason
             unresolved_items.append(
                 {
                     "source_timeline_item_id": str(shot.get("source_timeline_item_id", "")),
                     "narration_segment_id": str(shot.get("narration_segment_id", "")),
                     "source_story_block_id": str(shot.get("source_story_block_id", "")),
-                    "reason": _unusable_binding_reason(unusable_binding),
+                    "reason": reason,
+                }
+            )
+            if reason == "ambiguous_media_asset_binding":
+                errors.append(_issue(reason, _shot_field(shot), "Shot matches multiple conflicting media bindings."))
+        elif range_reason:
+            errors.append(_issue(range_reason, _shot_field(shot), "Shot source range is not valid for the matched binding."))
+            unresolved_items.append(
+                {
+                    "source_timeline_item_id": str(shot.get("source_timeline_item_id", "")),
+                    "narration_segment_id": str(shot.get("narration_segment_id", "")),
+                    "source_story_block_id": str(shot.get("source_story_block_id", "")),
+                    "reason": range_reason,
                 }
             )
 
@@ -169,14 +191,14 @@ def plan_adapter_export(adapter_input: dict[str, Any]) -> dict[str, Any]:
             "media_files_read": False,
         }
 
-    binding_index = _usable_binding_index(_safe_list(adapter_input.get("media_asset_bindings")))
+    binding_index = _usable_binding_candidates_by_key(_safe_list(adapter_input.get("media_asset_bindings")))
     operations = [
         {
             "type": "create_sequence",
             "sequence": _safe_dict(adapter_input.get("edit_timeline")).get("sequence", {}),
         }
     ]
-    for binding in _unique_bindings(binding_index.values()):
+    for binding in _unique_bindings(_flatten_binding_candidates(binding_index)):
         operations.append(
             {
                 "type": "register_media_asset",
@@ -188,7 +210,7 @@ def plan_adapter_export(adapter_input: dict[str, Any]) -> dict[str, Any]:
         )
 
     for shot in _safe_list(adapter_input.get("shot_list")):
-        binding = _matching_binding(shot, binding_index)
+        binding, _reason = _resolve_binding_for_shot(shot, binding_index)
         operations.append(
             {
                 "type": "place_clip",
@@ -197,8 +219,10 @@ def plan_adapter_export(adapter_input: dict[str, Any]) -> dict[str, Any]:
                 "source_timeline_item_id": str(shot.get("source_timeline_item_id", "")),
                 "timeline_start": str(shot.get("timeline_start", "")),
                 "timeline_end": str(shot.get("timeline_end", "")),
-                "source_in": str(binding.get("source_in", "")),
-                "source_out": str(binding.get("source_out", "")),
+                "source_in": str(shot.get("source_start", "")),
+                "source_out": str(shot.get("source_end", "")),
+                "binding_source_in": str(binding.get("source_in", "")),
+                "binding_source_out": str(binding.get("source_out", "")),
                 "reuse_policy": str(shot.get("reuse_policy", "")),
             }
         )
@@ -305,7 +329,7 @@ def _validate_media_asset_bindings(
     bindings: list[dict[str, Any]],
     errors: list[dict[str, str]],
     required_missing_fields: list[dict[str, str]],
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, list[dict[str, Any]]]:
     for index, binding in enumerate(bindings):
         prefix = f"media_asset_bindings[{index}]"
         if not (binding.get("source_story_block_id") or binding.get("source_timeline_item_id")):
@@ -335,18 +359,23 @@ def _validate_media_asset_bindings(
                     "Binding validation_errors must be empty before adapter planning.",
                 )
             )
-    return _usable_binding_index(bindings)
+    usable_index = _usable_binding_candidates_by_key(bindings)
+    _validate_binding_ambiguity(usable_index, errors)
+    return usable_index
 
 
-def _usable_binding_index(bindings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    usable = [
+def _usable_bindings(bindings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
         binding
         for binding in bindings
         if binding.get("status") == "bound"
         and isinstance(binding.get("validation_errors"), list)
         and not binding.get("validation_errors")
     ]
-    return _binding_index(usable)
+
+
+def _usable_binding_candidates_by_key(bindings: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    return _binding_candidates_by_key(_usable_bindings(bindings))
 
 
 def _unique_bindings(bindings: Any) -> list[dict[str, Any]]:
@@ -361,22 +390,132 @@ def _unique_bindings(bindings: Any) -> list[dict[str, Any]]:
     return unique
 
 
-def _binding_index(bindings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    index = {}
+def _flatten_binding_candidates(binding_index: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    return [binding for bindings in binding_index.values() for binding in bindings]
+
+
+def _binding_candidates_by_key(bindings: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    index: dict[str, list[dict[str, Any]]] = {}
     for binding in bindings:
         story_id = str(binding.get("source_story_block_id", ""))
         timeline_id = str(binding.get("source_timeline_item_id", ""))
         if story_id:
-            index[f"story:{story_id}"] = binding
+            index.setdefault(f"story:{story_id}", []).append(binding)
         if timeline_id:
-            index[f"timeline:{timeline_id}"] = binding
+            index.setdefault(f"timeline:{timeline_id}", []).append(binding)
     return index
 
 
-def _matching_binding(shot: dict[str, Any], binding_index: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+def _resolve_binding_for_shot(
+    shot: dict[str, Any],
+    binding_index: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, str]:
     story_id = str(shot.get("source_story_block_id", ""))
     timeline_id = str(shot.get("source_timeline_item_id", ""))
-    return binding_index.get(f"story:{story_id}") or binding_index.get(f"timeline:{timeline_id}")
+    candidates = []
+    if story_id:
+        candidates.extend(binding_index.get(f"story:{story_id}", []))
+    if timeline_id:
+        candidates.extend(binding_index.get(f"timeline:{timeline_id}", []))
+    return _resolve_binding_candidates(candidates)
+
+
+def _resolve_binding_candidates(candidates: list[dict[str, Any]]) -> tuple[dict[str, Any] | None, str]:
+    unique = _dedupe_equivalent_bindings(candidates)
+    if not unique:
+        return None, "missing_media_asset_binding"
+    signatures = {_binding_semantic_signature(binding) for binding in unique}
+    if len(signatures) > 1:
+        return None, "ambiguous_media_asset_binding"
+    return unique[0], ""
+
+
+def _validate_binding_ambiguity(
+    binding_index: dict[str, list[dict[str, Any]]],
+    errors: list[dict[str, str]],
+) -> None:
+    for key, candidates in binding_index.items():
+        _binding, reason = _resolve_binding_candidates(candidates)
+        if reason == "ambiguous_media_asset_binding":
+            errors.append(_issue(reason, f"media_asset_bindings.{key}", "Multiple conflicting usable bindings share one source key."))
+
+
+def _dedupe_equivalent_bindings(bindings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    unique = []
+    seen = set()
+    for binding in bindings:
+        fingerprint = _binding_fingerprint(binding)
+        if fingerprint in seen:
+            continue
+        seen.add(fingerprint)
+        unique.append(binding)
+    return unique
+
+
+def _binding_fingerprint(binding: dict[str, Any]) -> tuple[Any, ...]:
+    return (
+        str(binding.get("media_asset_id", "")),
+        str(binding.get("source_story_block_id", "")),
+        str(binding.get("source_timeline_item_id", "")),
+        str(binding.get("source_file", "")),
+        str(binding.get("source_in", "")),
+        str(binding.get("source_out", "")),
+        str(binding.get("duration", "")),
+        binding.get("fps"),
+        bool(binding.get("audio_available")),
+        str(binding.get("status", "")),
+        tuple(binding.get("validation_errors", []) if isinstance(binding.get("validation_errors"), list) else []),
+    )
+
+
+def _binding_semantic_signature(binding: dict[str, Any]) -> tuple[Any, ...]:
+    return (
+        str(binding.get("media_asset_id", "")),
+        str(binding.get("source_file", "")),
+        str(binding.get("source_in", "")),
+        str(binding.get("source_out", "")),
+        str(binding.get("duration", "")),
+        binding.get("fps"),
+        bool(binding.get("audio_available")),
+    )
+
+
+def _shot_range_error(shot: dict[str, Any], binding: dict[str, Any]) -> str:
+    shot_range = _valid_range_ms(shot.get("source_start"), shot.get("source_end"))
+    if not shot_range:
+        return "invalid_shot_source_range"
+    binding_range = _valid_range_ms(binding.get("source_in"), binding.get("source_out"))
+    if not binding_range:
+        return "invalid_binding_source_range"
+    shot_start, shot_end = shot_range
+    binding_start, binding_end = binding_range
+    if shot_start < binding_start or shot_end > binding_end:
+        return "shot_source_range_outside_binding"
+    return ""
+
+
+def _valid_range_ms(start: Any, end: Any) -> tuple[int, int] | None:
+    start_ms = _timecode_to_ms(start)
+    end_ms = _timecode_to_ms(end)
+    if start_ms is None or end_ms is None or start_ms >= end_ms:
+        return None
+    return start_ms, end_ms
+
+
+def _timecode_to_ms(value: Any) -> int | None:
+    if not isinstance(value, str):
+        return None
+    match = TIMECODE_PATTERN.match(value)
+    if not match:
+        return None
+    hours, minutes, seconds, milliseconds = (int(part) for part in match.groups())
+    if minutes > 59 or seconds > 59:
+        return None
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000 + milliseconds
+
+
+def _shot_field(shot: dict[str, Any]) -> str:
+    return f"shot_list.{shot.get('id', '') or shot.get('source_timeline_item_id', '')}"
 
 
 def _unusable_binding_reason(binding: dict[str, Any] | None) -> str:

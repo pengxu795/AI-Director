@@ -212,6 +212,91 @@ def test_plan_is_abstract_and_does_not_write_project_files():
     assert "project_file" not in plan
 
 
+def test_place_clip_uses_shot_source_range_not_binding_range():
+    shots = [
+        shot(id="v001", source_story_block_id="b001", source_timeline_item_id="t001", source_start="00:00:05.000", source_end="00:00:06.000"),
+        shot(id="v002", source_story_block_id="b001", source_timeline_item_id="t002", source_start="00:00:07.000", source_end="00:00:08.000"),
+    ]
+    binding = media_binding(source_story_block_id="b001", source_timeline_item_id="", source_in="00:00:05.000", source_out="00:00:08.000")
+    plan = plan_adapter_export(adapter_input(bindings=[binding], shots=shots))
+
+    place_clips = [operation for operation in plan["operations"] if operation["type"] == "place_clip"]
+    assert plan["status"] == "planned"
+    assert [(clip["source_in"], clip["source_out"]) for clip in place_clips] == [
+        ("00:00:05.000", "00:00:06.000"),
+        ("00:00:07.000", "00:00:08.000"),
+    ]
+    assert all(clip["binding_source_in"] == "00:00:05.000" for clip in place_clips)
+    assert all(clip["binding_source_out"] == "00:00:08.000" for clip in place_clips)
+
+
+def test_shot_source_range_outside_binding_blocks_plan():
+    bad_shot = shot(source_start="00:00:05.500", source_end="00:00:06.500")
+    binding = media_binding(source_in="00:00:05.000", source_out="00:00:06.000")
+    result = validate_adapter_input(adapter_input(bindings=[binding], shots=[bad_shot]))
+    plan = plan_adapter_export(adapter_input(bindings=[binding], shots=[bad_shot]))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "shot_source_range_outside_binding" for error in result["errors"])
+    assert result["unresolved_items"][0]["reason"] == "shot_source_range_outside_binding"
+    assert plan["status"] == "blocked"
+    assert not any(operation.get("type") == "place_clip" for operation in plan["operations"])
+
+
+@pytest.mark.parametrize(
+    ("source_start", "source_end"),
+    [
+        ("00:00:06.000", "00:00:05.000"),
+        ("00:00:05.000", "00:00:05.000"),
+    ],
+)
+def test_invalid_shot_source_range_blocks_plan(source_start, source_end):
+    bad_shot = shot(source_start=source_start, source_end=source_end)
+    result = validate_adapter_input(adapter_input(shots=[bad_shot]))
+    plan = plan_adapter_export(adapter_input(shots=[bad_shot]))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "invalid_shot_source_range" for error in result["errors"])
+    assert result["unresolved_items"][0]["reason"] == "invalid_shot_source_range"
+    assert plan["status"] == "blocked"
+
+
+def test_duplicate_story_binding_with_different_media_is_ambiguous():
+    bindings = [
+        media_binding(media_asset_id="m001", source_story_block_id="b001", source_timeline_item_id=""),
+        media_binding(media_asset_id="m002", source_story_block_id="b001", source_timeline_item_id="", source_file="/media/other.mp4"),
+    ]
+    result = validate_adapter_input(adapter_input(bindings=bindings))
+    plan = plan_adapter_export(adapter_input(bindings=bindings))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "ambiguous_media_asset_binding" for error in result["errors"])
+    assert result["unresolved_items"][0]["reason"] == "ambiguous_media_asset_binding"
+    assert plan["status"] == "blocked"
+    assert plan["operations"] == []
+
+
+def test_story_and_timeline_binding_conflict_is_ambiguous():
+    bindings = [
+        media_binding(media_asset_id="m001", source_story_block_id="b001", source_timeline_item_id=""),
+        media_binding(media_asset_id="m002", source_story_block_id="", source_timeline_item_id="t001", source_file="/media/other.mp4"),
+    ]
+    result = validate_adapter_input(adapter_input(bindings=bindings))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "ambiguous_media_asset_binding" for error in result["errors"])
+    assert result["unresolved_items"][0]["reason"] == "ambiguous_media_asset_binding"
+
+
+def test_exact_duplicate_binding_is_deduped():
+    binding = media_binding()
+    plan = plan_adapter_export(adapter_input(bindings=[binding, dict(binding)]))
+
+    assert plan["status"] == "planned"
+    assert [operation["type"] for operation in plan["operations"]].count("register_media_asset") == 1
+    assert [operation["type"] for operation in plan["operations"]].count("place_clip") == 1
+
+
 def test_export_interface_is_defined_but_not_implemented():
     with pytest.raises(NotImplementedError):
         export_adapter_project(adapter_input())

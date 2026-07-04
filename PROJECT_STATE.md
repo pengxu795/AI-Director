@@ -3,7 +3,7 @@
 ## Current Status
 
 - Current phase: Module 7 Review
-- Latest completed work: Module 7 export adapter contract research and binding validation fix
+- Latest completed work: Module 7 export adapter contract research, binding validation, source range validation, and ambiguity checks
 - Next module: editor-specific adapter implementation
 - Gate: Module 7 Review passes before selecting one actual export target
 
@@ -31,6 +31,8 @@
 - Review Module 7 adapter contract.
 - Confirm media asset bindings are external and required before real editor export.
 - Confirm only bound media asset bindings with empty validation errors can enter adapter planning.
+- Confirm `place_clip` uses shot-level source ranges and blocks out-of-binding ranges.
+- Confirm ambiguous media asset bindings block planning instead of being selected silently.
 - Confirm adapter validation blocks missing media paths, fps, duration, and unsupported targets.
 - Confirm no editor project, XML, FCPXML, EDL, AAF, media read, render, or video export was introduced.
 

@@ -278,6 +278,8 @@ Media Asset Binding 是外部注入层，用于把抽象 `source_story_block_id`
 
 只有 `status: "bound"` 且 `validation_errors: []` 的 binding 可以参与 adapter plan；`pending`、`unresolved`、`invalid` 或带校验错误的 binding 会阻断计划，并让对应 shot 保持 unresolved。
 
+`binding.source_in/source_out` 表示媒体绑定允许使用的范围；`shot.source_start/source_end` 表示实际要放进剪辑时间线的镜头范围。Adapter plan 的 `place_clip` 必须使用 shot 级范围，并在 binding 范围冲突或多个 binding 歧义时阻断。
+
 文档：
 
 ```text

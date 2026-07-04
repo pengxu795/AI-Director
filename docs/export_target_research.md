@@ -45,6 +45,9 @@ Rules:
 - Missing `source_file`, `fps`, or `duration` is a validation error.
 - Only `status: "bound"` with `validation_errors: []` is usable for adapter planning.
 - `pending`, `unresolved`, `invalid`, or non-empty `validation_errors` must block planning and keep matching shots unresolved.
+- `source_in` / `source_out` define the usable media binding range; shot-level `source_start` / `source_end` define the actual clip range used by `place_clip`.
+- Shot source ranges must be valid, positive duration, and contained within the matched binding range.
+- Conflicting bindings for the same story or timeline key are ambiguous; exact duplicates may be deduplicated, but different media assets or different source ranges must block planning.
 - No adapter may infer filenames from subtitle text, story blocks, or narration.
 - Unbound shots remain unresolved; they must not become fake clips.
 
@@ -69,7 +72,7 @@ Each target declares:
 - `plan(input) -> adapter_plan`
 - `export(...)` is intentionally not implemented in Module 7.
 
-`adapter_plan` contains abstract operations such as `create_sequence`, `register_media_asset`, `place_clip`, and `add_narration_cue`. It must not write XML, FCPXML, EDL, AAF, project files, or media files.
+`adapter_plan` contains abstract operations such as `create_sequence`, `register_media_asset`, `place_clip`, and `add_narration_cue`. `place_clip.source_in` / `place_clip.source_out` come from the shot-level source range, while `binding_source_in` / `binding_source_out` preserve the matched binding range for later adapter-specific conversion. It must not write XML, FCPXML, EDL, AAF, project files, or media files.
 
 ## Validation Result
 
