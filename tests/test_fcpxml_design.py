@@ -80,8 +80,9 @@ def test_timecode_conversion_uses_rational_seconds():
     assert fcpxml_time_from_timecode("00:00:05.000") == "5s"
     assert fcpxml_time_from_timecode("00:00:01.480") == "37/25s"
     assert frame_duration_from_fps(25.0) == "1/25s"
-    assert frame_duration_from_fps(30) == "1/30s"
-    assert frame_duration_from_fps("30000/1001") == "1001/30000s"
+    assert frame_duration_from_fps(20) == "1/20s"
+    with pytest.raises(ValueError):
+        frame_duration_from_fps("30000/1001")
 
 
 def test_minimal_design_maps_resources_and_shot_ranges():
@@ -132,7 +133,7 @@ def test_mixed_fps_is_blocked():
             "type": "register_media_asset",
             "media_asset_id": "m002",
             "source_file": "/media/other.mp4",
-            "fps": 30.0,
+            "fps": 20.0,
             "duration": "00:00:10.000",
         },
     )
@@ -157,19 +158,31 @@ def test_non_frame_aligned_time_is_blocked_without_rounding():
     assert any(error["code"] == "time_not_frame_aligned" for error in result["errors"])
 
 
-def test_30000_1001_fps_frame_alignment_is_exact():
+@pytest.mark.parametrize("fps", ["30000/1001", "60000/1001", 29.97, 59.94, 30])
+def test_non_millisecond_frame_rates_are_not_supported_in_mvp(fps):
+    result = validate_fcpxml_design_input(adapter_plan(sequence_fps=fps, asset_fps=fps))
+    design = build_fcpxml_minimal_design(adapter_plan(sequence_fps=fps, asset_fps=fps))
+
+    assert result["valid"] is False
+    assert any(error["code"] == "unsupported_non_millisecond_frame_rate" for error in result["errors"])
+    assert design["status"] == "blocked"
+
+
+def test_30000_1001_single_frame_cannot_be_represented_by_millisecond_timecode():
     result = validate_fcpxml_design_input(
         adapter_plan(
             sequence_fps="30000/1001",
             asset_fps="30000/1001",
-            source_start="00:00:05.005",
-            source_end="00:00:06.006",
+            source_start="00:00:00.000",
+            source_end="00:00:00.033",
             timeline_start="00:00:00.000",
-            timeline_end="00:00:01.001",
+            timeline_end="00:00:00.033",
         )
     )
 
-    assert result["valid"] is True
+    assert result["valid"] is False
+    assert any(error["code"] == "unsupported_non_millisecond_frame_rate" for error in result["errors"])
+    assert not any(error["code"] == "time_not_frame_aligned" for error in result["errors"])
 
 
 def test_design_preserves_narration_as_marker_design_only():

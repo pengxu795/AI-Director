@@ -2,10 +2,13 @@
 
 ## 2026-07-03
 
+- Fixed Module 8 time precision contract by blocking non-millisecond frame rates in the MVP.
+- Added `unsupported_non_millisecond_frame_rate` for 30, 30000/1001, 60000/1001, 29.97, and 59.94 fps inputs.
+- Removed the earlier implication that 30000/1001 can be fully represented by `HH:MM:SS.mmm`.
 - Fixed Module 8 fps contract by requiring explicit sequence fps from target profile or project settings.
 - Blocked mixed fps and sequence/asset fps mismatch for the FCPXML MVP design.
 - Added exact frame-alignment validation with no rounding for source and timeline edit points.
-- Added tests for 25fps, 30fps, 30000/1001fps, mixed fps, missing sequence fps, project settings fps, and non-frame-aligned times.
+- Added tests for supported 25fps, blocked 30fps and 30000/1001fps, mixed fps, missing sequence fps, project settings fps, and non-frame-aligned times.
 - Added Module 8 FCPXML adapter discovery and minimal export design.
 - Added abstract FCPXML target profile, rational time conversion, resource ID strategy, field mapping, and minimal outline.
 - Added `output/sample_fcpxml_design.json` as design-only sample data, not FCPXML or an editor project.

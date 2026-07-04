@@ -92,6 +92,14 @@ def validate_fcpxml_design_input(adapter_plan: dict[str, Any]) -> dict[str, Any]
         )
     elif not _valid_fps(sequence_fps):
         errors.append(_issue("invalid_sequence_fps", "target_profile.sequence_fps", "sequence_fps must be a positive fps value."))
+    elif not _millisecond_frame_rate_supported(sequence_fps):
+        errors.append(
+            _issue(
+                "unsupported_non_millisecond_frame_rate",
+                "target_profile.sequence_fps",
+                "Module 8 MVP only supports fps values whose frame duration is an integer number of milliseconds.",
+            )
+        )
 
     asset_fps_values = set()
     for index, operation in enumerate(operations):
@@ -101,9 +109,10 @@ def validate_fcpxml_design_input(adapter_plan: dict[str, Any]) -> dict[str, Any]
             errors.append(_issue("unsupported_operation_type", f"{field}.type", "Operation is not part of the FCPXML minimal design."))
         if operation_type == "register_media_asset":
             _validate_register_media_asset(operation, field, errors)
+            if _valid_fps(operation.get("fps")):
+                asset_fps_values.add(_fps_fraction(operation.get("fps")))
             if not any(error["field"].startswith(field) for error in errors):
                 media_assets.add(str(operation.get("media_asset_id", "")))
-                asset_fps_values.add(_fps_fraction(operation.get("fps")))
         elif operation_type == "place_clip":
             _validate_place_clip(operation, field, media_assets, sequence_fps, errors)
         elif operation_type == "add_narration_cue":
@@ -207,6 +216,8 @@ def frame_duration_from_fps(fps: float | int | str) -> str:
     fps_fraction = _fps_fraction(fps)
     if fps_fraction is None or fps_fraction <= 0:
         raise ValueError("fps must be a positive number.")
+    if not _millisecond_frame_rate_supported(fps):
+        raise ValueError("Module 8 MVP requires an integer millisecond frame duration.")
     fraction = Fraction(1, 1) / fps_fraction
     return _fraction_to_fcpxml_time(fraction)
 
@@ -228,6 +239,14 @@ def _validate_register_media_asset(
         errors.append(_issue("invalid_duration_timecode", f"{field}.duration", "Media duration must use HH:MM:SS.mmm."))
     if not _valid_fps(operation.get("fps")):
         errors.append(_issue("invalid_fps", f"{field}.fps", "fps must be a positive number."))
+    elif not _millisecond_frame_rate_supported(operation.get("fps")):
+        errors.append(
+            _issue(
+                "unsupported_non_millisecond_frame_rate",
+                f"{field}.fps",
+                "Module 8 MVP only supports fps values whose frame duration is an integer number of milliseconds.",
+            )
+        )
 
 
 def _validate_place_clip(
@@ -249,7 +268,7 @@ def _validate_place_clip(
         errors.append(_issue("invalid_source_range", field, "Clip source range must have positive duration."))
     if _valid_range_ms(operation.get("timeline_start"), operation.get("timeline_end")) is None:
         errors.append(_issue("invalid_timeline_range", field, "Clip timeline range must have positive duration."))
-    if sequence_fps is not None and _valid_fps(sequence_fps):
+    if sequence_fps is not None and _valid_fps(sequence_fps) and _millisecond_frame_rate_supported(sequence_fps):
         for name in ("source_in", "source_out", "timeline_start", "timeline_end"):
             milliseconds = _timecode_to_ms(operation.get(name))
             if milliseconds is not None and not _time_is_frame_aligned(milliseconds, sequence_fps):
@@ -416,6 +435,14 @@ def _sequence_fps(adapter_plan: dict[str, Any]) -> Any:
 def _valid_fps(value: Any) -> bool:
     fps = _fps_fraction(value)
     return fps is not None and fps > 0
+
+
+def _millisecond_frame_rate_supported(value: Any) -> bool:
+    fps = _fps_fraction(value)
+    if fps is None or fps <= 0:
+        return False
+    frame_duration_ms = Fraction(1000, 1) / fps
+    return frame_duration_ms.denominator == 1
 
 
 def _fps_fraction(value: Any) -> Fraction | None:

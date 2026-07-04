@@ -29,27 +29,39 @@ FCPXML time attributes use rational seconds, for example:
 ```text
 5s
 3/2s
-1001/30000s
 ```
 
 Module 8 conversion policy:
 
 - Convert internal milliseconds to reduced rational seconds.
+- Preserve the existing Module 1-7 `HH:MM:SS.mmm` contract; Module 8 does not introduce rational or frame-index edit fields.
 - Sequence fps must be explicit in `target_profile.sequence_fps` or `project_settings.sequence_fps`.
 - Derive the sequence `frameDuration` from the explicit sequence fps.
 - Asset fps must match the sequence fps in the MVP.
 - Mixed fps is not supported in the MVP and must return `mixed_fps_not_supported`.
+- Non-millisecond frame rates are not supported in the MVP and must return `unsupported_non_millisecond_frame_rate`.
 - Every clip source and timeline edit point must align exactly to the sequence frame duration.
 - Non-frame-aligned edit points must return `time_not_frame_aligned`.
 - Rounding to the nearest frame is forbidden in Module 8.
+- `30000/1001`, `60000/1001`, `29.97`, `59.94`, and `30` are blocked because `HH:MM:SS.mmm` cannot represent every frame boundary exactly.
 - Do not model drop-frame behavior yet.
 - Do not infer frame rate from media files.
 
 Supported fps validation examples:
 
 - `25` -> `1/25s`
-- `30` -> `1/30s`
-- `30000/1001` -> `1001/30000s`
+- `20` -> `1/20s`
+- `10` -> `1/10s`
+- `8` -> `1/8s`
+- `5` -> `1/5s`
+
+Unsupported fps examples:
+
+- `30`
+- `30000/1001`
+- `60000/1001`
+- `29.97`
+- `59.94`
 
 ## Sequence Format and Asset Format
 

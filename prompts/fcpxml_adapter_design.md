@@ -10,6 +10,7 @@ Module 8 is FCPXML discovery and minimal export design only.
 - Require explicit sequence fps from target profile or project settings.
 - Keep sequence format separate from asset metadata.
 - Reject mixed fps in Module 8 MVP.
+- Reject non-millisecond frame rates such as 30, 30000/1001, 60000/1001, 29.97, and 59.94.
 - Reject any source or timeline edit point that is not exactly frame aligned.
 - Never round edit points to frames.
 - Represent narration text as marker or note design only.

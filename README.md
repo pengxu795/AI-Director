@@ -298,6 +298,8 @@ docs/export_target_research.md
 - 时间模型：`HH:MM:SS.mmm` 转 rational seconds
 - Sequence fps 必须显式来自 target profile 或 project settings
 - MVP 禁止 mixed fps，asset fps 必须与 sequence fps 一致
+- MVP 仅支持单帧时长可由整数毫秒精确表达的 fps，例如 `25`、`20`、`10`、`8`、`5`
+- `30`、`30000/1001`、`60000/1001`、`29.97`、`59.94` 会被 `unsupported_non_millisecond_frame_rate` 阻断
 - 所有 source/timeline edit point 必须精确帧对齐，不做 rounding
 - Sequence format 与 asset metadata 分离
 - 资源 ID：`fmt001`、`asset_001`、`clip_001`、`marker_001`
