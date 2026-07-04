@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 12 Review
-- Latest completed work: Module 12 FCPXML compatibility findings review and remediation plan
+- Current phase: Module 13 Review
+- Latest completed work: Module 13 evidence-backed remediation selection
 - Next module: FCPXML compatibility remediation implementation
-- Gate: Module 12 Review passes before modifying serializer, samples, media bindings, or editor automation
+- Gate: Module 13 Review passes before modifying serializer, samples, media bindings, or editor automation
 
 ## Completed
 
@@ -30,20 +30,17 @@
 - Module 10: FCPXML manual import acceptance protocol
 - Module 11: FCPXML manual import result capture and acceptance record
 - Module 12: FCPXML compatibility findings review and remediation plan
+- Module 13: evidence-backed remediation selection and task contract
 
 ## Pending Review
 
-- Review Module 12 compatibility findings and remediation plan.
-- Confirm findings are derived from Module 11 acceptance records without guessing.
-- Confirm non-online media, failed/blocked checks, import errors, and validation warnings become traceable findings.
-- Confirm `finding.evidence_refs` contains only real Module 11 `evidence_id` values.
-- Confirm only complete and unique evidence entries can confirm blocker or major findings.
-- Confirm affected asset ids, checklist ids, and error codes stay in `related_entities` and do not masquerade as evidence.
-- Confirm missing evidence produces `evidence_incomplete` and requires evidence before remediation implementation.
-- Confirm successful records produce informational findings and no remediation items.
-- Confirm remediation is proposed only and keeps `serializer_change_allowed=false`.
-- Confirm Module 12 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
-- Confirm Module 12 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
+- Review Module 13 evidence-backed remediation selection.
+- Confirm selection requires Module 12 `review_ready` input.
+- Confirm selected remediation resolves to a linked-evidence finding.
+- Confirm `evidence_incomplete` or missing-evidence remediation cannot be selected.
+- Confirm task contract keeps `implementation_allowed=false` and `serializer_change_allowed=false`.
+- Confirm Module 13 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
+- Confirm Module 13 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
 
 ## Development Rule
 

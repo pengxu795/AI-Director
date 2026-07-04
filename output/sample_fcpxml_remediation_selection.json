@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "module": "Module 13",
+  "name": "Evidence-Backed Remediation Selection",
+  "status": "selection_ready",
+  "source_review": {
+    "schema_version": "1.0",
+    "status": "review_ready",
+    "source_record": {
+      "schema_version": "1.0",
+      "status": "recorded",
+      "fcpxml_path": "output/sample_minimal.fcpxml",
+      "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+      "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+      "git_commit": "281ea04",
+      "serializer_commit": "647f4e5"
+    }
+  },
+  "selection": {
+    "remediation_id": "r001",
+    "finding_id": "f001",
+    "selected_by": "module13-reviewer",
+    "selected_at": "2026-07-04T02:10:00+00:00",
+    "selection_reason": "Select the highest-priority evidence-backed remediation for the next reviewed implementation module.",
+    "priority": "P0",
+    "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
+    "finding": {
+      "code": "media_not_online",
+      "severity": "blocker",
+      "category": "media",
+      "summary": "Asset asset_001 was offline.",
+      "evidence_refs": [
+        "ev_asset_001",
+        "ev_check_clip_source_ranges",
+        "ev_error_media_offline"
+      ],
+      "related_entities": {
+        "asset_ids": [
+          "asset_001"
+        ],
+        "check_ids": [],
+        "error_codes": []
+      }
+    },
+    "source_review_status": "review_ready"
+  },
+  "task_contract": {
+    "status": "task_contract_ready",
+    "implementation_allowed": false,
+    "serializer_change_allowed": false,
+    "requires_module_review_before_implementation": true,
+    "requires_linked_evidence": true,
+    "selected_remediation_id": "r001",
+    "selected_finding_id": "f001",
+    "evidence_refs": [
+      "ev_asset_001",
+      "ev_check_clip_source_ranges",
+      "ev_error_media_offline"
+    ],
+    "scope_boundary": {
+      "may_define_future_fix_scope": true,
+      "may_modify_serializer": false,
+      "may_modify_samples": false,
+      "may_launch_editor": false,
+      "may_read_media": false,
+      "may_render_or_export_video": false
+    },
+    "next_gate": "Module 13 Review must pass before remediation implementation begins."
+  },
+  "validation_result": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "metadata": {
+    "selection_recorded": true,
+    "serializer_modified": false,
+    "media_files_read": false,
+    "editor_launched": false,
+    "automatic_import_performed": false,
+    "video_export_performed": false
+  }
+}

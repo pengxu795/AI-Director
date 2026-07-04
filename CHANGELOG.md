@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-04
+
+- Added Module 13 evidence-backed remediation selection and task contract generation.
+- Added validation that only `review_ready` Module 12 reviews with linked evidence findings can be selected.
+- Added sample remediation selection output and tests for blocked, missing, evidence-incomplete, and boundary-violating selections.
+
 ## 2026-07-03
 
 - Fixed Module 12 evidence usability so incomplete evidence and duplicate `evidence_id` entries cannot confirm blocker or major findings.
