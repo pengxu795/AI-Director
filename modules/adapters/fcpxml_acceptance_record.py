@@ -190,6 +190,22 @@ def _validate_result_status(manual_result: dict[str, Any], errors: list[dict[str
                 "Compatibility can pass only when import_result and media_validation_result both pass.",
             )
         )
+    if compatibility_result == "passed" and status != "passed":
+        errors.append(
+            _issue(
+                "compatibility_pass_requires_pass_status",
+                "manual_result.status",
+                "Compatibility can pass only when the top-level status is passed.",
+            )
+        )
+    if compatibility_result == "passed" and manual_result.get("imported") is not True:
+        errors.append(
+            _issue(
+                "compatibility_pass_requires_import",
+                "manual_result.imported",
+                "Compatibility can pass only when imported=true.",
+            )
+        )
     if status == "passed" and compatibility_result != "passed":
         errors.append(_issue("pass_status_mismatch", "manual_result.compatibility_result", "A passed record must have compatibility_result passed."))
     if status == "passed" and (import_result != "passed" or media_validation_result != "passed"):

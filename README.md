@@ -412,6 +412,7 @@ python app/generate_fcpxml_acceptance_protocol.py output/sample_fcpxml_design.js
 - 人工结果的 artifact identifiers 必须与协议一致
 - 必须记录 FCP 版本、macOS 版本、素材在线/离线状态、错误信息和证据路径
 - `result` 拆分为 `import_result`、`media_validation_result` 和 `compatibility_result`
+- `compatibility_result="passed"` 必须同时满足顶层 `status="passed"` 且 `imported=true`
 - `passed` 结果要求所有 checklist 均通过，且所有素材必须 `online`
 - 任一素材 `offline`、`missing` 或 `unverified` 时不得记为完整兼容性通过
 - 任一 blocker import error 都不得记为 `passed`

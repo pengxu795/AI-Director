@@ -184,6 +184,22 @@ def test_acceptance_record_does_not_allow_pass_with_blocker_import_error(tmp_pat
     assert any(error["code"] == "passed_result_has_blocker_import_error" for error in validation["errors"])
 
 
+def test_acceptance_record_does_not_allow_blocked_status_with_passed_compatibility(tmp_path):
+    protocol = acceptance_ready_protocol(tmp_path)
+    result = manual_result(protocol)
+    result["status"] = "blocked"
+    result["imported"] = False
+    result["import_result"] = "passed"
+    result["media_validation_result"] = "passed"
+    result["compatibility_result"] = "passed"
+
+    validation = validate_fcpxml_acceptance_record_input(protocol, result)
+
+    assert validation["valid"] is False
+    assert any(error["code"] == "compatibility_pass_requires_pass_status" for error in validation["errors"])
+    assert any(error["code"] == "compatibility_pass_requires_import" for error in validation["errors"])
+
+
 def test_acceptance_record_requires_asset_validation_for_every_expected_asset(tmp_path):
     protocol = acceptance_ready_protocol(tmp_path)
     result = manual_result(protocol)

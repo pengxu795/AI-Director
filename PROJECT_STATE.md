@@ -38,6 +38,7 @@
 - Confirm relationship confirmation is human-provided and required before PASS/FAIL recording.
 - Confirm FCP version, macOS version, asset import states, checklist results, evidence, importer errors, and regression samples are captured.
 - Confirm `import_result`, `media_validation_result`, and `compatibility_result` remain separate.
+- Confirm `compatibility_result="passed"` requires top-level `status="passed"` and `imported=true`.
 - Confirm PASS requires every expected asset to be `online` and no blocker import errors.
 - Confirm failed and blocked results can be recorded without pretending compatibility passed.
 - Confirm Module 11 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.

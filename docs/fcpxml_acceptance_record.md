@@ -76,11 +76,12 @@ Result levels are intentionally separate:
 
 - `import_result`: whether Final Cut Pro accepted the `.fcpxml`.
 - `media_validation_result`: whether expected media was online and could be manually checked.
-- `compatibility_result`: full compatibility. It may be `passed` only when import and media validation both pass.
+- `compatibility_result`: full compatibility. It may be `passed` only when top-level `status`, import, and media validation all pass, and `imported == true`.
 
 A `passed` record requires:
 
 - `imported == true`
+- top-level `status == "passed"`
 - `import_result == "passed"`
 - `media_validation_result == "passed"`
 - `compatibility_result == "passed"`

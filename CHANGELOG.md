@@ -2,6 +2,7 @@
 
 ## 2026-07-03
 
+- Fixed Module 11 status-machine consistency so compatibility cannot pass when top-level status is blocked/failed or `imported` is false.
 - Fixed Module 11 PASS rules so media must be online and blocker import errors cannot pass.
 - Split manual results into `import_result`, `media_validation_result`, and `compatibility_result`.
 - Added tests and samples for online PASS and offline-media blocked records.

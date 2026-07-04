@@ -7,6 +7,7 @@ Module 11 records manually observed Final Cut Pro import results.
 - Require human confirmation that source design, FCPXML, and serializer commit belong to the same output chain.
 - Capture tester, run time, Final Cut Pro version, macOS version, library name, and project name.
 - Split `import_result`, `media_validation_result`, and `compatibility_result`.
+- Require `status: passed` and `imported: true` before allowing `compatibility_result: passed`.
 - Require every expected asset to be online before allowing `status: passed` or `compatibility_result: passed`.
 - Block PASS when any asset is offline, missing, or unverified.
 - Block PASS when any import error has `severity: blocker`.
