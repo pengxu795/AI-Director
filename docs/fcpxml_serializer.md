@@ -52,6 +52,8 @@ Sequence duration is calculated with `Fraction` from clip `offset + duration`.
 
 Narration markers must include a real `timeline_start`.
 
+`source_timeline_item_id` is traceability only. It must not be used to infer a marker time.
+
 During serialization:
 
 - The serializer finds the single clip whose timeline range covers `timeline_start`.
@@ -67,6 +69,8 @@ The serializer blocks:
 - markers that match more than one overlapping clip
 
 It never places all markers on the first clip and never defaults marker start to `0s` unless the marker truly starts at the matched clip's beginning.
+
+Module 8 must preserve an empty marker `timeline_start` when the narration cue does not provide one. Module 9 then blocks serialization with `missing_marker_timeline_start`.
 
 ## Boundary
 

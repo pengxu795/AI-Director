@@ -145,6 +145,31 @@ def test_marker_one_frame_after_second_clip_start_is_not_zero():
     assert second_marker.attrib["start"] == "1/25s"
 
 
+def test_marker_missing_timeline_start_blocks_even_with_matching_clip():
+    design = fcpxml_design()
+    design["sequence_design"]["markers"][0]["timeline_start"] = ""
+    assert design["sequence_design"]["markers"][0]["source_timeline_item_id"] == "t001"
+
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "missing_marker_timeline_start" for error in result["errors"])
+    with pytest.raises(ValueError):
+        serialize_fcpxml(design)
+
+
+def test_marker_missing_timeline_start_blocks_with_duplicate_timeline_ids():
+    design = fcpxml_design(two_clips=True)
+    design["sequence_design"]["spine"][1]["source_timeline_item_id"] = "t001"
+    design["sequence_design"]["markers"][1]["source_timeline_item_id"] = "t001"
+    design["sequence_design"]["markers"][1]["timeline_start"] = ""
+
+    result = validate_fcpxml_serialization_input(design)
+
+    assert result["valid"] is False
+    assert any(error["code"] == "missing_marker_timeline_start" for error in result["errors"])
+
+
 def test_marker_in_gap_between_clips_blocks_serialization():
     design = fcpxml_design(two_clips=True)
     design["sequence_design"]["spine"][1]["offset"] = "2s"

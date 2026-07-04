@@ -160,7 +160,7 @@ def build_fcpxml_minimal_design(adapter_plan: dict[str, Any]) -> dict[str, Any]:
     sequence_fps = _sequence_fps(adapter_plan)
     media_assets = _media_asset_resources(operations)
     clips = _clip_designs(operations, media_assets)
-    narration_markers = _narration_marker_designs(operations, clips)
+    narration_markers = _narration_marker_designs(operations)
 
     return {
         "schema_version": FCPXML_DESIGN_SCHEMA_VERSION,
@@ -329,9 +329,8 @@ def _clip_designs(
     return clips
 
 
-def _narration_marker_designs(operations: list[dict[str, Any]], clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _narration_marker_designs(operations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     markers = []
-    clip_by_timeline_item = {clip["source_timeline_item_id"]: clip for clip in clips if clip.get("source_timeline_item_id")}
     for operation in operations:
         if operation.get("type") != "add_narration_cue":
             continue
@@ -339,8 +338,7 @@ def _narration_marker_designs(operations: list[dict[str, Any]], clips: list[dict
         if not text:
             continue
         source_timeline_item_id = str(operation.get("source_timeline_item_id", ""))
-        matched_clip = clip_by_timeline_item.get(source_timeline_item_id, {})
-        timeline_start = str(operation.get("timeline_start", "") or matched_clip.get("offset", ""))
+        timeline_start = str(operation.get("timeline_start", ""))
         markers.append(
             {
                 "id": f"marker_{len(markers) + 1:03d}",

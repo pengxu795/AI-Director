@@ -2,6 +2,8 @@
 
 ## 2026-07-03
 
+- Fixed Module 9 marker timing fallback so marker time is never inferred from clip offset.
+- Added tests for missing marker `timeline_start` with matching clips and duplicate source timeline ids.
 - Fixed Module 9 narration marker placement so markers attach to the clip covering their timeline position.
 - Added clip-relative marker start calculation and validation for gaps, out-of-sequence markers, and ambiguous overlapping clips.
 - Updated the sample FCPXML to include two clips and two markers at different times.

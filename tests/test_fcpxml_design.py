@@ -201,6 +201,20 @@ def test_design_preserves_narration_as_marker_design_only():
     ]
 
 
+def test_missing_narration_cue_timeline_start_is_not_inferred_from_clip():
+    plan = adapter_plan()
+    for operation in plan["operations"]:
+        if operation["type"] == "add_narration_cue":
+            operation.pop("timeline_start")
+            assert operation["source_timeline_item_id"] == "t001"
+
+    design = build_fcpxml_minimal_design(plan)
+
+    assert design["status"] == "designed"
+    assert design["sequence_design"]["markers"][0]["source_timeline_item_id"] == "t001"
+    assert design["sequence_design"]["markers"][0]["timeline_start"] == ""
+
+
 def test_invalid_or_blocked_adapter_plan_blocks_design():
     blocked_plan = dict(adapter_plan())
     blocked_plan["status"] = "blocked"
