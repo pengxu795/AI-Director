@@ -2,6 +2,9 @@
 
 ## 2026-07-03
 
+- Added Module 9 minimal FCPXML serializer and CLI.
+- Added `.fcpxml` file export from validated Module 8 abstract designs only.
+- Added tests for XML structure, blocked design refusal, unknown asset refs, `.fcpxml` suffix enforcement, file writing, and no media-processing imports.
 - Fixed Module 8 time precision contract by blocking non-millisecond frame rates in the MVP.
 - Added `unsupported_non_millisecond_frame_rate` for 30, 30000/1001, 60000/1001, 29.97, and 59.94 fps inputs.
 - Removed the earlier implication that 30000/1001 can be fully represented by `HH:MM:SS.mmm`.

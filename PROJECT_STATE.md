@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 8 Review
-- Latest completed work: Module 8 FCPXML adapter discovery, minimal export design, millisecond-fps contract, and frame alignment validation
-- Next module: real FCPXML adapter implementation
-- Gate: Module 8 Review passes before generating real FCPXML, XML, or editor project files
+- Current phase: Module 9 Review
+- Latest completed work: Module 9 minimal FCPXML serialization and file export
+- Next module: FCPXML import validation / editor compatibility testing
+- Gate: Module 9 Review passes before launching Final Cut Pro or validating editor import
 
 ## Completed
 
@@ -26,17 +26,15 @@
 - Module 6 phase 1: JSON/TXT export package generation
 - Module 7: export target research, media asset binding schema, and adapter contract
 - Module 8: FCPXML adapter discovery, source mapping design, time conversion, and minimal outline
+- Module 9: minimal FCPXML serializer and `.fcpxml` file export
 
 ## Pending Review
 
-- Review Module 8 FCPXML discovery and minimal export design.
-- Confirm FCPXML version baseline, field mapping, resource IDs, and rational time conversion are clear.
-- Confirm sequence fps is explicit and mixed fps is blocked for MVP.
-- Confirm non-millisecond frame rates are blocked until Module 8 gains rational or frame-index edit fields.
-- Confirm non-frame-aligned source or timeline times are blocked without rounding.
-- Confirm `place_clip` design uses shot-level source ranges.
-- Confirm narration remains marker or note design only, with no generated audio asset.
-- Confirm no editor project, XML, FCPXML, EDL, AAF, media read, render, or video export was introduced.
+- Review Module 9 minimal FCPXML serializer.
+- Confirm only validated Module 8 designs can be serialized.
+- Confirm `.fcpxml` output preserves resources, asset refs, clip source ranges, offsets, durations, and narration markers.
+- Confirm serializer does not read media, probe files, render video, launch Final Cut Pro, or validate editor import.
+- Confirm blocked designs do not write files.
 
 ## Development Rule
 

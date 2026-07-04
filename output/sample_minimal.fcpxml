@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.10">
+  <resources>
+    <format id="fmt001" name="FFVideoFormat25.0" frameDuration="1/25s" />
+    <asset id="asset_001" name="drama_episode_01.mp4" src="file:///media/drama_episode_01.mp4" duration="10s" hasVideo="1" hasAudio="1" format="fmt001" />
+  </resources>
+  <library>
+    <event name="AI-Director">
+      <project name="AI-Director Minimal FCPXML Design">
+        <sequence format="fmt001" duration="37/25s" tcStart="0s" tcFormat="NDF">
+          <spine>
+            <asset-clip name="drama_episode_01.mp4" ref="asset_001" offset="0s" start="5s" duration="37/25s">
+              <!--source_story_block_id=b001; source_timeline_item_id=t001; reuse_policy=primary-->
+              <marker start="0s" duration="1/25s" value="她终于发现真相" />
+            </asset-clip>
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>
