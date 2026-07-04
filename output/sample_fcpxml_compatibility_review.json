@@ -1,0 +1,167 @@
+{
+  "schema_version": "1.0",
+  "module": "Module 12",
+  "name": "FCPXML Compatibility Findings Review / Remediation Plan",
+  "status": "review_ready",
+  "source_record": {
+    "schema_version": "1.0",
+    "status": "recorded",
+    "fcpxml_path": "output/sample_minimal.fcpxml",
+    "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+    "source_design_sha256": "f37f5618e7278289f71872b02f4e5630c83959348a58e128073192cd8a3ec062",
+    "git_commit": "281ea04",
+    "serializer_commit": "647f4e5"
+  },
+  "environment": {
+    "tester": "manual-reviewer",
+    "run_at": "2026-07-04T01:05:00+00:00",
+    "final_cut_pro_version": "10.8.1",
+    "macos_version": "15.5",
+    "library_name": "AI-Director Acceptance",
+    "project_name": "Module 11 Sample"
+  },
+  "result_summary": {
+    "status": "blocked",
+    "import_result": "passed",
+    "media_validation_result": "blocked",
+    "imported": true,
+    "compatibility_result": "blocked",
+    "summary": "FCPXML import was accepted, but offline media prevents source range and edit-chain validation."
+  },
+  "findings": [
+    {
+      "id": "f001",
+      "code": "media_not_online",
+      "severity": "blocker",
+      "category": "media",
+      "summary": "Asset asset_001 was offline.",
+      "reproduction": "Sample media manually recorded as offline.",
+      "evidence_refs": [
+        "asset_001"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "f002",
+      "code": "media_not_online",
+      "severity": "blocker",
+      "category": "media",
+      "summary": "Asset asset_002 was offline.",
+      "reproduction": "Sample media manually recorded as offline.",
+      "evidence_refs": [
+        "asset_002"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "f003",
+      "code": "manual_check_not_passed",
+      "severity": "blocker",
+      "category": "manual_check",
+      "summary": "Checklist item clip_source_ranges was blocked.",
+      "reproduction": "Media was offline, so source range verification could not be completed.",
+      "evidence_refs": [
+        "clip_source_ranges"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "f004",
+      "code": "media_offline",
+      "severity": "blocker",
+      "category": "import_error",
+      "summary": "FCPXML imported, but sample media assets were offline during manual validation.",
+      "reproduction": "FCPXML imported, but sample media assets were offline during manual validation.",
+      "evidence_refs": [],
+      "status": "open"
+    },
+    {
+      "id": "f005",
+      "code": "media_assets_not_online",
+      "severity": "warning",
+      "category": "record_warning",
+      "summary": "Media assets are not online: asset_001, asset_002.",
+      "reproduction": "manual_result.asset_results",
+      "evidence_refs": [],
+      "status": "open"
+    }
+  ],
+  "remediation_plan": {
+    "status": "proposed",
+    "items": [
+      {
+        "id": "r001",
+        "finding_id": "f001",
+        "priority": "P0",
+        "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
+        "owner": "human_review",
+        "serializer_change_allowed": false,
+        "requires_review_before_implementation": true,
+        "status": "proposed"
+      },
+      {
+        "id": "r002",
+        "finding_id": "f002",
+        "priority": "P0",
+        "action": "Repeat manual import with bound online media before assessing source ranges or edit usability.",
+        "owner": "human_review",
+        "serializer_change_allowed": false,
+        "requires_review_before_implementation": true,
+        "status": "proposed"
+      },
+      {
+        "id": "r003",
+        "finding_id": "f003",
+        "priority": "P0",
+        "action": "Inspect the failed checklist evidence and decide whether a serializer fix, protocol update, or sample correction is needed.",
+        "owner": "human_review",
+        "serializer_change_allowed": false,
+        "requires_review_before_implementation": true,
+        "status": "proposed"
+      },
+      {
+        "id": "r004",
+        "finding_id": "f004",
+        "priority": "P0",
+        "action": "Triage the importer error against the exact FCPXML/design fingerprints before changing serializer output.",
+        "owner": "human_review",
+        "serializer_change_allowed": false,
+        "requires_review_before_implementation": true,
+        "status": "proposed"
+      },
+      {
+        "id": "r005",
+        "finding_id": "f005",
+        "priority": "P2",
+        "action": "Review this finding and decide whether remediation is needed.",
+        "owner": "human_review",
+        "serializer_change_allowed": false,
+        "requires_review_before_implementation": true,
+        "status": "proposed"
+      }
+    ],
+    "serializer_changes_applied": false,
+    "next_gate": "Review findings before changing serializer or adding editor automation."
+  },
+  "regression_samples": [
+    {
+      "name": "module11_minimal_fcpxml_import_blocked",
+      "fcpxml_path": "output/sample_minimal.fcpxml",
+      "fcpxml_sha256": "13a2f446d70fb4e4eeafbcc36fdeceaaf0138f9a9a1d3b1930e05f769e09adde",
+      "result": "blocked"
+    }
+  ],
+  "validation_result": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "metadata": {
+    "review_generated": true,
+    "serializer_modified": false,
+    "media_files_read": false,
+    "editor_launched": false,
+    "automatic_import_performed": false,
+    "video_export_performed": false
+  }
+}

@@ -1,4 +1,4 @@
-"""Adapter contract exports for Modules 7 through 11."""
+"""Adapter contract exports for Modules 7 through 12."""
 
 from .fcpxml_acceptance import (
     FCPXML_ACCEPTANCE_SCHEMA_VERSION,
@@ -11,6 +11,12 @@ from .fcpxml_acceptance_record import (
     build_fcpxml_acceptance_record,
     validate_fcpxml_acceptance_record_input,
     write_fcpxml_acceptance_record,
+)
+from .fcpxml_compatibility_review import (
+    FCPXML_COMPATIBILITY_REVIEW_SCHEMA_VERSION,
+    build_fcpxml_compatibility_review,
+    validate_fcpxml_compatibility_review_input,
+    write_fcpxml_compatibility_review,
 )
 from .contract import (
     ADAPTER_CONTRACT_SCHEMA_VERSION,
@@ -41,12 +47,14 @@ __all__ = [
     "ADAPTER_CONTRACT_SCHEMA_VERSION",
     "FCPXML_ACCEPTANCE_SCHEMA_VERSION",
     "FCPXML_ACCEPTANCE_RECORD_SCHEMA_VERSION",
+    "FCPXML_COMPATIBILITY_REVIEW_SCHEMA_VERSION",
     "FCPXML_DESIGN_SCHEMA_VERSION",
     "FCPXML_SERIALIZER_SCHEMA_VERSION",
     "FCPXML_SELECTED_VERSION",
     "build_canonical_adapter_input",
     "build_fcpxml_import_acceptance_protocol",
     "build_fcpxml_acceptance_record",
+    "build_fcpxml_compatibility_review",
     "build_fcpxml_minimal_design",
     "default_target_profiles",
     "ensure_no_fcpxml_file_output",
@@ -59,9 +67,11 @@ __all__ = [
     "validate_adapter_input",
     "validate_fcpxml_import_acceptance_protocol",
     "validate_fcpxml_acceptance_record_input",
+    "validate_fcpxml_compatibility_review_input",
     "validate_fcpxml_design_input",
     "validate_fcpxml_serialization_input",
     "write_fcpxml_file",
     "write_fcpxml_import_acceptance_protocol",
     "write_fcpxml_acceptance_record",
+    "write_fcpxml_compatibility_review",
 ]

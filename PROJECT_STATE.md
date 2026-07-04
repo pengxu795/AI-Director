@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- Current phase: Module 11 Review
-- Latest completed work: Module 11 FCPXML manual import result capture
-- Next module: FCPXML compatibility findings review / remediation plan
-- Gate: Module 11 Review passes before compatibility remediation or editor automation
+- Current phase: Module 12 Review
+- Latest completed work: Module 12 FCPXML compatibility findings review and remediation plan
+- Next module: FCPXML compatibility remediation implementation
+- Gate: Module 12 Review passes before modifying serializer, samples, media bindings, or editor automation
 
 ## Completed
 
@@ -29,20 +29,17 @@
 - Module 9: minimal FCPXML serializer and `.fcpxml` file export
 - Module 10: FCPXML manual import acceptance protocol
 - Module 11: FCPXML manual import result capture and acceptance record
+- Module 12: FCPXML compatibility findings review and remediation plan
 
 ## Pending Review
 
-- Review Module 11 manual acceptance record.
-- Confirm records require a Module 10 `acceptance_ready` protocol.
-- Confirm manual artifact identifiers must match protocol artifacts exactly.
-- Confirm relationship confirmation is human-provided and required before PASS/FAIL recording.
-- Confirm FCP version, macOS version, asset import states, checklist results, evidence, importer errors, and regression samples are captured.
-- Confirm `import_result`, `media_validation_result`, and `compatibility_result` remain separate.
-- Confirm `compatibility_result="passed"` requires top-level `status="passed"` and `imported=true`.
-- Confirm PASS requires every expected asset to be `online` and no blocker import errors.
-- Confirm failed and blocked results can be recorded without pretending compatibility passed.
-- Confirm Module 11 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
-- Confirm Module 11 stops before compatibility remediation or editor automation.
+- Review Module 12 compatibility findings and remediation plan.
+- Confirm findings are derived from Module 11 acceptance records without guessing.
+- Confirm non-online media, failed/blocked checks, import errors, and validation warnings become traceable findings.
+- Confirm successful records produce informational findings and no remediation items.
+- Confirm remediation is proposed only and keeps `serializer_change_allowed=false`.
+- Confirm Module 12 does not modify serializer, samples, media bindings, editor automation, or FCPXML output.
+- Confirm Module 12 does not launch Final Cut Pro, automate import, read media, probe files, render video, or export finished video.
 
 ## Development Rule
 
